@@ -87,6 +87,15 @@ we need to support each of these. My first idea is something like this :
 
 opreport session:run1 image:/usr/bin/oprofiled
 
+It's allowed to specify more than one time a tag and its value, all subsequent
+tag:value will overwrite the previous one. This scheme is simpler to code and
+can be usefull when used with alias. See section 4.
+
+FIXME: it's unclear if tag which allow list of item wouldn't be cumulative
+rather overwritting. Pro for cumulative is least suprise principle, if we allow
+list it's less suprising to cumulate, cons is overwrite seems more useful when
+used in conjunction with alias.
+
 Here's a complete list of tags :
 
 3.3	sample-file: <filename>
@@ -113,6 +122,9 @@ Here's a complete list of tags :
 		'image:/usr/bin/oprofiled,*op*,./oprofpp'
 
 		"image:" is default tag, allowing old-style "opreport /usr/bin/oprofiled"
+		The above shortcut don't wotk if user try to profile a binary
+		with a ':' imbedded in filename or path name, in this case
+		complete syntax image:image_name must be used.
 
 3.8	image-exclude: <imagelist> 
 		Comma list of images to exclude from the final list
@@ -168,15 +180,15 @@ We need to encode a number of the above things in the filename.
 
 3.19 The proposed format is
 
-$SAMPLES_DIR/session/root/path/to/binary/event.count.unitmask.tgid.pid.cpu
-$SAMPLES_DIR/session/root/path/to/binary/dep/root/path/to/lib/event.count.unitmask.tgid.pid.cpu
+$SAMPLES_DIR/session/{root}/path/to/binary/event.count.unitmask.tgid.pid.cpu
+$SAMPLES_DIR/session/{root}/path/to/binary/{dep}/{root}/path/to/lib/event.count.unitmask.tgid.pid.cpu
 
 The latter is to be used when using --separate=lib|kernel
 
 (in decimal where relevant) 
 For example,
 
-$SAMPLES_DIR/current/root/bin/ls/dep/root/lib/libc.so/CPU_CLK_UNHALTED.30000.0.434.434.0
+$SAMPLES_DIR/current/{root}/bin/ls/{dep}/{root}/lib/libc.so/CPU_CLK_UNHALTED.30000.0.434.434.0
 
 3.20 The paths must be fully resolved of symbolic links.
 
@@ -185,15 +197,26 @@ value "all", for when profiling method is not splitting
 
 3.22 The current session is defined as "current", all other sessions are free-form
 
-3.23 As well as "root" dir (representing the / fs), there is a "kern" dir,
+3.23 As well as "{root}" dir (representing the / fs), there is a "{kern}" dir,
      which will contain the 2.5 modules,  e.g :
 
-$SAMPLES_DIR/current/kern/oprofile/CPU_CLK_UNHALTED.30000.0.434.434.0
-$SAMPLES_DIR/current/root/bin/ls/dep/kern/oprofile/CPU_CLK_UNHALTED.30000.0.434.434.0
+$SAMPLES_DIR/current/{kern}/oprofile/CPU_CLK_UNHALTED.30000.0.434.434.0
+$SAMPLES_DIR/current/{root}/bin/ls/{dep}/{kern}/oprofile/CPU_CLK_UNHALTED.30000.0.434.434.0
 
-3.24 The code is expected to be able to disambiguate a binary called "dep", e.g.
-     /bin/dep (/bin is a dir, therefore /bin/dep is the binary ,and /bin/dep/dep will
-     exist)
+  {kern} can be followed only by a single path component. The name following
+ a {kern} path implicitely get a ".ko" during the file search
+
+3.24 The encoding scheme used should simplify code since we parse the string
+  at a syntactic point of view i.e. we don't have to look for existing path
+  or file. Some redundancy exist, like {dep} which is not striclty required,
+  but allow to sanity check samples filename.
+
+3.25 To clarify things here are the four allowed form of samples filename
+
+{root}/path/to/bin/CPU_CLK_UNHALTED.100000.255.33.34.0
+{kern}/name/CPU_CLK_UNHALTED.100000.255.33.34.0
+{root}/path/to/bin/{dep}/{root}/path/to/lib/CPU_CLK_UNHALTED.100000.255.33.34.0
+{root}/path/to/bin/{dep}/{kern}/name/CPU_CLK_UNHALTED.100000.255.33.34.0
 
 Resolution algorithm
 --------------------
@@ -217,7 +240,7 @@ all others set to "*" (match on anything) by default
 	add_to_profile_list();
 }
 
-3.23 if (one_profile_allowed_only) { 
+3.34 if (one_profile_allowed_only) { 
 	// merge on tgid,pid,cpu
 	// and also lib-image, iff the lib-image
 	// is specified as imagename
@@ -238,6 +261,28 @@ run1-oprofiled session:run1 image:/usr/bin/oprofiled
 4.2 # opreport run1-oprofiled
  
 for convenience. This is essentially a stored query facility ...
+
+4.3 Since tag:value on command line overwrite previously seen tag:value it's
+allowed to store in .oprofile/op_alias a complete set of tag and to overwrite
+some of them on command line.
+
+$ cat .oprofile/aliases
+all-lib libname:* pid:all tgid:all etc.
+$ opreport alias:all-lib pid:137
+
+4.4 alias_name act as if the aliases line from .oprofile/aliases is inserted
+at the place of alias_name on command line.
+
+Note there is a potential ambiguity with:
+
+$ opreport -l name
+
+if name is a binary in the current directory and is a valid alias name, in such
+case name being an alias name is assumed.
+
+4.5 When an alias is used user must be notified probably by showing the new
+command line after substitution of the alias name
+
  
 5. opreport
 ------------
