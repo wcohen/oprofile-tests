@@ -346,6 +346,7 @@ sample filename from the profile specification merge specification are applied.
 	--global-percent
 	--hide-dependent (-h)
 	--xml-output  (FIXME --xml)
+	--output-file (-o)
 	<profile spec>
 
 5.2 --include-dependent
@@ -479,6 +480,10 @@ as follows :
 5.27 --hide-dependent
 	hide dependent output when using --include-dependent
 
+5.28 --output-file <filename>
+	send all output to filename rather to stdout, this is just an
+	alternative to opreport .... > filename
+
 6. opgprof
 -----------
 
@@ -486,8 +491,7 @@ Split off the gprof dumping part of old oprofpp, since it didn't really
 fit.
 
 6.1 opgprof
-	--gprof-file <file>
-	-output-file (-o) filename
+	--output-file (-o) filename
 	<profile spec>
 
 6.2 --output-file filename
