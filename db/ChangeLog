@@ -1,3 +1,9 @@
+2002-04-16  Philippe Elie  <phil.el@wanadoo.fr>
+
+	* db-manage.c: silly bug fix, db works now with
+	  malloc/realloc or mmap/mremap memory allocation
+	  selected at compile time.
+
 2002-04-14  Philippe Elie  <phil.el@wanadoo.fr>
 
 	* first import standalone code to test oriented btree

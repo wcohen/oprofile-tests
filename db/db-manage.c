@@ -8,16 +8,19 @@
 
 #include "db.h"
 
+#define USE_MMAP
+
 page_idx_t add_page(root_t * root)
 {
 	if (root->current_size >= root->size) {
 		unsigned int old_size = root->size;
 		unsigned int pos;
 
-#if 1
+#ifndef USE_MMAP
 		root->size = root->size ? root->size * 2 : 1;
 		root->base_area =
-			realloc(root->base_area, root->size * sizeof(page_t));
+			realloc(root->base_area, (root->size * sizeof(page_t)));
+//		printf("%p\n", root->base_area);
 
 		memset(&root->base_area[old_size], '\0',
 		       (old_size == 0 ? 1 : old_size) * sizeof(page_t));
@@ -41,7 +44,6 @@ page_idx_t add_page(root_t * root)
 		memset(&root->base_area[old_size], '\0',
 		       (old_size == 0 ? 1 : old_size) * sizeof(page_t));
 #endif
-
 		for (pos = old_size ; pos < root->size ; ++pos) {
 			unsigned int count;
 			page_t * page;
@@ -69,6 +71,10 @@ void init_root(root_t * root)
 void delete_root(root_t * root)
 {
 	if (root->base_area)
-		munmap(root->base_area, 32768 * sizeof(page_t));
+#ifndef USE_MMAP
+		free(root->base_area);
+#else
+		munmap(root->base_area, root->size * sizeof(page_t));
+#endif
 }
 
