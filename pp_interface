@@ -370,6 +370,8 @@ by -i, -e, -s, -o.
 
 	5.3.2 This must include dependent images when --include-dependent is set
  
+	FIXME: we don't show 0-sampled symbols as of now. Should we ? oprofpp did.
+
 5.7	--xml-output
 	Reserved for now, and will be specified later.
 
