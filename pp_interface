@@ -179,14 +179,14 @@ Here's a complete list of tags :
 		those. If not specified, these samples are NOT included by default, EXCEPT
 		in the presence of automerging if image:*libc*, for example.
 
-3.11	event: event
-		Specify a particular event type e.g. CPU_CLK_UNHALTED or the string all to specify any event
+3.11	event: <eventlist>
+		Comma list of events e.g. CPU_CLK_UNHALTED or the string all to specify any event
 
-3.12	count: count
-		Specify the count for that event e.g. 30000 or the string all to specify any count
+3.12	count: <countlist>
+		Comma list of counts e.g. 30000 or the string all to specify any count
 
-3.13	unit-mask: mask
-		Specify the unit mask for that event. Encoded as numerical value or the string all to specify any unit mask.
+3.13	unit-mask: <masklist>
+		Comma list of unit masks. Encoded as numerical value or the string all to specify any unit mask.
 
 3.14	cpu: <cpulist>
 		Comma-separated list of cpu numbers to consider
