@@ -526,8 +526,6 @@ née op_to_source. Our basic source / asm annotation tool.
 	--exclude-dependent (-x)
 	<profile spec>
 
-FIXME we lost usefull feature e.g. --exclude-symbol --include-symbol
-
 7.2 Profile spec must produce exactly 1 profile after auto-merge etc.
 	
 	FIXME: Will says :
