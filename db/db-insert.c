@@ -155,7 +155,7 @@ static int do_insert(root_t * root, page_idx_t page_idx,
 
 	/* if left - right == 2 ==> found at pos.
 	 * else if right == -1 that's a leftmost elt
-	 * else left is insertion place */
+	 * left is insertion place */
 
 	if (left - right == 2) {
 		/* found: even if the write is non-atomic we do not need

@@ -8,9 +8,9 @@ all: db-test
 clean:
 	rm -f *.o *~ db-test
 
-db-test: db-insert.o db-manage.o db-test.o
+db-test: db-insert.o db-manage.o db-travel.o db-debug.o db-test.o
 	$(CC) $(CFLAGS) $^ -o $@
 
-ALL_SOURCES = db-insert.c db-manage.c db-test.c
+ALL_SOURCES = db-insert.c db-manage.c db-travel.c db-debug.c db-test.c
 
 include Rules.make

@@ -1,5 +1,6 @@
 2002-04-13  Philippe Elie  <phil.el@wanadoo.fr>
 
+	* db/ChangeLog: db sub dir have its own ChangeLog now
 	* db/*: new directory: standalone code to test oriented btree
 	  samples files
 
