@@ -550,3 +550,16 @@ This is to keep the line numbers the same.
 	Additional (?) params to objdump, e.g. for Intel syntax asm
 
 7.8 --source or --assembly or both must specified
+
+11. opcontrol
+--------------
+
+11.1 --image /foo/bar/a_binary
+
+	Allow to filter sample by image name. If a_binary is a primary binary
+	all dependent are also profiled (iff --separate=library, ditto for
+	--separate=kernel). If a_binary is a shared library or module (FIXME:
+	module naming) only this dependent is profiled.
+	 --separate=libray|kernel works in the usual way. Above rules are used
+	too when --seperate=thread.
+
