@@ -170,7 +170,8 @@ Here's a complete list of tags :
 		'image:/usr/bin/oprofiled,*op*,./oprofpp'
 
 3.8	image-exclude: <imagelist> 
-		Comma list of images to exclude from the final list
+		Comma list of images to exclude from the final list, this are
+		either library name or image name
 
 3.9	lib-image: <imagelist>
 		Comma list of library images to consider. Thus when looking for glibc samples
@@ -178,9 +179,6 @@ Here's a complete list of tags :
 		those. If not specified, these samples are NOT included by default, EXCEPT
 		in the presence of automerging if image:*libc*, for example.
 
-3.10	lib-image-exclude: <imagelist>
-		Similar to image-exclude ...
- 
 3.11	event: event
 		Specify a particular event type e.g. CPU_CLK_UNHALTED or the string all to specify any event
 
@@ -282,7 +280,6 @@ all others set to "*" (match on anything) by default
 	next if image && !included(file.image, imagelist)
 	next if image-exclude && included(file.image, image-exclude)
 	next if lib-image && !included(file.lib-image, lib-imagelist)
-	next if lib-image-exclude && included(file.lib-image, lib-image-exclude)
 	next if event && file.event != event
 	next if count && file.count != count
 	next if unitmask && file.unit_mask != unitmask
@@ -363,7 +360,7 @@ sample filename from the profile specification merge specification are applied.
 	--long-filenames (-f)
 	--accumulated (-c)
 	--reverse-sort (-r)
-	--global-percent (-p)
+	--global-percent (N/A)
 	--xml-output  (FIXME --xml)
 	--output-file (-o)
 	<profile spec>
@@ -522,7 +519,7 @@ née op_to_source. Our basic source / asm annotation tool.
 	--exclude-file <filelist> (N/A)
 	--source (-s)
 	--assembly (-a)
-	--objdump-params (-p)
+	--objdump-params (N/A)
 	--include-symbols <symbols list> (-i)
 	--exclude-symbols <symbols list> (-e)
 	--exclude-dependent (-x)
