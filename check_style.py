@@ -7,9 +7,7 @@
 
  TODO:
 
-  check spaces around ==, +=, *, etc.
   check for file header
-  check for spurious "std::" qualification in .cpp
   not smart enough to recognise "//" in string literals
   'function (...)'
 
@@ -42,7 +40,10 @@ arguments = "(\s%s\s,*\s)"
 lfe = "list_for_each[_a-z]*\s\(%s\)" % arguments
 control_keyword = "[^%s](if|while|do|for|%s)" % (ident_char, lfe)
 camel_ident = "([a-z]+[0-9:_]*[A-Z]|[A-Z]+[0-9:_]*[a-z])"
+binop = "(==|!=|\*=|-=|/=|<<=|>>=|<<|>>|\|\||&&)"
 
+cpp_file = re.compile(".*\.cpp")
+spurious_std = re.compile("\s+.*std::")
 open_indent = re.compile(r".*\{\s*$")
 space_prefix = re.compile(r"^[\t]*[ ][\t ]*[^\t ].*\n")
 cpp_io_continue = re.compile(r"\s*<<")
@@ -66,8 +67,11 @@ doxygen_comment = re.compile(r"(\s*///|.*/\*\*<|.*///<)")
 namespace_close = re.compile(r".*(%s\snamespace|namespace\s%s)" % (identifier, identifier))
 http = re.compile(".*http://.*")
 return_statement = re.compile(".*return ")
+operator_decl = re.compile(".*operator%s" % binop)
 pointer_missing_space = re.compile(".*%s\s+[*]%s" % (identifier, identifier))
 reference_missing_space = re.compile(".*%s\s+[&]%s" % (identifier, identifier))
+binop_missing_space_before = re.compile(".*[^ \t\n]+%s" % binop)
+binop_missing_space_after = re.compile(".*%s[^ ;\t\n]+" % binop)
 
 simple_regexps = [
 	( re.compile(r".*%s\(" % control_keyword), "missing space after control keyword"),
@@ -206,6 +210,10 @@ false_positives = [
 "	string_filter f4(\"ok,ok2,\", \"\");",
 "	string_filter f5(\"ok,ok2\", \"no,no2\");",
 "		     \"sort by\", \"sample,image,app-name,symbol,debug,vma\"),",
+"	right_rule.add_pattern(\".*=[ ]*\\\"(.*)\\\"\", \"\\\\1\");",
+"	left_rule.add_pattern(\"[ ]*\\\"(.*)\\\"[ ]*=.*\", \"\\\\1\");",
+"	var_value_rule.add_pattern(\".*=[ ]*\\\"(.*)\\\"\", \"\\\\1\");",
+"	var_name_rule.add_pattern(\"^\\\\$([_a-zA-Z][_a-zA-Z0-9]*)[ ]*=.*\", \"\\\\1\");",
 ]
 
 def err(file, nr, line, message):
@@ -297,6 +305,9 @@ def check_line(file, nr, line, prev_line):
 	if in_comment:
 		return
 
+	if cpp_file.match(file) and spurious_std.match(line):
+		err(file, nr, line, "warning: spurious std:: qualification")
+
 	check_camel(file, nr, line)
  
 	if space_prefix.match(line):
@@ -307,6 +318,12 @@ def check_line(file, nr, line, prev_line):
 
 	if reference_missing_space.match(line) and not return_statement.match(line):
 		err(file, nr, line, "warning: possible missing space after reference declaration")
+
+	if binop_missing_space_before.match(line) and not operator_decl.match(line):
+		err(file, nr, line, "warning: missing space before binary operator")
+
+	if binop_missing_space_after.match(line) and not operator_decl.match(line):
+		err(file, nr, line, "warning: missing space after binary operator")
 
 	if opt.check_length and len(line) > 80:
 		err(file, nr, line, "warning: line is of length %d" % len(line))
@@ -345,6 +362,8 @@ def parse_options(argv):
 	except getopt.error:
 		usage()
 		sys.exit(2)
+
+	print "check_style %s: remember this script is only a guide!" % version
 
 	for o, a in opts:
 		if o in ("-h", "--help"):
