@@ -75,8 +75,8 @@ and we can use the same method for every tool.
 3.12) Event count
 3.13) unit mask
 3.14) CPU nr.
-3.15) Group ID (tgid)
-3.16) Process ID (pid)
+3.15) Task Group ID (tgid)
+3.16) Task ID (tid)
 
 FIXME: review the can be null parameters
 3.2 Some of these may be "null" parameters, namely 3.3), 3.4), 3.9), 3.13),
@@ -164,8 +164,10 @@ Here's a complete list of tags :
 		Comma list of pid's to consider. This defines a thread group
 		including all child threads (task->tgid)
 
+FIXME: tgid should also be accepted for this ?
+
 3.16	tid: <tidlist>
-		A specific thread (task->pid)
+		A specific thread (task->tid)
 
 3.17 If a tag is not specified, then it will match all values (with the exception of
      session: as noted).
@@ -179,7 +181,7 @@ listchar ::= '\,' | '*' | '?' | alphanum
 i.e. we allow escape for entries with commas in it, and we allow
 globbing.
  
-We can use cpu,pid,event,count,unit-mask formats as parameters
+We can use cpu,tgid,tid,event,count,unit-mask formats as parameters
 to the daemon too. But we must allow multiple event,count pairs
 so the syntax must be different.
 
@@ -190,8 +192,8 @@ We need to encode a number of the above things in the filename.
 
 3.19 The proposed format is
 
-$SAMPLES_DIR/session/{root}/path/to/binary/event.count.unitmask.tgid.pid.cpu
-$SAMPLES_DIR/session/{root}/path/to/binary/{dep}/{root}/path/to/lib/event.count.unitmask.tgid.pid.cpu
+$SAMPLES_DIR/session/{root}/path/to/binary/event.count.unitmask.tgid.tid.cpu
+$SAMPLES_DIR/session/{root}/path/to/binary/{dep}/{root}/path/to/lib/event.count.unitmask.tgid.tid.cpu
 
 The latter is to be used when using --separate=lib|kernel
 
@@ -202,7 +204,7 @@ $SAMPLES_DIR/current/{root}/bin/ls/{dep}/{root}/lib/libc.so/CPU_CLK_UNHALTED.300
 
 3.20 The paths must be fully resolved of symbolic links.
 
-3.21 The parts tgid,pid,cpu may, instead of a number, have the
+3.21 The parts tgid,tid,cpu may, instead of a number, have the
 value "all", for when profiling method is not splitting
 
 3.22 The current session is defined as "current", all other sessions are free-form
@@ -237,7 +239,7 @@ Resolution algorithm
 session=as given or default to "current"
 all others set to "*" (match on anything) by default
 
-3.33 for each (file in session(s)) {
+3.24 for each (file in session(s)) {
 	next if samplefile && samplefile!=file;
 	next if image && !included(file.image, imagelist)
 	next if image-exclude && included(file.image, image-exclude)
@@ -247,14 +249,14 @@ all others set to "*" (match on anything) by default
 	next if count && file.count != count
 	next if unitmask && file.unit_mask != unitmask
 	next if cpu && !included(file.cpu, cpulist)
-	next if pid && !included(file.pid, pidlist)
+	next if tgid && !included(file.tgid, tgidlist)
 	next if tid && !included(file.tid, tidlist)
  
 	add_to_profile_list();
 }
 
 3.34 if (one_profile_allowed_only) { 
-	// merge on tgid,pid,cpu
+	// merge on tgid,tid,cpu
 	// and also lib-image, iff the lib-image
 	// is specified as imagename
 	merge
@@ -280,8 +282,8 @@ allowed to store in .oprofile/op_alias a complete set of tag and to overwrite
 some of them on command line.
 
 $ cat .oprofile/aliases
-all-lib libname:* pid:all tgid:all etc.
-$ opreport alias:all-lib pid:137
+all-lib libname:* tid:all tgid:all etc.
+$ opreport alias:all-lib tgid:137
 
 4.4 alias_name act as if the aliases line from .oprofile/aliases is inserted
 at the place of alias_name on command line.
@@ -487,9 +489,10 @@ née op_to_source. Our basic source / asm annotation tool.
 /*             */
 /* 73 (2.3%)   */      for (i = 0; i < 4; i++) {
 ...
- 
-7.5 This is to keep the line numbers the same. A post fix comment is also
-    added at the end of the file, along the lines of :
+
+This is to keep the line numbers the same.
+
+7.5. A post fix comment is also added at the end of the file, along the lines of :
 
 /* Generated from /path/to/some_function.c
  * CPU_CLK_UNHALTED (cycles CPU is not halted) with a count of 30000 
@@ -522,6 +525,7 @@ inside of one session only.
 	--output <output spec> (-o) 
 	--sort <sort spec> (-s)
 	--merge <merge spec>
+	--include-dependent (-n)
 	--ignore-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
 	--threshold <threshold> (-t)
@@ -549,7 +553,10 @@ as follows :
 
 	pid
 
-		Merge all process-id specific profiles.
+		Merge all process-id specific profiles (this merges all,
+		regardless of tgid vs. tid).
+
+FIXME: allow tgid and tid ?
 
 	lib
 
@@ -561,6 +568,8 @@ as follows :
 
 8.4 FIXME: should be we consider an "all-kernel" (kernel + modules) profile ?
  
+8.5 --include-dependent does as op_time -k does now.
+
 9. opdiff
 ----------
 
