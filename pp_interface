@@ -149,13 +149,13 @@ Here's a complete list of tags :
 		Similar to image-exclude ...
  
 3.11	event: event
-		Specify a particular event type e.g. CPU_CLK_UNHALTED
+		Specify a particular event type e.g. CPU_CLK_UNHALTED or the string all to specify any event
 
 3.12	count: count
-		Specify the count for that event e.g. 30000
+		Specify the count for that event e.g. 30000 or the string all to specify any count
 
 3.13	unit-mask: mask
-		Specify the unit mask for that event. Encoded as numerical value.
+		Specify the unit mask for that event. Encoded as numerical value or the string all to specify any unit mask.
 
 3.14	cpu: <cpulist>
 		Comma-separated list of cpu numbers to consider
