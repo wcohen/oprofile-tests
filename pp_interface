@@ -39,17 +39,11 @@ shared between the interfaces.
 
 	Maybe we can have more fine-grained --debug later, but for now this will do
 
-2.5 --no-demangle (n/a)
+2.5 --demangle=none,normal,smart
 
-	We demangle by default. This is for avoiding demangler bugs and the like.
+	normal is the default.
 
-2.6 --demangle (n/a)
-
-	For symmetry only 
-
-2.7 --smart-demangle (-D)
-
-	Use the smart demangler. Not the default.
+2.6, 2.7 intentionally empty to keep numbering
 
 2.8 --image-path (-p) pathcommalist
 
