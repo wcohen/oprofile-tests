@@ -490,20 +490,20 @@ as follows :
 Split off the gprof dumping part of old oprofpp, since it didn't really
 fit.
 
-6.1 opgprof
+6.1 opgprof <file>
 	--output-file (-o) filename
 	--image-path (-p)
 	<profile spec>
 
 6.2 --output-file filename
 	set the output filename, if not specified output filename is gmon.out
-	FIXME: must we backup gmon.out if existing, I think not
 
 6.3 <file>, --image-path
 	acts as 3.18, 5.19
 
 6.4 opgrof do automatic merging on the set selected sample filename, it's an
-error if more than one unmergeable profile exists
+error if more than one unmergeable profile exists. opgporf lookup in dependent
+file (shared lib/module etc) only if neccessary
  
 7. opannotate
 --------------
@@ -573,15 +573,13 @@ This is to keep the line numbers the same.
 7.6 --assembly
 
 	specifies the objdump annotated asm output.  The output looks
-	as above.
+	as above but all result are output to stdout.
 
-7.7 --mixed
-
-	specified the src/asm objdump annotated output
- 
-7.8 --objdump-params
+7.7 --objdump-params
 
 	Additional (?) params to objdump, e.g. for Intel syntax asm
+
+7.8 --source or --assembly or both must specified
 
 
 9. opdiff
