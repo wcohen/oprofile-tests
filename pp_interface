@@ -279,6 +279,7 @@ all others set to "*" (match on anything) by default
 	next if samplefile && samplefile!=file;
 	next if image && !included(file.image, imagelist)
 	next if image-exclude && included(file.image, image-exclude)
+	next if image-exclude && included(file.lib-image, image-exclude)
 	next if lib-image && !included(file.lib-image, lib-imagelist)
 	next if event && file.event != event
 	next if count && file.count != count
