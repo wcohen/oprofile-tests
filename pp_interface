@@ -82,6 +82,19 @@ shared between the interfaces.
 	the basename is searched for. Otherwise, the basename with ".ko"
 	appended is searched for.
 
+2.9 --threshold <threshold>
+
+	Threshold of minimum values before an entry is printed. a percentage,
+	e.g. "--threshold=0.1" is 0.1%
+
+	A trailing '%' is ignored, e.g. "--threshold=0.1%" is equivalent to
+	"--threshold=0.1"
+
+	Threshold get a different meaning for opdiff
+ 
+	FIXME: what about showing the dependent images ? Should threshold make
+	a difference ?
+
 2.12
 	2.5, 2.6 and 2.7 are not used by opgprof
 
@@ -341,7 +354,6 @@ sample filename from the profile specification merge specification are applied.
 	--symbols (-l)
 	--debug-info (-g)
 	--details (-d)
-	--threshold <threshold> (-t)
 	--sort <sort spec> (-s)
 	--include-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
@@ -425,14 +437,6 @@ by -i, -e, -s, -o.
      the search is repeated, but each match is done against a demangled symbol name. Thus
      mixing mangled with unmangled names will not work, and should be documented.
  
-5.18 --threshold <threshold>
-
-	Threshold of minimum values before an entry is printed. a percentage, e.g. "--threshold=0.1" is 0.1%
-
-	A trailing '%' is ignored, e.g. "--threshold=0.1%" is equivalent to "--threshold=0.1"
- 
-	FIXME: what about showing the dependent images ? Should threshold make a difference ?
-
 5.20 FIXME: should be we consider an "all-kernel" (kernel + modules) profile ?
 
 5.21 --merge <merge spec>
@@ -516,7 +520,6 @@ née op_to_source. Our basic source / asm annotation tool.
 	--base-dir <dir> (-b)
 	--include-file <filelist> (N/A)
 	--exclude-file <filelist> (N/A)
-	--threshold <threshold> (-t)
 	--source (-s)
 	--assembly (-a)
 	--objdump-params (-p)
