@@ -342,24 +342,18 @@ sample filename from the profile specification merge specification are applied.
 	--debug-info (-b)
 	--details (-a)
 	--threshold <threshold> (-t)
-	--include-dependent (-n)
 	--sort <sort spec> (-s)
 	--include-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
 	--merge <merge spec> (-m)
-	--no-header FIXME shortcut for this and below
+	--no-header FIXME shortcut for this and below (-n,-h are available)
 	--short-filename
 	--accumulated
 	--reverse-sort (-r)
 	--global-percent
-	--hide-dependent (-h)
 	--xml-output  (FIXME --xml)
 	--output-file (-o)
 	<profile spec>
-
-5.2 --include-dependent
-
-	Include libs, kernel, modules, etc. Add the 'i' output specifier
 
 5.3 --symbols <symbol-list>
 
@@ -368,7 +362,7 @@ by -i, -e, -s, -o.
 
 	5.3.1 The default for opreport will be "opreport" (i.e. no --symbols)
 
-	5.3.2 This must include dependent images when --include-dependent is set
+	5.3.2 This must include dependent images
  
 	FIXME: we don't show 0-sampled symbols as of now. Should we ? oprofpp did.
 
@@ -481,9 +475,6 @@ as follows :
 	*add* one field to output to show samples count percent relative
 	to the whole samples count (add the 'q' or 'Q' output specifier)
 
-5.27 --hide-dependent
-	hide dependent output when using --include-dependent
-
 5.28 --output-file <filename>
 	send all output to filename rather to stdout, this is just an
 	alternative to opreport .... > filename
@@ -505,7 +496,7 @@ fit.
 	acts as 3.18
 
 6.4 opgrof do automatic merging on the set selected sample filename, it's an
-error if more than one unmergeable profile exists. opgporf lookup in dependent
+error if more than one unmergeable profile exists. opgprof lookup in dependent
 file (shared lib/module etc) only if neccessary
  
 7. opannotate
