@@ -447,7 +447,7 @@ as follows :
 		Merge all compatible unit mask differences
 
 	all
-		all the above, default if no --merge is given
+		all the above
 
 5.22 --no-header
 	remove all header line from output
