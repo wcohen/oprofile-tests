@@ -65,16 +65,19 @@ endif = re.compile(".*#endif")
 elseif = re.compile(".*#else(if)*")
 doxygen_comment = re.compile(r"(\s*///|.*/\*\*<|.*///<)")
 namespace_close = re.compile(r".*(%s\snamespace|namespace\s%s)" % (identifier, identifier))
+http = re.compile(".*http://.*")
 
 simple_regexps = [
 	( re.compile(r".*%s\(" % control_keyword), "missing space after control keyword"),
 	( re.compile(".* ,"), "extra space before comma"),
+	( re.compile(r".*,[^ \n'\"].*"), "comma not followed by whitespace"),
 	( re.compile(".*! "), "extra space after negation"),
 	( re.compile(r".*(?<!delete) \["), "extra space before square bracket"),
 	( re.compile(r".*\( [^;]"), "extra space after open bracket"),
 	( re.compile(r"[^;]* \)"), "extra space before close bracket"),
 	( re.compile(r".*\){"), "missing space between bracket and brace"),
 	( re.compile(".*const\s%s\s%s" % (identifier, rop)), "'const' modifier in wrong place"),
+	( re.compile("\s*else.*{"), "else clause on following line"),
 ]
 
 camel_ok = [
@@ -129,8 +132,6 @@ camel_ok = [
 ]
 
 false_positives = [
-" * @remark Idea comes from TextFilt project <http://textfilt.sourceforge.net>",
-"		   << \"Read http://oprofile.sf.net/faq/#binutilsbug\\n\";",
 "	To value;",
 "template <typename To, typename From>",
 "To op_lexical_cast(From const & src)",
@@ -180,6 +181,29 @@ false_positives = [
 "	{ \"///usr//dir\", \"dir\" },",
 "	{ \".//.//\" \"file_manip_tests.o\", \"file_manip_tests.o\" },",
 "template <typename Throw, typename Catch>",
+"		     \"verbose output\", \"all,debug,bfd,level1,sfile,stats\"),",
+"	sscanf(arg, \"%lx,%lx\", &kernel_start, &kernel_end);",
+"		event->user = copy_ulong(&c, ',');",
+"	glob_filter f1(\"foo,*bar\", \"foobar\");",
+"		     \"comma separated list\", \"cpu,tid,tgid,unitmask,all\"),",
+"		     \"comma separated list\", \"cpu,lib,tid,tgid,unitmask,all\"),",
+"		       \"for Software Development (Document 245320-003),\\n\"",
+"		       \"for Software Optimization (Document 245473-003),\\n\"",
+"		sep += \"library,\";",
+"		sep += \"kernel,\";",
+"		sep += \"cpu,\";",
+"		sep += \"thread,\";",
+"	sscanf(arg, \"%llx,%llx\", &vmlinux_image.start, &vmlinux_image.end);",
+"	{ \"verbose\", \'V\', POPT_ARG_STRING, &verbose, 0, \"be verbose in log file\", \"all,sfile,arcs,samples,module,misc\", },",
+"		\"abcdefghijklmnopqrstuvwxyz0123456789_:=-+%,./\")",
+"	c1.set(\"2,3\");",
+"	c2.set(\"6,all\");",
+"	c2.set(\"all,6\");",
+"	path_filter f1(\"foo,*bar\", \"foobar\");",
+"	path_filter f6(\" foo,bar\", \"bar \");",
+"	string_filter f4(\"ok,ok2,\", \"\");",
+"	string_filter f5(\"ok,ok2\", \"no,no2\");",
+"		     \"sort by\", \"sample,image,app-name,symbol,debug,vma\"),",
 ]
 
 def err(file, nr, line, message):
@@ -188,6 +212,10 @@ def err(file, nr, line, message):
 	for false in false_positives:
 		if false == line.splitlines()[0]:
 			return
+
+	# http:// looks like "trailing comment"
+	if http.match(line):
+		return
 
 	if opt.count:
 		total_errors = total_errors + 1
@@ -340,6 +368,8 @@ def parse_options(argv):
 				continue
 			if string.find(file, ".S") != -1:
 				continue
+			if string.find(file, "module/") != -1:
+				continue
 
 			if file == "config.h":
 				continue
@@ -355,23 +385,18 @@ def parse_options(argv):
 				continue
 			if file == "daemon/liblegacy/p_module.h":
 				continue
-			if file == "module/ia64/IA64syscallstub.h":
-				continue
 			if file == "daemon/opd_perfmon.h":
-				continue
-			if file == "module/ia64/IA64minstate.h":
 				continue
 			if file == "check_style.py":
 				continue
 			if file == "configure":
-				continue
-			if file == "module/x86/op_model_p4.c":
 				continue
 
 			files.append(file)
 
 		files = dict([(x,None) for x in files]).keys()
  
+		files.sort()
 		return files
 
 	if len(args) == 0:
