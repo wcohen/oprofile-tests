@@ -365,6 +365,8 @@ def parse_options(argv):
 				continue
 			if file == "configure":
 				continue
+			if file == "module/x86/op_model_p4.c":
+				continue
 
 			files.append(file)
 
