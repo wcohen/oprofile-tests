@@ -348,7 +348,7 @@ sample filename from the profile specification merge specification are applied.
 	--exclude-dependent (-x)
 	--merge <merge spec> (-m)
 	--no-header FIXME shortcut for this and below (-n,-h are available)
-	--short-filename
+	--long-filenames
 	--accumulated
 	--reverse-sort (-r)
 	--global-percent
@@ -466,9 +466,9 @@ as follows :
 5.22 --no-header
 	remove all header line from output
 
-5.23 --short-filename
-	for all filename in output use the basename ('ile' output specifier, if
-	used, become 'ILE')
+5.23 --long-filenames
+	for all filename in output use the full path instead of the
+	basenames ('ILE' output specifier, if used, become 'ile')
 
 5.24 --accumulated
 	all samples count or cumulated samples count will show the accumulated
