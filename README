@@ -1,7 +1,12 @@
 This is currently just a placeholder. It will contain
-some tests for the post-profiling code to check for regressions.
+some tests for the post-profiling code to check for regressions
+and test to easier understand how work some part of the profiler
 
 Ideas on how to set up the testing harness are welcome.
 
 thanks
 john
+
+The directory understanding contains test not intended to be runned
+automatically but rather to provide an easier way to understand
+some sub-part of the profiler.
