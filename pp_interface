@@ -5,7 +5,7 @@ Beta.
 
 Please don't re-number item in this file as code comment refer this number.
  
-General FIXME: call graphs - for a later spec ?
+General FIXME: call graph stuff
 
 
 1. Basic principles
@@ -352,6 +352,7 @@ sample filename from the profile specification merge specification are applied.
 	--symbols (-l)
 	--debug-info (-g)
 	--details (-d)
+	--compare (-u)
 	--sort <sort spec> (-s)
 	--include-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
@@ -362,7 +363,7 @@ sample filename from the profile specification merge specification are applied.
 	--accumulated (-c)
 	--reverse-sort (-r)
 	--global-percent (N/A)
-	--xml-output  (FIXME --xml)
+	--xml (FIXME)
 	--output-file (-o)
 	<profile spec>
 
@@ -382,7 +383,8 @@ by -i, -e, -s, -o.
  
 	FIXME: we don't show 0-sampled symbols as of now. Should we ? oprofpp did.
 
-5.7	--xml-output
+5.7	--xml
+
 	Reserved for now, and will be specified later.
 
 5.8 	The default output specifier is 'vspn'. If the set of selected samples
@@ -441,8 +443,11 @@ by -i, -e, -s, -o.
 
 Unlike the single-profile tools, it can be useful for us to not auto-merge
 profile specs giving more than one profile result. Two profiles of the same
-thing on CPU #0, and CPU #1, we might want to keep separate in the summary.  So
-we don't do it by default for opreport, but allow the user to specify merges
+thing on CPU #0, and CPU #1, we might want to keep separate in the summary.
+
+FIXME: is this section above just describing --compare ?
+
+So we don't do it by default for opreport, but allow the user to specify merges
 as follows :
 
 	cpu
@@ -486,6 +491,20 @@ as follows :
 5.28 --output-file <filename>
 	send all output to filename rather to stdout, this is just an
 	alternative to opreport .... > filename
+
+5.29 --compare
+
+When using this option, a profile spec that identifies multiple profiles
+is used to provide side-by-side output. In image mode, this repeats each
+count, percent, and image name. In symbol mode, this repeats count, percent,
+symbol name, and debug info. Each repeated section gets a repeated subheader,
+for example :
+
+	samples count symbol    samples count symbol
+        |---- tid 454 -----|    |----- tid 453 ----|
+
+or something similar. The profile spec elements that can be separated
+comparatively are: tid, tgid, cpu, event, unit mask (?), session (?)
 
 6. opgprof
 -----------
