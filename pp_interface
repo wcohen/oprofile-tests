@@ -124,7 +124,11 @@ Here's a complete list of tags :
 		"image:" is default tag, allowing old-style "opreport /usr/bin/oprofiled"
 		The above shortcut don't work if user try to profile a binary
 		with a ':' imbedded in filename or path name, in this case
-		complete syntax image:image_name must be used.
+		complete syntax image:image_name must be used. FIXME: must
+		we assume than invalid_tag_name:value is a binary name. Cons
+		is code simplification (and better error message ?) Pro is
+		easier to use for guys using ':' in filename (and smallest
+		documentation ?)
 
 3.8	image-exclude: <imagelist> 
 		Comma list of images to exclude from the final list
