@@ -189,10 +189,12 @@ We need to encode a number of the above things in the filename.
 
 3.19 The format is
 
-$SAMPLES_DIR/session/{root}/path/to/binary/event.count.unitmask.tgid.tid.cpu
+$SAMPLES_DIR/session/{root}/path/to/binary/{dep}/{root}/path/to/binary/event.count.unitmask.tgid.tid.cpu
 $SAMPLES_DIR/session/{root}/path/to/binary/{dep}/{root}/path/to/lib/event.count.unitmask.tgid.tid.cpu
 
-The latter is to be used when using --separate=lib (or with kernel, perhaps with {kern})
+The latter is to be used when using --separate=lib (or with kernel, perhaps with {kern}). Note the former always encode the {dep} even not strictly needed,
+a sample file is a dependant it's a cg file and {cg} part != {dep} part or
+if {dep} is different 'first' part.
 
 (in decimal where relevant) 
 For example,
@@ -220,7 +222,7 @@ value "all", which matches any value
 which will contain the 2.5 modules and the vmlinux file when profiling
 with --no-vmlinux,  e.g :
 
-$SAMPLES_DIR/current/{kern}/oprofile/CPU_CLK_UNHALTED.30000.0.434.434.0
+$SAMPLES_DIR/current/{kern}/oprofile/{dep}/{kern}/oprofile/CPU_CLK_UNHALTED.30000.0.434.434.0
 $SAMPLES_DIR/current/{root}/bin/ls/{dep}/{kern}/oprofile/CPU_CLK_UNHALTED.30000.0.434.434.0
 
   {kern} can be followed only by a single path component. The name following
@@ -234,8 +236,8 @@ to other filename
 
 3.25 To clarify things here are the four allowed form of samples filename
 
-{root}/path/to/bin/CPU_CLK_UNHALTED.100000.255.33.34.0
-{kern}/name/CPU_CLK_UNHALTED.100000.255.33.34.0
+{root}/path/to/bin/{dep}/{root}/path/to/bin/CPU_CLK_UNHALTED.100000.255.33.34.0
+{kern}/name/{dep}/{kern}/name/CPU_CLK_UNHALTED.100000.255.33.34.0
 {root}/path/to/bin/{dep}/{root}/path/to/lib/CPU_CLK_UNHALTED.100000.255.33.34.0
 {root}/path/to/bin/{dep}/{kern}/name/CPU_CLK_UNHALTED.100000.255.33.34.0
 
