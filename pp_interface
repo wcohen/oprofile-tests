@@ -532,9 +532,9 @@ file (shared lib/module etc) only if neccessary
 née op_to_source. Our basic source / asm annotation tool.
 
 7.1 opannotate
-	--source-dir <dir> (-d)
 	--output-dir <dir> (-o)
-	--base-dir <dir> (-b)
+	--search-dirs <dirs> (-d)
+	--base-dirs <dirs> (-b)
 	--include-file <filelist> (N/A)
 	--exclude-file <filelist> (N/A)
 	--source (-s)
@@ -564,14 +564,14 @@ née op_to_source. Our basic source / asm annotation tool.
 
 7.3 --source
 
-	specifies the source-based per-file annotation. --source-dir is
-	used to find the source when debug info is relative. When --base-dir
-	is specified, then only files in that dir or a subdirectory are generated.
-	In the absence of --base-dir, this defaults to the value of --source-dir
+	specifies the source-based per-file annotation. --search-dirs is
+	used to find the source when debug info is relative. When --base-dirs
+	is specified, a matching prefix is stripped, and then the remaining
+	path is looked for in the given --search-dirs. --search-dirs is required
+	if --base-dirs is specified.
 	The directory structure of the source is replicated under --output-dir,
-	with annotated files of the same name as the source file.
-	Specifying a --source-dir == --output-dir is an error. Samples
-	in files outside of --source-dir are ignored with a message.
+	with annotated files of the same name as the source file, and with full paths.
+	Specifying a --source-dir == --output-dir is an error.
 
 7.4 The source annotation works by prefixing all lines with a certain size comment, e.g.
 
