@@ -144,11 +144,6 @@ Here's a complete list of tags :
 	
 		'image:/usr/bin/oprofiled,*op*,./oprofpp'
 
-		"image:" is default tag, allowing old-style "opreport /usr/bin/oprofiled"
-		if an image name is "valid_tag:xxx" above shortcut doesn't
-		work and user must use image:valid_tag:xxxx, the same ambiguity
-		occur if image name is an alias, see 4.4
-
 3.8	image-exclude: <imagelist> 
 		Comma list of images to exclude from the final list
 
@@ -195,6 +190,13 @@ globbing.
 We can use cpu,tgid,tid,event,count,unit-mask formats as parameters
 to the daemon too. But we must allow multiple event,count pairs
 so the syntax must be different.
+
+3.18	default tag
+		non option and non valid tag value are taken as "image name"
+		but match as with image: *or* with lib-image:
+		if an image name is "valid_tag:xxx" above shortcut doesn't
+		work and user must use image:valid_tag:xxxx, the same ambiguity
+		occur if image name is an alias, see 4.4
 
 Sample file mangling
 --------------------
@@ -481,10 +483,19 @@ Split off the gprof dumping part of old oprofpp, since it didn't really
 fit.
 
 6.1 opgprof
-	--gprof-file (-o) <file>
+	--gprof-file <file>
+	-output-file (-o) filename
 	<profile spec>
 
-6.2 Default to gmon.out, making a back up if it exists already 
+6.2 --output-file filename
+	set the output filename, if not specified output filename is gmon.out
+	FIXME: must we backup gmon.out if existing, I think not
+
+6.3 <file>
+	acts as 3.18
+
+6.4 opgrof do automatic merging on the set selected sample filename, it's an
+error if more than one unmergeable profile exists
  
 7. opannotate
 --------------
