@@ -128,8 +128,65 @@ camel_ok = [
 	"isNull",
 ]
 
-def err(file, nr, message):
+false_positives = [
+" * @remark Idea comes from TextFilt project <http://textfilt.sourceforge.net>",
+"		   << \"Read http://oprofile.sf.net/faq/#binutilsbug\\n\";",
+"	To value;",
+"template <typename To, typename From>",
+"To op_lexical_cast(From const & src)",
+"string const begin_comment(\"/* \");",
+"	if ((pmc0 & ~0x1UL) != 0UL) {",
+"		if (sscanf(line, \"cycle frequency [Hz] : %lu\", &uval) == 1) {",
+"	{ \"//\", \"/\" },",
+"	{ \"//usr\", \"/usr\" },",
+"	{ \"///\", \"/\" },",
+"	{ \"/usr///\", \"/usr\" },",
+"	// \"////usr\" must return \"/\"",
+"template <typename Input, typename Output>",
+"	Input input;",
+"	Output output;",
+"template <typename Input, typename Output, typename Result>",
+"static void check_result(char const * fct_name, Input const & input,",
+"		  Output const & output, Result const & result)",
+"static void check_result(char const * fct_name, Input const & input1,",
+"	Input input2, Output const & output, Result const & result)",
+"#define APIC_TDCR			0x3E0",
+"#define APIC_TDR_DIV_1			0xB",
+"#define APIC_DEFAULT_PHYS_BASE		0xfee00000",
+"#define APIC_SPIV			0xF0",
+"#define MSR_IA32_APICBASE 0x1B",
+"#define GET_APIC_VERSION(x)	((x)&0xFF)",
+"#define GET_APIC_MAXLVT(x)	(((x)>>16)&0xFF)",
+"#define APIC_INTEGRATED(x)	((x)&0xF0)",
+"#define CCCR_RESERVED_BITS 0x38030FFF",
+" *			// do something",
+"			if (it->sample.vma & ~0xffffffffLLU) {",
+"	address = *(unsigned short *)phys_to_virt(0x40E);",
+"		smp_scan_config(0xF0000,0x10000)) {",
+"	return sum & 0xFF;",
+"		      << \" valid range is [\" << OP_MIN_BUF_SIZE << \", \"",
+"		      << \" valid range is [\" << OP_MIN_NOTE_TABLE_SIZE << \", \"",
+"		       \"ftp://ftp.compaq.com/pub/products/alphaCPUdocs/alpha_arch_ref.pdf\\n\");",
+"			    << cfg.count << \" must be in [ \"",
+"			     << \" allowed range: [0-100]\" << endl;",
+"	catch (Catch const &) {",
+"		throw Throw(\"\");",
+"template <class Throw, class Catch>",
+"	{ \"//////\", \"/\" },",
+"	{ \"///usr\", \"/\" },",
+"	{ \"///usr/dir\", \"///usr\" },",
+"	{ \"///usr\", \"usr\" },",
+"	{ \"///usr/dir\", \"dir\" },",
+"	{ \"///usr//dir\", \"dir\" },",
+"	{ \".//.//\" \"file_manip_tests.o\", \"file_manip_tests.o\" },",
+]
+
+def err(file, nr, line, message):
 	global total_errors
+
+	for false in false_positives:
+		if false == line.splitlines()[0]:
+			return
 
 	if opt.count:
 		total_errors = total_errors + 1
@@ -148,11 +205,11 @@ def check_camel(file, nr, line):
 		if line.find(word) != -1:
 			return
 
-	err(file, nr, "camelCase")
+	err(file, nr, line, "camelCase")
 
 def check_indentation(file, nr, line, prev_line):
 	if open_indent.match(prev_line):
-		err(file, nr, "logical indentation with spaces")
+		err(file, nr, line, "logical indentation with spaces")
 		return
 
 	# hacky as you like
@@ -172,7 +229,7 @@ def check_indentation(file, nr, line, prev_line):
 	close = prev_line.count(')')
 
 	if open <= close:
-		err(file, nr, "possible logical indentation with spaces")
+		err(file, nr, line, "possible logical indentation with spaces")
 
 def check_trailing_comment(file, nr, line):
 	if endif.match(line) or elseif.match(line):
@@ -182,7 +239,7 @@ def check_trailing_comment(file, nr, line):
 	if namespace_close.match(line):
 		return
 
-	err(file, nr, "trailing comment")
+	err(file, nr, line, "trailing comment")
 
 in_comment = False
 
@@ -215,11 +272,11 @@ def check_line(file, nr, line, prev_line):
 		check_indentation(file, nr, line, prev_line)
 
 	if opt.check_length and len(line) > 80:
-		err(file, nr, "warning: line is of length %d" % len(line))
+		err(file, nr, line, "warning: line is of length %d" % len(line))
 
 	for regexp, error in simple_regexps:
 		if regexp.match(line):
-			err(file, nr, error)
+			err(file, nr, line, error)
 
 def check_file(filename):
 	file = open(filename, 'r')
@@ -283,6 +340,18 @@ def parse_options(argv):
 			if string.find(file, ".S") != -1:
 				continue
 
+			if file == "config.h":
+				continue
+			if file == "utils/opcontrol":
+				continue
+			if file == "gui/ui/oprof_start.base.moc.cpp":
+				continue
+			if file == "gui/oprof_start.moc.cpp":
+				continue
+			if file == "gui/ui/oprof_start.base.h":
+				continue
+			if file == "gui/ui/oprof_start.base.cpp":
+				continue
 			if file == "daemon/liblegacy/p_module.h":
 				continue
 			if file == "module/ia64/IA64syscallstub.h":
