@@ -72,7 +72,7 @@ simple_regexps = [
 	( re.compile(".*! "), "extra space after negation"),
 	( re.compile(r".*(?<!delete) \["), "extra space before square bracket"),
 	( re.compile(r".*\( [^;]"), "extra space after open bracket"),
-	( re.compile(r".* \)"), "extra space before close bracket"),
+	( re.compile(r"[^;]* \)"), "extra space before close bracket"),
 	( re.compile(r".*\){"), "missing space between bracket and brace"),
 	( re.compile(".*const\s%s\s%s" % (identifier, rop)), "'const' modifier in wrong place"),
 ]
