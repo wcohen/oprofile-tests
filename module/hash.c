@@ -25,7 +25,6 @@ static __inline unsigned int op_hash(u32 eip, u16 pid, int ctr)
 		 (pid << LSHIFT_PID) ^ 
 		 (eip << LSHIFT_EIP_2) ^ 
 		 (ctr << LSHIFT_CTR)) & (OP_DEFAULT_HASH_SIZE - 1);
-
 }
 
 /** maximum number of counters, up to 4 for Athlon (18 for P4). The primary
