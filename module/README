@@ -1,9 +1,0 @@
-samples.dat : the dump of count/pid/eip as a struct op_sample. This samples
-file is the result of profiling at CPU_CLK_UNHALTED at 300000 a kernel
-compilation + some minor things in foreground (emacs etc.)
-
-diff-produce-samples : a diff between the main line and the oprofile
-version used to dump the samples to disk. Mainly as reference if you want
-to produce your own samples data file.
-
-later I'll add the test function by extracting them from oprofile.c
