@@ -69,7 +69,7 @@ static void do_test(void)
 	int i, j;
 
 	for (i = 1000 ; i <= 1000000 ; i *= 10) {
-		for (j = 100 ; j <= i / 10 ; j *= 10) {
+		for (j = 100 ; j <= i / 1 ; j+=1) {
 			if (test(i, j)) {
 				printf("%s:%d failure for %d %d\n",
 				       __FILE__, __LINE__, i, j);

@@ -14,7 +14,7 @@ page_idx_t add_page(root_t * root)
 		unsigned int old_size = root->size;
 		unsigned int pos;
 
-#if 0
+#if 1
 		root->size = root->size ? root->size * 2 : 1;
 		root->base_area =
 			realloc(root->base_area, root->size * sizeof(page_t));
@@ -33,11 +33,13 @@ page_idx_t add_page(root_t * root)
 					       PROT_READ | PROT_WRITE,
 					       MAP_PRIVATE | MAP_ANON, -1, 0);
 		}
-		printf("%p %d\n", root->base_area, root->size);
 		if (root->base_area == MAP_FAILED) {
 			printf("%s\n", strerror(errno));
 			exit(1);
 		}
+
+		memset(&root->base_area[old_size], '\0',
+		       (old_size == 0 ? 1 : old_size) * sizeof(page_t));
 #endif
 
 		for (pos = old_size ; pos < root->size ; ++pos) {
@@ -48,15 +50,12 @@ page_idx_t add_page(root_t * root)
 			 * page_nr_to_page_ptr can trigger an assertion ! */
 			page = &root->base_area[pos];
 //			page = page_nr_to_page_ptr(root, pos);
-			printf("pos %d\n", pos);
 			page->p0 = nil_page;
 			for (count = 0 ; count < MAX_PAGE ; ++count) {
 				page->page_table[count].child_page = nil_page;
 			}
 		}
 	}
-
-	printf("return %d\n", root->current_size);
 
 	return (page_idx_t)root->current_size++;
 }
