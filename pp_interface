@@ -339,19 +339,19 @@ sample filename from the profile specification merge specification are applied.
 
 5.1 opreport <flags> <profile-spec>
 	--symbols (-l)
-	--debug-info (-b)
-	--details (-a)
+	--debug-info (-g)
+	--details (-d)
 	--threshold <threshold> (-t)
 	--sort <sort spec> (-s)
 	--include-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
 	--exclude-dependent (-x)
 	--merge <merge spec> (-m)
-	--no-header FIXME shortcut for this and below (-n,-h are available)
-	--long-filenames
-	--accumulated
+	--no-header (-n)
+	--long-filenames (-f)
+	--accumulated (-c)
 	--reverse-sort (-r)
-	--global-percent
+	--global-percent (-p)
 	--xml-output  (FIXME --xml)
 	--output-file (-o)
 	<profile spec>
