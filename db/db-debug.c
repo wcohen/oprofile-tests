@@ -130,8 +130,9 @@ static int do_check_tree(const root_t * root, page_idx_t page_nr,
 		do_check_tree(root, page->p0, last);
 
 	for (i = 0 ; i < page->count ; ++i) {
-		if (page->page_table[i].key <= last)
+		if (page->page_table[i].key <= last) {
 			return 1;
+		}
 		last = page->page_table[i].key;
 		if (page->page_table[i].child_page != nil_page)
 			if (do_check_tree(root, page->page_table[i].child_page,

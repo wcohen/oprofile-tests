@@ -25,7 +25,7 @@ static void speed_test(unsigned int nr_item, unsigned int nr_unique_item)
 	init_root(&root);
 	begin = user_time();
 	for (i = 0 ; i < nr_item ; ++i) {
-		insert(&root, random() % nr_unique_item, 1);
+		insert(&root, (random() % nr_unique_item) + 1, 1);
 	}
 	end = user_time();
 	delete_root(&root);
@@ -54,7 +54,7 @@ static int test(unsigned int nr_item, unsigned int nr_unique_item)
 	init_root(&root);
 
 	for (i = 0 ; i < nr_item ; ++i) {
-		insert(&root, random() % nr_unique_item, 1);
+		insert(&root, (random() % nr_unique_item) + 1, 1);
 	}
 
 	ret = check_tree(&root);
@@ -91,8 +91,7 @@ static void call_back(unsigned int key, unsigned int info, void * data)
 		nr_error++;
 	}
 
-	if (key < range_first || key >= range_last)
- {
+	if (key < range_first || key >= range_last) {
 		printf("%x %x %x\n", key, range_first, range_last);
 		nr_error++;
 	}
