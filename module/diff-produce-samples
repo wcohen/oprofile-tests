@@ -1,31 +1,11 @@
 ? doc/oprofile.html
-Index: op_user.h
-===================================================================
-RCS file: /cvsroot/oprofile/oprofile/op_user.h,v
-retrieving revision 1.21
-diff -u -r1.21 op_user.h
---- op_user.h	22 Mar 2002 21:18:43 -0000	1.21
-+++ op_user.h	26 Apr 2002 01:09:48 -0000
-@@ -79,10 +79,10 @@
- #define OP_MIN_HASH_SIZE 256
- 
- /** 32768 * 8 = 262144 bytes default */
--#define OP_DEFAULT_BUF_SIZE 32768
-+#define OP_DEFAULT_BUF_SIZE 32768*16
- /** we don't try to wake-up daemon until it remains more than this free entry
-  * in eviction buffer */
--#define OP_PRE_WATERMARK 2048
-+#define OP_PRE_WATERMARK 2048*64
- /** maximum number of entry in samples eviction buffer */
- #define OP_MAX_BUF_SIZE	1048576
- /** minimum number of entry in samples eviction buffer */
 Index: dae/oprofiled.c
 ===================================================================
 RCS file: /cvsroot/oprofile/oprofile/dae/oprofiled.c,v
 retrieving revision 1.71
 diff -u -r1.71 oprofiled.c
 --- dae/oprofiled.c	20 Mar 2002 21:19:42 -0000	1.71
-+++ dae/oprofiled.c	26 Apr 2002 01:09:49 -0000
++++ dae/oprofiled.c	26 Apr 2002 12:53:10 -0000
 @@ -593,6 +593,7 @@
   */
  void opd_do_samples(const struct op_sample *opd_buf, size_t count)
@@ -40,7 +20,7 @@ diff -u -r1.71 oprofiled.c
  	sigprocmask(SIG_UNBLOCK, &maskset, NULL);
 +#else
 +	FILE * fp = fopen("incoming_samples.dat", "a+");
-+	fwrite(opd_buf, sizeof(struct op_sample), count, fp);
++	fwrite(opd_buf, 1, count, fp);
 +	fclose(fp);
 +#endif
  }
@@ -52,7 +32,7 @@ RCS file: /cvsroot/oprofile/oprofile/module/oprofile.c,v
 retrieving revision 1.46
 diff -u -r1.46 oprofile.c
 --- module/oprofile.c	2 Mar 2002 01:25:18 -0000	1.46
-+++ module/oprofile.c	26 Apr 2002 01:09:50 -0000
++++ module/oprofile.c	26 Apr 2002 12:53:10 -0000
 @@ -125,6 +125,7 @@
  void op_do_profile(uint cpu, struct pt_regs *regs, int ctr)
  {
