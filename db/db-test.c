@@ -8,7 +8,7 @@
 
 static int nr_error;
 
-static double user_time()
+static double user_time(void)
 {
   struct rusage  usage;
 
@@ -20,11 +20,11 @@ static double user_time()
 /* create nr item randomly created with nr_unique_item distinct items */
 static void speed_test(size_t nr_item, size_t nr_unique_item)
 {
-	int i;
+	size_t i;
 	double begin, end;
 	db_tree_t tree;
 
-	db_open(&tree, TEST_FILENAME, 128, 0);
+	db_open(&tree, TEST_FILENAME, 128);
 	begin = user_time();
 	for (i = 0 ; i < nr_item ; ++i) {
 		db_insert(&tree, (random() % nr_unique_item) + 1, 1);
@@ -51,11 +51,11 @@ static void do_speed_test(void)
 
 static int test(size_t nr_item, size_t nr_unique_item)
 {
-	int i;
+	size_t i;
 	db_tree_t tree;
 	int ret;
 
-	db_open(&tree, TEST_FILENAME, 128, 0);
+	db_open(&tree, TEST_FILENAME, 128);
 
 
 	for (i = 0 ; i < nr_item ; ++i) {
@@ -93,6 +93,8 @@ static db_key_t range_first, range_last;
 static db_key_t last_key_found;
 static void call_back(db_key_t key, db_value_t info, void * data)
 {
+	if (&info) {} if (&data) {}	/* suppress unused parameters */
+
 	if (key <= last_key_found) {
 		printf("%x %x\n", key, last_key_found);
 		nr_error++;
@@ -106,14 +108,14 @@ static void call_back(db_key_t key, db_value_t info, void * data)
 	last_key_found = key;
 }
 
-static int callback_test(int nr_item, int nr_unique_item)
+static int callback_test(size_t nr_item, size_t nr_unique_item)
 {
-	int i;
+	size_t i;
 	db_tree_t tree;
 	db_key_t first_key, last_key;
 	int old_nr_error = nr_error;
 
-	db_open(&tree, TEST_FILENAME, 128, 0);
+	db_open(&tree, TEST_FILENAME, 128);
 
 	for (i = 0 ; i < nr_item ; ++i) {
 		db_insert(&tree, (random() % nr_unique_item) + 1, 1);

@@ -1,14 +1,21 @@
-CFLAGS=-O2 -Wall -pedantic -g -fomit-frame-pointer
+# Generated automatically from Makefile.in by configure.
+AR=ar
+
+CFLAGS=-Wall -Wstrict-prototypes -pipe -Wunused -W -Wshadow -Wmissing-prototypes -Winline -g -O2
 CFLAGS+=-DNDEBUG
 
-.PHONY: db-test clean
+.PHONY: clean
 
-all: db-test
+all: libdb.a db-test
 
 clean:
-	rm -f *.o *~ db-test
+	rm -f *.o *~ db-test libdb.a
 
-db-test: db-insert.o db-manage.o db-travel.o db-debug.o db-test.o
+libdb.a: db-insert.o db-manage.o db-travel.o db-debug.o
+	rm -f $@
+	$(AR) cr $@ $^
+
+db-test: db-test.o libdb.a
 	$(CC) $(CFLAGS) $^ -o $@
 
 ALL_SOURCES = db-insert.c db-manage.c db-travel.c db-debug.c db-test.c

@@ -12,7 +12,7 @@
 
 static __inline db_descr_t * db_to_descr(db_tree_t * tree)
 {
-	return (db_descr_t*)(((char *)tree->base_memory) + tree->offset_descr);
+	return (db_descr_t*)(((char*)tree->base_memory) + tree->sizeof_header);
 }
 
 static __inline db_page_t * db_to_page(db_tree_t * tree)
@@ -82,16 +82,15 @@ db_page_idx_t db_add_page(db_tree_t * tree)
 	(4096 - offset_page) / sizeof(db_page_t) ?		\
 	(4096 - offset_page) / sizeof(db_page_t) : 1 
 
-void db_open(db_tree_t * tree, const char * filename, size_t offset_page,
-	     size_t offset_descr)
+void db_open(db_tree_t * tree, const char * filename, size_t sizeof_header)
 {
 	struct stat stat_buf;
 	size_t nr_page;
 
 	memset(tree, '\0', sizeof(db_tree_t));
 
-	tree->offset_page = offset_page;
-	tree->offset_descr = offset_descr;
+	tree->offset_page = sizeof_header + sizeof(db_descr_t);
+	tree->sizeof_header = sizeof_header;
 
 	tree->fd = open(filename, O_RDWR | O_CREAT, 0644);
 	if (tree->fd < 0) {
@@ -114,14 +113,14 @@ void db_open(db_tree_t * tree, const char * filename, size_t offset_page,
 
 		nr_page = DEFAULT_PAGE_NR(tree->offset_page);
 
-		file_size = offset_page + (nr_page * sizeof(db_page_t));
+		file_size = tree->offset_page + (nr_page * sizeof(db_page_t));
 		if (ftruncate(tree->fd, file_size)) {
 			fprintf(stderr, "unable to resize file %s to %d "
 				"length, cause : %s\n",
 				filename, file_size, strerror(errno));
 		}
 	} else {
-		nr_page = (stat_buf.st_size - offset_page) / sizeof(db_page_t);
+		nr_page = (stat_buf.st_size - tree->offset_page) / sizeof(db_page_t);
 
 		if (nr_page != tree->descr->size) {
 			fprintf(stderr, "nr_page != tree->descr->size\n");

@@ -211,7 +211,7 @@ static int do_insert(db_tree_t * tree, db_page_idx_t page_idx,
 		     db_item_t * excess_elt, db_item_t * value)
 {
 	int need_reorg;
-	int pos;
+	size_t pos;
 	db_page_idx_t child_page_idx;
 	db_page_t * page;
 

@@ -27,7 +27,7 @@ void db_display_tree(const db_tree_t * tree)
 	do_display_tree(tree, tree->descr->root_idx);
 }
 
-static void do_raw_display_tree(const db_tree_t * tree, int page_idx)
+static void do_raw_display_tree(const db_tree_t * tree)
 {
 	size_t i;
 	printf("tree root %d\n", tree->descr->root_idx);
@@ -49,14 +49,14 @@ static void do_raw_display_tree(const db_tree_t * tree, int page_idx)
 
 void db_raw_display_tree(const db_tree_t * tree)
 {
-	do_raw_display_tree(tree, tree->descr->root_idx);
+	do_raw_display_tree(tree);
 }
 
 static int do_check_page_pointer(const db_tree_t * tree,
 				 db_page_idx_t page_idx, int * viewed_page)
 {
 	int ret;
-	int i;
+	size_t i;
 	const db_page_t * page;
 
 	if (page_idx == db_nil_page)

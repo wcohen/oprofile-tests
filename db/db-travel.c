@@ -6,7 +6,7 @@ static void do_travel(const db_tree_t * tree, db_page_idx_t page_idx,
 		      db_key_t first, db_key_t last,
 		      db_travel_callback callback, void * data)
 {
-	int pos;
+	size_t pos;
 	db_page_t * page;
 	db_page_idx_t child_page_idx = db_nil_page;
 

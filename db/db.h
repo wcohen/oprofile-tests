@@ -58,17 +58,17 @@ typedef struct {
 	size_t size;			/*< in page nr */
 	size_t current_size;		/*< nr used page */
 	db_page_idx_t root_idx;		/*< the root page index */
+	int padding[5];			/*< for padding and future use */
 } db_descr_t;
 
 /** a "database". this is an in memory only description.
  *
- * The mmaped file must contain a db_descr_t struct which manage the current
- * state of memory allocation (base pointer, root_idx etc.) the point here
- * is to allow using this library w/o knowning the offset inside the mapped
- * file of management data or the page base memory offset. A typical is use is:
+ * We allow to manage a database inside a mapped file with an "header" of 
+ * unknown so db_open get a parameter to specify the size of this header.
+ * A typical is use is:
  *
- * struct header { int etc; ... struct db_descr_t descr; .... };
- * db_open(&tree, filename, offsetof(header, descr), sizeof(header));
+ * struct header { int etc; ... };
+ * db_open(&tree, filename, sizeof(header));
  * so on this library have no dependency on the header type.
  */
 typedef struct {
@@ -76,7 +76,7 @@ typedef struct {
 	fd_t fd;			/*< file descriptor of the maped mem */
 	void * base_memory;		/*< base memory of the maped memory */
 	db_descr_t * descr;		/*< the current state of database */
-	size_t offset_descr;		/*< from base_memory to descr */
+	size_t sizeof_header;		/*< from base_memory to descr */
 	size_t offset_page;		/*< from base_memory to page_base */
 	size_t is_locked;		/*< is fd already locked */
 } db_tree_t;
@@ -93,8 +93,8 @@ typedef struct {
  * a file containing an header such as opd_header. db_open always preallocate
  * a few number of page
  */
-void db_open(db_tree_t * tree, const char * filename, size_t offset_page,
-	     size_t offset_descr);
+void db_open(db_tree_t * tree, const char * filename, size_t sizeof_header);
+
 /**
  * \param tree the data base to close
  */
@@ -132,7 +132,7 @@ void db_travel(const db_tree_t * tree, db_key_t first, db_key_t last,
 static __inline db_page_t * page_nr_to_page_ptr(const db_tree_t * tree,
 						db_page_idx_t page_nr)
 {
-	assert(page_nr < tree->current_size);
+	assert(page_nr < tree->descr->current_size);
 	return &tree->page_base[page_nr];
 }
 
