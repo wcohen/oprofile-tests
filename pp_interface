@@ -173,11 +173,9 @@ Here's a complete list of tags :
 3.14	cpu: <cpulist>
 		Comma-separated list of cpu numbers to consider
 
-3.15	pid: <pidlist>
-		Comma list of pid's to consider. This defines a thread group
-		including all child threads (task->tgid)
-
-FIXME: tgid should also be accepted for this ?
+3.15	tgid: <tgidlist>
+		Comma list of tgid's to consider. This defines a set of thread
+		group including all child threads (task->tgid)
 
 3.16	tid: <tidlist>
 		A specific thread (task->tid)
