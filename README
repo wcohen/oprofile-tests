@@ -7,6 +7,6 @@ Ideas on how to set up the testing harness are welcome.
 thanks
 john
 
-The directory understanding contains test not intended to be runned
+The directory understanding contains test not intended to be run
 automatically but rather to provide an easier way to understand
 some sub-part of the profiler.

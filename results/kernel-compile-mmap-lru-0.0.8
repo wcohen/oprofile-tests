@@ -1,0 +1,153 @@
+the first run in each set of test is w/o --separate-samples,
+then with --separate-samples reserving 1.2 Gb, 1.4 Gb, 1.6Gb
+and 1.8 Gb of memory space in daemon. The first set is commented
+to clarify, under timing line information about number of mapping
+
+# real user system
+
+# kernel-compile.20020105-055556.out (3 run)
+1 1752.98 (0.00%) 1629.70 (0.00%) 99.12 (0.00%)
+
+# kernel-compile-300000.20020105-055556.out (3 run)
+2 1784.34 (1.79%) 1638.08 (0.51%) 100.83 (1.73%)  // w/o separate-samples
+Nr. mapping: 38 Nr. unmapping due to mapping failure: 0
+# kernel-compile-300000.20020104-224007.out (3 run)
+2 1803.75 (2.98%) 1639.21 (0.50%) 100.26 (2.99%)  // with separate 1.2Gb
+Nr. mapping: 118 Nr. unmapping due to mapping failure: 0
+# kernel-compile-300000.20020105-080720.out (3 run)
+2 1810.42 (3.42%) 1637.86 (0.39%) 101.83 (5.15%)  // ditto 1.4 Gb
+Nr. mapping: 123 Nr. unmapping due to mapping failure: 14
+# kernel-compile-300000.20020105-101917.out (3 run)
+2 1806.64 (3.16%) 1639.04 (0.54%) 100.97 (2.90%)  // ditto 1.6 Gb
+Nr. mapping: 264 Nr. unmapping due to mapping failure: 185
+# kernel-compile-300000.20020105-123118.out (3 run)
+2 1805.78 (3.03%) 1640.25 (0.65%) 99.34 (0.28%)   // ditto 1.8 Gb
+Nr. mapping: 1975 Nr. unmapping due to mapping failure: 1935
+
+# kernel-compile-100000.20020105-055556.out (3 run)
+3 1804.96 (2.97%) 1655.81 (1.60%) 100.24 (1.13%)
+Nr. mapping: 47 Nr. unmapping due to mapping failure: 0
+# kernel-compile-100000.20020104-224007.out (3 run)
+3 1821.40 (3.99%) 1654.83 (1.46%) 101.38 (4.14%)
+Nr. mapping: 134 Nr. unmapping due to mapping failure: 0
+# kernel-compile-100000.20020105-080720.out (3 run)
+3 1825.07 (4.26%) 1653.34 (1.34%) 103.26 (6.63%)
+Nr. mapping: 185 257 Nr. unmapping due to mapping failure: 72
+# kernel-compile-100000.20020105-101917.out (3 run)
+3 1819.48 (3.89%) 1653.26 (1.42%) 103.00 (4.97%)
+Nr. mapping: 552 Nr. unmapping due to mapping failure: 486
+# kernel-compile-100000.20020105-123118.out (3 run)
+3 1820.59 (3.87%) 1653.11 (1.44%) 103.71 (4.69%)
+Nr. mapping: 4834 Nr. unmapping due to mapping failure: 4800
+
+# kernel-compile-25000.20020105-055556.out (3 run)
+4 1866.12 (6.45%) 1715.98 (5.29%) 99.84 (0.73%)
+Nr. mapping: 56 Nr. unmapping due to mapping failure: 0
+# kernel-compile-25000.20020104-224007.out (3 run)
+4 1878.51 (7.25%) 1716.06 (5.21%) 100.62 (3.36%)
+Nr. mapping: 142 Nr. unmapping due to mapping failure: 0
+# kernel-compile-25000.20020105-080720.out (3 run)
+4 1880.20 (7.41%) 1715.57 (5.15%) 100.34 (3.61%)
+Nr. mapping: 231 Nr. unmapping due to mapping failure: 117
+# kernel-compile-25000.20020105-101917.out (3 run)
+4 1889.01 (7.86%) 1714.64 (5.18%) 101.45 (3.39%)
+Nr. mapping: 1060 Nr. unmapping due to mapping failure: 986
+# kernel-compile-25000.20020105-123118.out (3 run)
+4 1889.10 (7.78%) 1715.54 (5.27%) 101.51 (2.47%)
+Nr. mapping: 15337 Nr. unmapping due to mapping failure: 15295
+
+the error margin of system time/user time is very high (2%), the error
+margin of real time is < 0.3%. I can't explain why the error is so high.
+In any case increase of system time is counterbalanced by decrease
+of user time so the real time seems reliable. Older test show the same
+problem.
+
+results look like than --separate-samples have a sensible impact on performance
+but unmapping/mapping have no real effect.
+
+retaking the last:
+
+# kernel-compile-25000.20020105-123118.out (3 run)
+4 1889.10 (7.78%) 1715.54 (5.27%) 101.51 (2.47%)
+Nr. mapping: 15337 Nr. unmapping due to mapping failure: 15295
+
+the necessary address space to map all samples files was 836 Mb, remaining
+address space was 200 Mb so results look like than --separate-samples have
+a sensible impact on performance but unmapping/mapping have not a great effect
+at least until address space available is 20% of the total address space
+needed. Obviously that roughly measurement. But it's encouraging for cpu
+with many counter.
+
+-- 
+ 
+the same result as my last mail, adding one entry for 1.9 Gb reserved address space,
+removing for the 1.9 Gb test all sleep/dump in my script to test reliability of
+your wait for starting/stopping profiler in op_start/op_stop
+
+# real user system
+
+# kernel-compile.20020105-055556.out (3 run)
+1 1752.98 (0.00%) 1629.70 (0.00%) 99.12 (0.00%)
+
+# kernel-compile-300000.20020105-055556.out (3 run)
+2 1784.34 (1.79%) 1638.08 (0.51%) 100.83 (1.73%)  // w/o separate-samples
+Nr. mapping: 38 Nr. unmapping due to mapping failure: 0
+# kernel-compile-300000.20020104-224007.out (3 run)
+2 1803.75 (2.98%) 1639.21 (0.50%) 100.26 (2.99%)  // with separate 1.2Gb
+Nr. mapping: 118 Nr. unmapping due to mapping failure: 0
+# kernel-compile-300000.20020105-080720.out (3 run)
+2 1810.42 (3.42%) 1637.86 (0.39%) 101.83 (5.15%)  // ditto 1.4 Gb
+Nr. mapping: 123 Nr. unmapping due to mapping failure: 14
+# kernel-compile-300000.20020105-101917.out (3 run)
+2 1806.64 (3.16%) 1639.04 (0.54%) 100.97 (2.90%)  // ditto 1.6 Gb
+Nr. mapping: 264 Nr. unmapping due to mapping failure: 185
+# kernel-compile-300000.20020105-123118.out (3 run)
+2 1805.78 (3.03%) 1640.25 (0.65%) 99.34 (0.28%)   // ditto 1.8 Gb
+Nr. mapping: 1975 Nr. unmapping due to mapping failure: 1935
+# kernel-compile-300000.20020105-233924.out (3 run) // ditto 1.9 Gb
+2 1812.41 (3.43%) 1637.18 (0.44%) 102.00 (3.63%)
+Nr. mapping: 20578 Nr. unmapping due to mapping failure: 20562
+
+# kernel-compile-100000.20020105-055556.out (3 run)
+3 1804.96 (2.97%) 1655.81 (1.60%) 100.24 (1.13%)
+Nr. mapping: 47 Nr. unmapping due to mapping failure: 0
+# kernel-compile-100000.20020104-224007.out (3 run)
+3 1821.40 (3.99%) 1654.83 (1.46%) 101.38 (4.14%)
+Nr. mapping: 134 Nr. unmapping due to mapping failure: 0
+# kernel-compile-100000.20020105-080720.out (3 run)
+3 1825.07 (4.26%) 1653.34 (1.34%) 103.26 (6.63%)
+Nr. mapping: 185 257 Nr. unmapping due to mapping failure: 72
+# kernel-compile-100000.20020105-101917.out (3 run)
+3 1819.48 (3.89%) 1653.26 (1.42%) 103.00 (4.97%)
+Nr. mapping: 552 Nr. unmapping due to mapping failure: 486
+# kernel-compile-100000.20020105-123118.out (3 run)
+3 1820.59 (3.87%) 1653.11 (1.44%) 103.71 (4.69%)
+Nr. mapping: 4834 Nr. unmapping due to mapping failure: 4800
+# kernel-compile-100000.20020105-233924.out (3 run)
+3 1828.93 (4.37%) 1651.31 (1.30%) 105.01 (6.68%)
+Nr. mapping: 60941 Nr. unmapping due to mapping failure: 60925
+
+# kernel-compile-25000.20020105-055556.out (3 run)
+4 1866.12 (6.45%) 1715.98 (5.29%) 99.84 (0.73%)
+Nr. mapping: 56 Nr. unmapping due to mapping failure: 0
+# kernel-compile-25000.20020104-224007.out (3 run)
+4 1878.51 (7.25%) 1716.06 (5.21%) 100.62 (3.36%)
+Nr. mapping: 142 Nr. unmapping due to mapping failure: 0
+# kernel-compile-25000.20020105-080720.out (3 run)
+4 1880.20 (7.41%) 1715.57 (5.15%) 100.34 (3.61%)
+Nr. mapping: 231 Nr. unmapping due to mapping failure: 117
+# kernel-compile-25000.20020105-101917.out (3 run)
+4 1889.01 (7.86%) 1714.64 (5.18%) 101.45 (3.39%)
+Nr. mapping: 1060 Nr. unmapping due to mapping failure: 986
+# kernel-compile-25000.20020105-123118.out (3 run)
+4 1889.10 (7.78%) 1715.54 (5.27%) 101.51 (2.47%)
+Nr. mapping: 15337 Nr. unmapping due to mapping failure: 15295
+# kernel-compile-25000.20020105-233924.out (3 run)
+4 1921.12 (9.63%) 1715.86 (5.26%) 101.29 (2.91%)
+Nr. mapping: 198687 Nr. unmapping due to mapping failure: 198668
+
+regards,
+Phil
+
+
+
