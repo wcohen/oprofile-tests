@@ -114,14 +114,8 @@ we need to support each of these. My first idea is something like this :
 
 opreport session:run1 image:/usr/bin/oprofiled
 
-It's allowed to specify more than one time a tag and its value, all subsequent
-tag:value will overwrite the previous one. This scheme is simpler to code and
-can be usefull when used with alias. See section 4.
-
-FIXME: it's unclear if tag which allow list of item wouldn't be cumulative
-rather overwritting. Pro for cumulative is least suprise principle, if we allow
-list it's less suprising to cumulate, cons is overwrite seems more useful when
-used in conjunction with alias.
+It's not allowed to specify more than one time a tag and its value, all
+ subsequent tag:value are fatal error.
 
 Here's a complete list of tags :
 
@@ -191,8 +185,7 @@ globbing.
 		non option and non valid tag value are taken as "image name"
 		but match as with image: *or* with lib-image:
 		if an image name is "valid_tag:xxx" above shortcut doesn't
-		work and user must use image:valid_tag:xxxx, the same ambiguity
-		occur if image name is an alias, see 4.4
+		work and user must use image:valid_tag:xxxx.
 
 Sample file mangling
 --------------------
@@ -272,42 +265,9 @@ all others set to "*" (match on anything) by default
 		error
 }
 
-4. op_alias
------------
+4. Empty to preserve section numbering was op_alias
+---------------------------------------------------
 
-The above is rather tedious syntax, and is likely to stay that way
-even with improvements. So we can have a command line tool / config file, e.g. :
-
-4.1 # cat .oprofile/aliases
-run1-oprofiled session:run1 image:/usr/bin/oprofiled
-
-4.2 # opreport run1-oprofiled
- 
-for convenience. This is essentially a stored query facility ...
-
-4.3 Since tag:value on command line overwrite previously seen tag:value it's
-allowed to store in .oprofile/op_alias a complete set of tag and to overwrite
-some of them on command line.
-
-$ cat .oprofile/aliases
-all-lib libname:* tid:all tgid:all etc.
-$ opreport alias:all-lib tgid:137
-
-4.4 alias_name act as if the aliases line from .oprofile/aliases is inserted
-at the place of alias_name on command line.
-
-Note there is a potential ambiguity with:
-
-$ opreport name
-
-if name is a binary in the current directory and is a valid alias name, in such
-case name being an alias name is assumed.
-
-4.5 When an alias is used user must be notified probably by showing the new
-command line after substitution of the alias name
-
-FIXME: I don't think alias is that useful to be honest
- 
 5. opreport
 ------------
 
