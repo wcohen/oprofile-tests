@@ -317,6 +317,8 @@ née oprofpp.
 
 5.0 overall
 
+FIXME: s/dependent/library ?
+
 This tool is used for providing symbol-based summaries of a particular set
 of image (possibly including all image profiled). After selecting candidate
 sample filename from the profile specification merge specification are applied.
@@ -337,6 +339,7 @@ sample filename from the profile specification merge specification are applied.
 	--accumulated
 	--reverse-sort (-r)
 	--global-percent
+	--hide-dependent
 	--xml-output  (FIXME --xml)
 	<profile spec>
 
@@ -462,6 +465,9 @@ as follows :
 5.26 --global-percent
 	*add* one field to output to show samples count percent relative
 	to the whole samples count (add the 'q' or 'Q' output specifier)
+
+5.27 --hide-dependent
+	hide dependent output when using --include-dependent
 
 6. opgprof
 -----------
