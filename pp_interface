@@ -16,11 +16,31 @@ There are five basic things a user needs to specify to the post-profile tools :
 a) common options such as --help, --version
 b) specifications of which sample files to operate upon
 c) processing options (what gets included in the workings) 
-d) output and formatting options (what gets output, and how)
+d) output and formatting options (what gets output, and how) see 1.2
 e) "special" options 
 
 Of these, obviously a), and hopefully b) and some of c) can be universally
 shared between the interfaces.
+
+1.2 output fields specifier
+
+	In this document output specifier use the following code:
+
+	v       vma offset
+	s       nr samples
+	p       nr percent samples relative to owner symbol
+	q       nr percent samples details relative to owner application
+	n       symbol name
+	l       source file name and line nr
+	i       image name
+	e       owning application name
+
+	SPQ variant are the same but cumulated percentage
+
+	LIE use basename rather filename
+
+	This encoding is to easier specification but are not exposed to user
+
 
 2. Common basic options
 -----------------------
@@ -311,7 +331,6 @@ sample filename from the profile specification merge specification are applied.
 	--symbols (-l)
 	--debug-info (-b)
 	--details (-a)
-	--output <output spec> (-o) 
 	--threshold <threshold> (-t)
 	--include-dependent (-n)
 	--sort <sort spec> (-s)
@@ -343,14 +362,14 @@ by -i, -e, -s, -o.
 5.7	--xml-output
 	Reserved for now, and will be specified later.
 
-5.8 	The default format is vspn. If the set of selected samples file belong
-	to binary which belong to another binary (shared lib,  module) the
-	owning binary image name must be output. The following options also
-	modify the output :
+5.8 	The default output specifier is 'vspn'. If the set of selected samples
+	file belong to binary which belong to another binary (shared lib,
+	 module) the 'e' output specifier is added. The following options also
+	modify the output specifier :
 
 5.9	--debug-info
 
-	Shows line number and file information (equivalent to add 'L' output
+	Shows line number and file information (equivalent to add 'l' output
 	specifier)
 
 5.10	--details
@@ -363,7 +382,7 @@ by -i, -e, -s, -o.
 
 5.11	--include-dependent
 
-	add the 'i' format specifier
+	add the 'i' output specifier
 
 5.14 --sort <sortspec>
 
@@ -371,9 +390,9 @@ by -i, -e, -s, -o.
  
 	vma         vma offset
 	sample      nr samples
-	symnol      symbol name
+	symbol      symbol name
 	debug       source file name and line nr
-	image       image name (these two are useful for merged)
+	image       image name (this one is useful for merged)
  
 5.15 --ignore-symbols <symbollist>
 
@@ -436,19 +455,20 @@ FIXME: allow tgid and tid ?
 	remove all header line from output
 
 5.23 --short-filename
-	for all filename in output use the basename
+	for all filename in output use the basename ('ile' output specifier, if
+	used, become 'ILE')
 
 5.24 --accumulated
 	all samples count or cumulated samples count will show the accumulated
-	samples count
+	samples count ('spq' output specifier, if used, become 'SPQ')
 
 5.25 --reverse-sort
 	sort whatever in reverse
 
 5.26 --relative-percent={image,global}
 	*add* one or two field to output to show samples count percent relative
-	to image or global samples count. FIXME global is perhaps hard to
-	implement
+	to image or global samples count. image add the 'q' or 'Q' output
+	specifier. FIXME global is perhaps hard to implement
 
 6. opgprof
 -----------
