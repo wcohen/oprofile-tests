@@ -7,6 +7,9 @@ Please don't re-number item in this file as code comment refer this number.
  
 General FIXME: call graphs - for a later spec ?
 
+FIXME: missing e E output field in all place, but it don't make sense to allow
+them in all pp tools.
+
 1. Basic principles
 -------------------
 
@@ -40,19 +43,15 @@ shared between the interfaces.
 
 	Maybe we can have more fine-grained --debug later, but for now this will do
 
-2.5 --no-verbose
-
-	Default, for symmetry only 
-
-2.6 --no-demangle (n/a)
+2.5 --no-demangle (n/a)
 
 	We demangle by default. This is for avoiding demangler bugs and the like.
 
-2.7 --demangle (n/a)
+2.6 --demangle (n/a)
 
 	For symmetry only 
 
-2.8 --smart-demangle (-D)
+2.7 --smart-demangle (-D)
 
 	Use the smart demangler. Not the default.
 
@@ -350,8 +349,6 @@ by -i, -e, -s, -o.
 	i       image name (these two are useful for merged)
 	I       base name of image name
  
-	h       a leading header (not a field ...)
-	d       detailed samples for each selected symbol
 	x	reserved for XML output at some point
  
 
@@ -359,30 +356,28 @@ v,s,S,p,P,n,m,I,L,i,I :
  
 0x8004434 433 34343 0.3% 4.5% blah(int) blah_Qv /home/steve.c:3 steve.c:3 /home/steve steve 
  
-5.5 The 'h' output gives a leading free-form title describing the profile, and
-    column headers as appropriate.
- 
-5.6 For 'd', the columns are the same, except that the "symbol" fields may show
-    xmalloc+0x34, for example
-
 5.7 'x' is reserved for now, and will be specified later.
 
-5.8 The default format is hvspn. The following options modify this :
+5.8 The default format is vspn. The following options modify this :
 
 5.9	--debug
 
-	Shows line number and file information (equivalent to 'hvspnL')
+	Shows line number and file information (equivalent to 'vspnL')
 
 5.10	--details
 
-	Shows line number and file information, and per-address values
-	(equivalent to 'hvspnLd')
+	Shows per-address samples values not only per-symbol samples,
+	equivalent to 'vspnL' but the "symbol" fields may show
+	xmalloc+0x34, for example and some field can be omitted like
+	i, I, m from details lines but not from the symbol lines
 
 5.11	--include-dependent
 
-	Default format becomes 'hvspni'
+	Default format becomes 'vspni'
 
 5.12 Specification of either --debug OR --details AND --output is a fatal error.
+FIXME: remove 5.12 since now --debug and --details are modifier but not
+format specifier.
 
 5.13 Note: --help must output this information and document the default
  
@@ -515,6 +510,8 @@ This is to keep the line numbers the same.
 8. opsummary
 -------------
 
+FIXME: this section doen't contain an output format, is it intended ?
+
 nee op_time. This is used for either global symbol- or image-based summaries
 inside of one session only.
 
@@ -626,9 +623,10 @@ to the user to do this sensibly.
 	i       image name (these two are useful for merged)
 	I       base name of image name
  
-	h       a leading header (not a field ...)
-	d       detailed samples for each selected symbol
 	x	reserved for XML output at some point
+
+FIXME: I removed h and d specifier, there was probably a missing --details
+--debug option like for opreport.
  
 e.g. s is
 
