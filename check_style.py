@@ -40,7 +40,7 @@ arguments = "(\s%s\s,*\s)"
 lfe = "list_for_each[_a-z]*\s\(%s\)" % arguments
 control_keyword = "[^%s](if|while|do|for|%s)" % (ident_char, lfe)
 camel_ident = "([a-z]+[0-9:_]*[A-Z]|[A-Z]+[0-9:_]*[a-z])"
-binop = "(==|!=|\*=|-=|/=|<<=|>>=|<<|>>|\|\||&&)"
+binop = "(==|!=|\+=|\*=|-=|/=|<<=|>>=|<<|>>|\|\||&&)"
 
 cpp_file = re.compile(".*\.cpp")
 spurious_std = re.compile(".*std::")
@@ -215,6 +215,8 @@ false_positives = [
 "	left_rule.add_pattern(\"[ ]*\\\"(.*)\\\"[ ]*=.*\", \"\\\\1\");",
 "	var_value_rule.add_pattern(\".*=[ ]*\\\"(.*)\\\"\", \"\\\\1\");",
 "	var_name_rule.add_pattern(\"^\\\\$([_a-zA-Z][_a-zA-Z0-9]*)[ ]*=.*\", \"\\\\1\");",
+"	synth_syms.reset(new asymbol * [cur_symcount + start]);",
+"	                                + \" [self]\");",
 ]
 
 def err(file, nr, line, message):
