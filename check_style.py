@@ -171,7 +171,7 @@ false_positives = [
 "			     << \" allowed range: [0-100]\" << endl;",
 "	catch (Catch const &) {",
 "		throw Throw(\"\");",
-"template <class Throw, class Catch>",
+"template <typename Throw, typename Catch>",
 "	{ \"//////\", \"/\" },",
 "	{ \"///usr\", \"/\" },",
 "	{ \"///usr/dir\", \"///usr\" },",
