@@ -531,7 +531,7 @@ Callgraph viewer.
 
 8.2 -m, --merge=cpu,lib,tid,tgid,unitmask,all
 
-	see 5.21
+	see 5.21. Not honored currently
 
 11. opcontrol
 --------------
