@@ -345,6 +345,7 @@ sample filename from the profile specification merge specification are applied.
 	--sort <sort spec> (-s)
 	--include-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
+	--exclude-dependent (-x)
 	--merge <merge spec> (-m)
 	--no-header FIXME shortcut for this and below (-n,-h are available)
 	--short-filename
@@ -355,6 +356,10 @@ sample filename from the profile specification merge specification are applied.
 	--output-file (-o)
 	<profile spec>
 
+5.2 --exclude-dependent
+
+	Exclude all dependent images from the profile.
+
 5.3 --symbols <symbol-list>
 
 	This is the standard sorted summary produced by oprofpp, as specified
@@ -362,7 +367,8 @@ by -i, -e, -s, -o.
 
 	5.3.1 The default for opreport will be "opreport" (i.e. no --symbols)
 
-	5.3.2 This must include dependent images
+	5.3.2 This must include dependent images, unless --exclude-dependent is
+	specified
  
 	FIXME: we don't show 0-sampled symbols as of now. Should we ? oprofpp did.
 
@@ -516,6 +522,7 @@ née op_to_source. Our basic source / asm annotation tool.
 	--objdump-params (-p)
 	--include-symbols <symbols list> (-i)
 	--exclude-symbols <symbols list> (-e)
+	--exclude-dependent (-x)
 	<profile spec>
 
 FIXME we lost usefull feature e.g. --exclude-symbol --include-symbol
