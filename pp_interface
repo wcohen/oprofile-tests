@@ -1,12 +1,7 @@
 
-As promised the first draft of the new post-profiling tools interface
+Draft version 2
  
-This is mostly describing the ideal interface w/o much
-regard to implementation problems, though I do mention
-a couple of things.
- 
-It's obviously a work in progress ... I would appreciate comments,
-especially on things I've left out.
+Still a WIP
  
 1. Basic principles
 -------------------
@@ -41,11 +36,17 @@ shared between the interfaces.
 
 	Maybe we can have more fine-grained --debug later, but for now this will do
 
+--no-verbose
+
+	Default, for symmetry only 
+
 --no-demangle (n/a)
 
 	We demangle by default. This is for avoiding demangler bugs and the like.
 
-[FIXME] add a --demangle as well for symmetry ? 
+--demangle
+
+	For symmetry only 
 
 
 3. Profile specifications
@@ -63,17 +64,18 @@ b) Binary
 c) App binary (for shared libraries, e.g. /bin/ls using /lib/libc.so)
 d) Event name
 e) Event count
-f) Process ID
-g) CPU nr.
-h) the actual binary to bfd_open
-i) the actual samples file to use 
+f) parent process ID
+g) Process ID
+h) CPU nr.
+i) the actual binary to bfd_open
+j) the actual samples file to use 
 
-Some of these may be "null" paramaters, namely c),f),g),h),i) (and possibly e) depending
+Some of these may be "null" parameters, namely c),f),g),h),i),j) (and possibly e) depending
 on what we do about multiplexing).
 
-h) is a special case since it is not part of the profile as such. By default
+i) is a special case since it is not part of the profile as such. By default
 it is derived from b), but allowing its specification is needed for op_diff
-of two differently compiled binary + profile pairs. Similar goes for i)
+of two differently compiled binary + profile pairs. Similar goes for j)
 
 So if we provide a way to specify some set of profiles via the command line,
 we need to support each of these. My first idea is something like this :
@@ -83,12 +85,13 @@ op_report session:run1 image:/usr/bin/oprofiled
 Here's a complete list of tags :
 
 	sample-file: <filename>
-		An actual sample file. If this is given, no other tags are allowed
+		An actual sample file. If this is given, no other tags are allowed,
+		with the exception of binary:
  
 	binary: <filename>
-		The binary to use.
-
-[FIXME] need to work on the semantics of this one in presence with other tags
+		The binary to use. This is incompatible with the image: parameter,
+		and may only be specified as part of a single-profile specification.
+		It may be used ONLY with sample-file:
 
 	session: <sessionlist>
 		A comma-separated list of session names to resolve in. Absence of this
@@ -117,7 +120,7 @@ Here's a complete list of tags :
 	lib-image-exclude: <imagelist>
 		Similar to image-exclude ...
  
-	event: eventname
+	event: event
 		Specify a particular event type e.g. CPU_CLK_UNHALTED
 
 	count: count
@@ -133,11 +136,11 @@ Here's a complete list of tags :
 
 	pid: <pidlist>
 		Comma list of pid's to consider
+
+[FIXME] We should allow to support "and all children", but what syntax ? 454+ ??
  
 If a tag is not specified, then it will match all values (with the exception of
 session:).
- 
-[FIXME] is there anything else we can usefully have ? do we need all the above ?
  
 Note: we can use a common method for comma-separated lists :
 
@@ -148,6 +151,64 @@ listchar ::= '\,' | '*' | '?' | alphanum
 i.e. we allow escape for entries with commas in it, and we allow
 globbing.
  
+We can use cpu,pid,event,count,unit-mask formats as parameters
+to the daemon too. But we must allow multiple event,count pairs
+so the syntax must be different.
+
+
+3a. sample file mangling
+------------------------
+
+We need to encode a number of the above things in the filename.
+The proposed format is
+
+$SAMPLES_DIR/sessionname/event.count.unitmask.ppid.pid.cpu.mangledbinname}mangledlibname
+
+(in decimal where relevant) 
+For example,
+
+CPU_CLK_UNHALTED.30000.0.434.436.0.}bin}ls}}lib}libc.so
+
+mangledlib/binname will be absolute and fully resolved pathnames
+
+The parts ppid,pid,cpu may, instead of a number, have the
+value "all", for when profiling method is not splitting on
+(p)pid/cpu
+
+mangledlibname may be ""
+ 
+3b. Resolution algorithm
+------------------------
+
+session=as given or default to currentsession 
+all others set to "*" (match on anything) by default
+
+for each (file in session(s)) {
+	next if samplefile && samplefile!=file;
+	next if image && !included(file.image, imagelist)
+	next if image-exclude && included(file.image, image-exclude)
+	next if lib-image && !included(file.lib-image, lib-imagelist)
+	next if lib-image-exclude && included(file.lib-image, lib-image-exclude)
+	next if event && file.event != event
+	next if count && file.count != count
+	next if unitmask && file.unit_mask != unitmask
+	next if cpu && !included(file.cpu, cpulist)
+	next if pid && !included(file.pid, pidlist)
+	// if it's in the child tree of the give parent process id, accept it
+	next if parentpid && !transitive_include(file.ppid, parentpid-graph)
+ 
+	add_to_profile_list();
+}
+
+if (one_profile_allowed_only) { 
+	// merge on ppid,pid,cpu
+	// and also lib-image, iff the lib-image
+	// is specified as imagename
+	merge
+	if (nr. profiles > 1)
+		error
+}
+
 4. op_alias
 -----------
 
@@ -161,8 +222,6 @@ run1-oprofiled session:run1 image:/usr/bin/oprofiled
  
 for convenience. This is essentially a stored query facility ...
  
-[FIXME] can we use something similar for the daemon start up ?
- 
 5. op_report
 ------------
 
@@ -173,13 +232,7 @@ The profile spec must resolve to exactly one profile, unless it is possible to
 auto-merge the resolved list from the profile spec (see below). 
 
 op_report <flags> <profile-spec>
-	--version (-v)
-	--usage
-	--help (-?)
-	--verbose (-V)
-	--no-demangle
 	--symbols (-l)
-	--dump-gprof (-g)
 	--output <output spec> (-o) 
 	--sort <sort spec> (-s)
 	--ignore-symbols <symbollist> (-i)
@@ -192,10 +245,6 @@ op_report <flags> <profile-spec>
 by -i, -e, -s, -o. The default for op_report will be "op_report --symbols \*"
 or something similar.
  
---dump-gprof
-
-	Simple gprof dump as we have now. Incompatible with other options.
-
 --output <outputspec>
 
     What fields to output in what order, as follows :
@@ -211,11 +260,17 @@ or something similar.
 	L       base name of source file and line nr
 	i       image name (these two are useful for merged)
 	I       base name of image name
+ 
 	h       a leading header (not a field ...)
 	d       detailed samples for each selected symbol
+	x	reserved for XML output at some point
  
-[FIXME] XML output ? 
-[FIXME]	... more ?? 
+
+v,s,S,p,P,n,m,I,L,i,I :
+ 
+0x8004434 433 34343 0.3% 4.5% blah(int) blah_Qv /home/steve.c:3 steve.c:3 /home/steve steve 
+ 
+[FIXME] detail h, d, x format
  
 --sort <sortspec>
 
@@ -229,9 +284,8 @@ or something similar.
 	L       base name of source file and line nr
 	i       image name (these two are useful for merged)
 	I       base name of image name
-	r	sort whatever in reverse
  
-[FIXME]	... more ?? 
+	r	sort whatever in reverse
  
 --ignore-symbols <symbollist>
 
@@ -250,20 +304,28 @@ side by side, since we consider only events not counters now. How could
 we restore this in a sane way ? If the spec expands to two profiles with
 differing events, how can we format and allow sorting/field specification ?
  
-6. op_annotate
+6. op_gprof
+-----------
+
+Split off the gprof dumping part of old oprofpp, since it didn't really
+fit.
+
+op_gprof
+	--gprof-file (-o) <file>
+	<profile spec>
+
+[FIXME] file defaults to gmon.out ?
+ 
+7. op_annotate
 --------------
  
 née op_to_source. Our basic source / asm annotation tool.
 
 op_annotate
-	--version (-v)
-	--usage
-	--help (-?)
-	--verbose (-V)
-	--source-dir <dir>
-	--output-dir <dir>
-	--include <filelist>
-	--exclude <filelist>
+	--source-dir <dir> (-d)
+	--output-dir <dir> (-o)
+	--include <filelist> (-i)
+	--exclude <filelist> (-e)
 	--source (-s)
 	--assembly (-a)
 	--mixed (-m)
@@ -271,12 +333,23 @@ op_annotate
 
 Profile spec must produce exactly 1 profile after auto-merge etc.
 
-Options are as they are currently, except
-
 --source
 
-	specifies the source-based per-file annotation
+	specifies the source-based per-file annotation. The directory
+	structure of the source is replicated under --output-dir, with
+	annotated files of the same name as the source file.
+	Specifying a --source-dir == --output-dir is an error. Samples
+	in files outside of --source-dir are ignored with a message.
 
+[FIXME] sometimes we're interested in /usr/include headers etc. Should we
+differentiate between "where to find the source when debug info is relative"
+and "what source tree we care about" ? Should we support source dir transplantation
+e.g. for debug info coming from a distro's build tree ? 
+ 
+[FIXME] I'd prefer a same-size comment prefix for each line, rather than the
+inline source comment method we have now. Makes association with original source
+easier/machine-readable
+ 
 --assembly
 
 	specifies the objdump annotated asm output
@@ -287,18 +360,13 @@ Options are as they are currently, except
  
 [FIXME]  for all tools, what about the "ignore less than..." option ?
  
-7. op_summary
+8. op_summary
 -------------
 
 nee op_time. This is used for either global symbol- or image-based summaries
 inside of one session only.
 
 op_summary 
-	--version (-v)
-	--usage
-	--help (-?)
-	--verbose (-V)
-	--no-demangle
 	--symbol-summary (-l)
 	--output <output spec> (-o) 
 	--sort <sort spec> (-s)
@@ -334,26 +402,45 @@ as follows :
 
 		Merge all app-specific library profiles.
  
-[FIXME] What else am I missing from this ?
+	unitmask
+
+		Merge all compatible unit mask differences
  
-8. op_diff
+9. op_diff
 ----------
 
+op_diff is a tool for comparing exactly two profile-executable
+pairs, on a symbol by symbol level.
+
+Comparing global summaries is left for a future
+specification (and tool) :)
+ 
 Of the general form :
 
-op_diff <profile spec 1> <profile spec 2>
+op_diff
+	--ignore-symbols <symbollist> (-i)
+	--exclude-symbols <symbollist> (-e)
+	<profile spec 1> : <profile spec 2>
 
 where 1 is to be diffed against 2. If each is more > 1 profile,
 auto-merging should take place as before, if needed. We also
 can use binary: in the profile spec.
 
-[FIXME] what's the delimiter between each profile spec ??
+We auto-merge as with op_report, the lhs,rhs or the ":"
+must each specify exactly one profile
  
-[FIXME] what makes incompatible profiles ?
+Two profile specs are incompatible iff
+
+1. event differs
+2. count differs
+3. image or lib-image differs
+
+[FIXME] unit mask - what cases are incompatible ?
  
-[FIXME] --merge as with op_summary ??
+[FIXME] we need an intuitive way of showing the biggest climbers
+and fallers in the profiles. Ideas on a postcard.
  
-9. auto merging
+10. auto merging
 ---------------
 
 If a profile spec leaves e.g
