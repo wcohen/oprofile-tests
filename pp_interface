@@ -73,7 +73,16 @@ shared between the interfaces.
 
 	Use the smart demangler. Not the default.
 
-2.8
+2.8 --image-path (-p) pathcommalist
+
+	Extra path to search for missing binaries. This is used for finding
+	2.5 modules "oprofile", and 2.4 initrd modules (e.g. /lib/module.o).
+	Resolution is: if a name can be found by appending the path of the
+	unfound binary directly, that is used (in the list order). Otherwise,
+	the basename is searched for. Otherwise, the basename with ".ko"
+	appended is searched for.
+
+2.12
 	2.5, 2.6 and 2.7 are not used by opgprof
 
 3. Profile specifications
@@ -337,7 +346,6 @@ sample filename from the profile specification merge specification are applied.
 	--sort <sort spec> (-s)
 	--include-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
-	--image-path (-p)
 	--merge <merge spec> (-m)
 	--no-header FIXME shortcut for this and below
 	--short-filename
@@ -421,14 +429,6 @@ by -i, -e, -s, -o.
 
 	A trailing '%' is ignored, e.g. "--threshold=0.1%" is equivalent to "--threshold=0.1"
  
-5.19 --image-path pathcommalist
-
-	Extra path to search for missing binaries. This is used for finding 2.5 modules
-	"oprofile", and 2.4 initrd modules (e.g. /lib/module.o). Resolution is: if a name
-	can be found by appending the path of the unfound binary directly, that is used
-	(in the list order). Otherwise, the basename is searched for. Otherwise, the basename
-	with ".o" appended is searched for.
-
 5.20 FIXME: should be we consider an "all-kernel" (kernel + modules) profile ?
 
 5.21 --merge <merge spec>
@@ -492,14 +492,13 @@ fit.
 
 6.1 opgprof <file>
 	--output-file (-o) filename
-	--image-path (-p)
 	<profile spec>
 
 6.2 --output-file filename
 	set the output filename, if not specified output filename is gmon.out
 
-6.3 <file>, --image-path
-	acts as 3.18, 5.19
+6.3 <file>
+	acts as 3.18
 
 6.4 opgrof do automatic merging on the set selected sample filename, it's an
 error if more than one unmergeable profile exists. opgporf lookup in dependent
@@ -514,12 +513,14 @@ née op_to_source. Our basic source / asm annotation tool.
 	--source-dir <dir> (-d)
 	--output-dir <dir> (-o)
 	--base-dir <dir> (-b)
-	--include <filelist> (-i)
-	--exclude <filelist> (-e)
+	--include-file <filelist> (N/A)
+	--exclude-file <filelist> (N/A)
 	--threshold <threshold> (-t)
 	--source (-s)
 	--assembly (-a)
 	--objdump-params (-p)
+	--include-symbols <symbols list> (-i)
+	--exclude-symbols <symbols list> (-e)
 	<profile spec>
 
 FIXME we lost usefull feature e.g. --exclude-symbol --include-symbol
