@@ -66,23 +66,26 @@ and we can use the same method for every tool.
 
 3.1 Each profile is a tuple of :
 
-a) Session name
-b) Binary
-c) App binary (for shared libraries, e.g. /bin/ls using /lib/libc.so)
-d) Event name
-e) Event count
-f) Group ID (tgid)
-g) Process ID (pid)
-h) CPU nr.
-i) the actual binary to bfd_open
-j) the actual samples file to use 
+3.3) the actual samples file to use 
+3.4) the actual binary to bfd_open
+3.5/3.6) Session name
+3.7) Binary
+3.9) App binary (for shared libraries, e.g. /bin/ls using /lib/libc.so)
+3.11) Event name
+3.12) Event count
+3.13) unit mask
+3.14) CPU nr.
+3.15) Group ID (tgid)
+3.16) Process ID (pid)
 
-3.2 Some of these may be "null" parameters, namely c),f),g),h),i),j) (and possibly e) depending
-on what we do about multiplexing).
+FIXME: review the can be null parameters
+3.2 Some of these may be "null" parameters, namely 3.3), 3.4), 3.9), 3.13),
+3.14), 3.16), (and possibly 3.12) depending on what we do about
+multiplexing).
 
-i) is a special case since it is not part of the profile as such. By default
-it is derived from b), but allowing its specification is needed for opdiff
-of two differently compiled binary + profile pairs. Similar goes for j)
+3.4) is a special case since it is not part of the profile as such. By default
+it is derived from 3.7), but allowing its specification is needed for opdiff
+of two differently compiled binary + profile pairs. Similar goes for 3.4)
 
 So if we provide a way to specify some set of profiles via the command line,
 we need to support each of these. My first idea is something like this :
@@ -105,7 +108,10 @@ Here's a complete list of tags :
 		with the exception of binary:
  
 3.4	binary: <filename>
-		The binary to use. May only be used with sample-file:
+		The binary to use. May only be used with sample-file: If binary
+		is given filename to bfd_open is not derived from sample-file:,
+		the sample-file:bin_name or lib_name is just ignored if binary:
+		is given.
 
 3.5	session: <sessionlist>
 		A comma-separated list of session names to resolve in. Absence of this
