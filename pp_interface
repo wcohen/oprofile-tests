@@ -1,7 +1,7 @@
 
-Draft version 2
+Draft version 3
  
-Still a WIP
+Beta.
  
 1. Basic principles
 -------------------
@@ -127,18 +127,16 @@ Here's a complete list of tags :
 		Specify the count for that event e.g. 30000
 
 	unit-mask: mask
-		Specify the unit mask for that event.
-
-[FIXME] How to encode this unit mask ? Can we do better than op_start does ??
+		Specify the unit mask for that event. Encoded as numerical value.
 
 	cpu: <cpulist>
 		Comma-separated list of cpu numbers to consider
 
-	pid: <pidlist>
-		Comma list of pid's to consider
+	pid: <pidspeclist>
+		Comma list of pid's to consider. A pidspec is either a literal
+		process id (454), or a process id plus a '+', to indicate all
+		child processes (recursive) as well as that pid (e.g. "454+")
 
-[FIXME] We should allow to support "and all children", but what syntax ? 454+ ??
- 
 If a tag is not specified, then it will match all values (with the exception of
 session:).
  
@@ -162,14 +160,14 @@ so the syntax must be different.
 We need to encode a number of the above things in the filename.
 The proposed format is
 
-$SAMPLES_DIR/sessionname/event.count.unitmask.ppid.pid.cpu.mangledbinname}mangledlibname
+$SAMPLES_DIR/sessionname/event.count.unitmask.ppid.pid.cpu.mangledprimaryname}mangledlibname
 
 (in decimal where relevant) 
 For example,
 
 CPU_CLK_UNHALTED.30000.0.434.436.0.}bin}ls}}lib}libc.so
 
-mangledlib/binname will be absolute and fully resolved pathnames
+mangledlib/primaryname will be absolute and fully resolved pathnames
 
 The parts ppid,pid,cpu may, instead of a number, have the
 value "all", for when profiling method is not splitting on
@@ -234,6 +232,7 @@ auto-merge the resolved list from the profile spec (see below).
 op_report <flags> <profile-spec>
 	--symbols (-l)
 	--output <output spec> (-o) 
+	--threshold <threshold> (-t)
 	--sort <sort spec> (-s)
 	--ignore-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
@@ -270,7 +269,13 @@ v,s,S,p,P,n,m,I,L,i,I :
  
 0x8004434 433 34343 0.3% 4.5% blah(int) blah_Qv /home/steve.c:3 steve.c:3 /home/steve steve 
  
-[FIXME] detail h, d, x format
+The 'h' output gives a leading free-form title describing the profile, and
+column headers as appropriate.
+ 
+For 'd', the columns are the same, except that the "symbol" fields may show
+xmalloc+0x34, for example
+
+'x' is reserved for now, and will be specified later.
  
 --sort <sortspec>
 
@@ -292,17 +297,20 @@ v,s,S,p,P,n,m,I,L,i,I :
 	comma-separated list of symbols to ignore. Ignored symbols are included
 	in percentage calculations etc, but not output
 
-[FIXME] mangling ??
- 
 --exclude-symbols <symbollist>
 
 	comma-separated list of symbols to exclude. Excluded symbols are neither
 	included in calculations nor output
+
+We accept mangled or unmangled names, but not a mix of the two. First the search
+tries to find verbatim symbol names. If exactly 0 matches are found, then every
+the search is repeated, but each match is done against a demangled symbol name. Thus
+mixing mangled with unmangled names will not work, and should be documented.
  
-[FIXME] Note that this has lost our current ability to compare counter 0,1
-side by side, since we consider only events not counters now. How could
-we restore this in a sane way ? If the spec expands to two profiles with
-differing events, how can we format and allow sorting/field specification ?
+--threshold <threshold>
+
+	Threshold of minimum values before an entry is printed. Either a sample count
+	or a percentage, e.g. "1", "0.1%"
  
 6. op_gprof
 -----------
@@ -314,7 +322,7 @@ op_gprof
 	--gprof-file (-o) <file>
 	<profile spec>
 
-[FIXME] file defaults to gmon.out ?
+Default to gmon.out, making a back up if it exists already 
  
 7. op_annotate
 --------------
@@ -324,8 +332,10 @@ née op_to_source. Our basic source / asm annotation tool.
 op_annotate
 	--source-dir <dir> (-d)
 	--output-dir <dir> (-o)
+	--base-dir <dir> (-b)
 	--include <filelist> (-i)
 	--exclude <filelist> (-e)
+	--threshold <threshold> (-t)
 	--source (-s)
 	--assembly (-a)
 	--mixed (-m)
@@ -335,20 +345,31 @@ Profile spec must produce exactly 1 profile after auto-merge etc.
 
 --source
 
-	specifies the source-based per-file annotation. The directory
-	structure of the source is replicated under --output-dir, with
-	annotated files of the same name as the source file.
+	specifies the source-based per-file annotation. --source-dir is
+	used to find the source when debug info is relative. When --base-dir
+	is specified, then only files in that dir or a subdirectory are generated.
+	In the absence of --base-dir, this defaults to the value of --source-dir
+	The directory structure of the source is replicated under --output-dir,
+	with annotated files of the same name as the source file.
 	Specifying a --source-dir == --output-dir is an error. Samples
 	in files outside of --source-dir are ignored with a message.
 
-[FIXME] sometimes we're interested in /usr/include headers etc. Should we
-differentiate between "where to find the source when debug info is relative"
-and "what source tree we care about" ? Should we support source dir transplantation
-e.g. for debug info coming from a distro's build tree ? 
+The source annotation works by prefixing all lines with a certain size comment, e.g.
+
+/* 99 (3.2%)   */ char some_function(void)
+/*             */ {
+/*             */      int i;
+/*             */
+/* 73 (2.3%)   */      for (i = 0; i < 4; i++) {
+...
  
-[FIXME] I'd prefer a same-size comment prefix for each line, rather than the
-inline source comment method we have now. Makes association with original source
-easier/machine-readable
+This is to keep the line numbers the same. A post fix comment is also
+added at the end of the file, along the lines of :
+
+/* Generated from /path/to/some_function.c
+ * CPU_CLK_UNHALTED (cycles CPU is not halted) with a count of 30000 
+ * blah blah
+ */
  
 --assembly
 
@@ -357,8 +378,6 @@ easier/machine-readable
 --mixed
 
 	specified the src/asm objdump annotated output
- 
-[FIXME]  for all tools, what about the "ignore less than..." option ?
  
 8. op_summary
 -------------
@@ -373,6 +392,7 @@ op_summary
 	--merge <merge spec>
 	--ignore-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
+	--threshold <threshold> (-t)
 	<profile spec>
 
 All as before.
@@ -420,6 +440,9 @@ Of the general form :
 op_diff
 	--ignore-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
+	--output <outputspec> (-o)
+	--sort <sortspec> (-s)
+	--threshold <threshold> (-t)
 	<profile spec 1> : <profile spec 2>
 
 where 1 is to be diffed against 2. If each is more > 1 profile,
@@ -431,14 +454,63 @@ must each specify exactly one profile
  
 Two profile specs are incompatible iff
 
-1. event differs
+1. event differs or
 2. count differs
-3. image or lib-image differs
 
-[FIXME] unit mask - what cases are incompatible ?
+NOTE: we consider all unit masks to be compatible, it is up
+to the user to do this sensibly.
  
-[FIXME] we need an intuitive way of showing the biggest climbers
-and fallers in the profiles. Ideas on a postcard.
+--threshold
+
+	Slightly different. By default the threshold is applied
+	absolutely, so --threshold 1 does not hide symbols with -232
+	samples. Prefixing a - or + affects this behaviour, so
+	--threshold +0 hides all negative entries, and --threshold -0
+	hides all positive ones.
+
+--output <outputspec>
+
+    What fields to output in what order, as follows :
+
+	v       vma offset
+	s       nr samples (difference)
+	p       nr percent samples (difference)
+	n       symbol name
+	m	mangled symbol name
+	l       source file name and line nr
+	L       base name of source file and line nr
+	i       image name (these two are useful for merged)
+	I       base name of image name
+ 
+	h       a leading header (not a field ...)
+	d       detailed samples for each selected symbol
+	x	reserved for XML output at some point
+ 
+e.g. s is
+
+343 (+343)
+
+p is
+
+0.2% (+0.1)
+ 
+--sort <sortspec>
+
+	What field to sort by, as follows :
+ 
+	v       vma offset
+	s	nr samples difference
+	n       symbol name
+	m	mangled symbol name
+	l       source file name and line nr
+	L       base name of source file and line nr
+	i       image name (these two are useful for merged)
+	I       base name of image name
+ 
+	r	sort whatever in reverse
+
+To get the symbols that have lost most samples at the bottom,
+for example, is "--sort sr"
  
 10. auto merging
 ---------------
@@ -451,6 +523,12 @@ If a profile spec leaves e.g
 or some other "mergable" set of profiles, and exactly 1 is required,
 then we should automatically merge them into one profile for the purposes
 required, along with a note to the user of what we've done.
+
+Two profile specs are unmergable iff 
+
+1. event differs or
+2. count differs or
+3. image or lib-image differs
 
 Also consider :
 

@@ -1,3 +1,7 @@
+2002-07-21  John Levon  <moz@compsoc.man.ac.uk>
+
+	* stress/startstop.sh: add a simple start/stop/unload stress test script
+ 
 2002-04-30  John Levon  <moz@compsoc.man.ac.uk>
 
 	* understanding/Makefile:
