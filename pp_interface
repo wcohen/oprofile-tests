@@ -2,6 +2,8 @@
 Draft version 5
  
 Beta.
+
+Please don't re-number item in this file as code comment refer this number.
  
 General FIXME: call graphs - for a later spec ?
 
@@ -103,9 +105,7 @@ Here's a complete list of tags :
 		with the exception of binary:
  
 3.4	binary: <filename>
-		The binary to use. This is incompatible with the image: parameter,
-		and may only be specified as part of a single-profile specification.
-		It may be used ONLY with sample-file:
+		The binary to use. May only be used with sample-file:
 
 3.5	session: <sessionlist>
 		A comma-separated list of session names to resolve in. Absence of this
@@ -122,7 +122,7 @@ Here's a complete list of tags :
 		'image:/usr/bin/oprofiled,*op*,./oprofpp'
 
 		"image:" is default tag, allowing old-style "opreport /usr/bin/oprofiled"
-		The above shortcut don't wotk if user try to profile a binary
+		The above shortcut don't work if user try to profile a binary
 		with a ':' imbedded in filename or path name, in this case
 		complete syntax image:image_name must be used.
 
@@ -198,13 +198,16 @@ value "all", for when profiling method is not splitting
 3.22 The current session is defined as "current", all other sessions are free-form
 
 3.23 As well as "{root}" dir (representing the / fs), there is a "{kern}" dir,
-     which will contain the 2.5 modules,  e.g :
+which will contain the 2.5 modules and the vmlinux file when profiling
+with --no-vmlinux,  e.g :
 
 $SAMPLES_DIR/current/{kern}/oprofile/CPU_CLK_UNHALTED.30000.0.434.434.0
 $SAMPLES_DIR/current/{root}/bin/ls/{dep}/{kern}/oprofile/CPU_CLK_UNHALTED.30000.0.434.434.0
 
   {kern} can be followed only by a single path component. The name following
- a {kern} path implicitely get a ".ko" during the file search
+a {kern} are first searched as it and, if not found, a second search is done
+with a ".ko" suffix. FIXME: must we special case vmlinux and always add a .ko
+to other filename
 
 3.24 The encoding scheme used should simplify code since we parse the string
   at a syntactic point of view i.e. we don't have to look for existing path
