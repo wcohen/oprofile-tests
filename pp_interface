@@ -397,6 +397,8 @@ by -i, -e, -s, -o.
 
 	FIXME: document inclusion/exclusion rules with --exclude-symbols
 
+	FIXME: do we support e.g. "*_idle" or just "*" ?
+
 5.16 --exclude-symbols <symbollist>
 
 	comma-separated list of symbols to exclude. Excluded symbols are neither
