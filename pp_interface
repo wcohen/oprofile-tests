@@ -330,7 +330,8 @@ sample filename from the profile specification merge specification are applied.
 	--threshold <threshold> (-t)
 	--include-dependent (-n)
 	--sort <sort spec> (-s)
-	--ignore-symbols <symbollist> (-i)
+	--include-symbols <symbollist> (-i)
+	--ignore-symbols <symbollist>
 	--exclude-symbols <symbollist> (-e)
 	--image-path (-p)
 	--merge <merge spec> (-m)
@@ -352,9 +353,9 @@ sample filename from the profile specification merge specification are applied.
 	This is the standard sorted summary produced by oprofpp, as specified
 by -i, -e, -s, -o.
 
-	5.3.1 The default for opreport will be "opreport --symbols \*"
+	5.3.1 The default for opreport will be "opreport" (i.e. no --symbols)
 
-	5.3.2 This must include --dependent symbols  when --include-dependent is set
+	5.3.2 This must include dependent images when --include-dependent is set
  
 5.7	--xml-output
 	Reserved for now, and will be specified later.
@@ -390,7 +391,14 @@ by -i, -e, -s, -o.
 	FIXME: clarify, what is the default order, the order depend also
 	of what we are showing (details, symbols line)
  
-5.15 --ignore-symbols <symbollist>
+5.15a --include-symbols <symbollist>
+
+	comma-separated list of symbols to include. This defaults to '*' (i.e.
+	all symbols)
+
+	FIXME: document inclusion/exclusion rules with --exclude-symbols
+
+5.15b --ignore-symbols <symbollist>
 
 	comma-separated list of symbols to ignore. Ignored symbols are included
 	in percentage calculations etc, but not output
