@@ -410,6 +410,8 @@ by -i, -e, -s, -o.
 5.18 --threshold <threshold>
 
 	Threshold of minimum values before an entry is printed. a percentage, e.g. "--threshold=0.1" is 0.1%
+
+	A trailing '%' is ignored, e.g. "--threshold=0.1%" is equivalent to "--threshold=0.1"
  
 5.19 --image-path pathcommalist
 
