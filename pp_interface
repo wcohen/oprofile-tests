@@ -3,7 +3,8 @@ Version 1.0
 
 Please don't re-number item in this file as code comment refer this number.
  
-General FIXME: call graph stuff
+General FIXME: call graph stuff to improve ? update opstack as it is actively
+developped
 
 
 1. Basic principles
@@ -197,6 +198,16 @@ The latter is to be used when using --separate=lib (or with kernel, perhaps with
 For example,
 
 $SAMPLES_DIR/current/{root}/bin/ls/{dep}/{root}/lib/libc.so/CPU_CLK_UNHALTED.30000.0.434.434.0
+
+Callgraph file are encoded as above + a {cg} components part:
+
+/var/lib/oprofile/samples/current/{root}/bin/bash/{dep}/{root}/lib/libc-2.2.5.so/{cg}/{root}/lib/ld-2.2.5.so/CPU_CLK_UNHALTED.600000.0.all.all.all
+
+Where the meaning of {dep} is different: for cg files it's the from (caller)
+binary, the {cg} part is the to (callee) part. So the above contains arc owned
+by application /bin/bash, arcs going from libc-2.2.5.so to ld-2.2.5.so. This
+example is from a profiling with --separate=library
+
 
 3.20 The paths must be fully resolved of symbolic links.
 
@@ -504,6 +515,23 @@ This is to keep the line numbers the same.
 	Additional (?) params to objdump, e.g. for Intel syntax asm
 
 7.8 --source or --assembly or both must specified
+
+8. opstack
+----------
+
+8.1 overall
+
+Callgraph viewer.
+
+8.2 opstack <flags> <profile-spec>
+
+8.1 -x, --exclude-dependent
+
+	Exclude all dependent images from the profile. Not honored currently.
+
+8.2 -m, --merge=cpu,lib,tid,tgid,unitmask,all
+
+	see 5.21
 
 11. opcontrol
 --------------
