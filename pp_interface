@@ -301,12 +301,11 @@ command line after substitution of the alias name
 
 née oprofpp.
 
+5.0 overall
+
 This tool is used for providing symbol-based summaries of a particular set
-of image (possibly including all image profiled). The profile spec don't need
-to resolve to exactly one profile. After selecting candidate sample filename
-from the profile specification merge specification are applied. If this
-resulting contains sample to binary which belong to another binary (shared lib,
- module) the output specification e is added to default
+of image (possibly including all image profiled). After selecting candidate
+sample filename from the profile specification merge specification are applied.
 
 5.1 opreport <flags> <profile-spec>
 	--symbols (-l)
@@ -320,6 +319,12 @@ resulting contains sample to binary which belong to another binary (shared lib,
 	--exclude-symbols <symbollist> (-e)
 	--image-path (-p)
 	--merge <merge spec>
+	--no-header
+	--short-filename
+	--accumulated
+	--reverse-sort
+	--relative-percent
+	--xml-output  (FIXME --xml)
 	<profile spec>
 
 5.2 --include-dependent
@@ -335,76 +340,41 @@ by -i, -e, -s, -o.
 
 	5.3.2 This must include --dependent symbols  when --include-dependent is set
  
-5.4 --output <outputspec>
+5.7	--xml-output
+	Reserved for now, and will be specified later.
 
-    What fields to output in what order, as follows :
-
-	v       vma offset
-	s       nr samples
-	S       nr accumulated samples
-	p       nr percent samples
-	P       nr accumulated percent samples
-	q       nr percent samples details
-	Q       nr cumulated percent samples details
-	n       symbol name
-	l       source file name and line nr
-	L       base name of source file and line nr
-	i       image name (these two are useful for merged)
-	I       base name of image name
-	e	owning application
-	E	base of owning application
- 
-	x	reserved for XML output at some point
- 
-
-v,s,S,p,P,n,m,I,L,i,I :
- 
-0x8004434 433 34343 0.3% 4.5% blah(int) blah_Qv /home/steve.c:3 steve.c:3 /home/steve steve 
- 
-5.7 'x' is reserved for now, and will be specified later.
-
-5.8 The default format is vspn. The following options modify this :
+5.8 	The default format is vspn. If the set of selected samples file belong
+	to binary which belong to another binary (shared lib,  module) the
+	owning binary image name must be output. The following options also
+	modify the output :
 
 5.9	--debug-info
 
-	Shows line number and file information (equivalent to 'vspnL')
+	Shows line number and file information (equivalent to add 'L' output
+	specifier)
 
 5.10	--details
 
 	Shows per-address samples values not only per-symbol samples,
-	equivalent to 'vspnL' but the "symbol" fields may show
+	equivalent to add 'L' output specifier but the "symbol" fields may show
 	xmalloc+0x34, for example and some field can be omitted like
 	i, I, n from details lines but not from the symbol lines. This option
 	imply --symbols
 
 5.11	--include-dependent
 
-	Default format becomes 'vspni'
+	add the 'i' format specifier
 
-5.12 Specification of either --debug-info OR --details AND --output is a fatal error.
-
-5.13 Note: --help must output this information and document the default
- 
 5.14 --sort <sortspec>
 
-	What field to sort by, as follows :
+	comma separated list in :
  
-	v       vma offset
-	s       nr samples
-	n       symbol name
-	l       source file name and line nr
-	L       base name of source file and line nr
-	i       image name (these two are useful for merged)
-	I       base name of image name
-	e	owning application
-	E	base of owning application
+	vma         vma offset
+	sample      nr samples
+	symnol      symbol name
+	debug       source file name and line nr
+	image       image name (these two are useful for merged)
  
-	r	sort whatever in reverse
-
-FIXME: separate option --reverse-sort ?
-FIXME: Some sorting option make little sense, I have not a great feeling to
-add a dozen of comparator and map type to sort the sample container.
-  
 5.15 --ignore-symbols <symbollist>
 
 	comma-separated list of symbols to ignore. Ignored symbols are included
@@ -434,7 +404,6 @@ add a dozen of comparator and map type to sort the sample container.
 	with ".o" appended is searched for.
 
 5.20 FIXME: should be we consider an "all-kernel" (kernel + modules) profile ?
-FIXME: what the above means ?
 
 5.21 --merge <merge spec>
 
@@ -463,6 +432,23 @@ FIXME: allow tgid and tid ?
 
 		Merge all compatible unit mask differences
 
+5.22 --no-header
+	remove all header line from output
+
+5.23 --short-filename
+	for all filename in output use the basename
+
+5.24 --accumulated
+	all samples count or cumulated samples count will show the accumulated
+	samples count
+
+5.25 --reverse-sort
+	sort whatever in reverse
+
+5.26 --relative-percent={image,global}
+	*add* one or two field to output to show samples count percent relative
+	to image or global samples count. FIXME global is perhaps hard to
+	implement
 
 6. opgprof
 -----------
@@ -494,6 +480,8 @@ née op_to_source. Our basic source / asm annotation tool.
 	--objdump-params (-p)
 	<profile spec>
 
+FIXME we lost usefull feature e.g. --exclude-symbol --include-symbol
+
 7.2 Profile spec must produce exactly 1 profile after auto-merge etc.
 	
 	FIXME: Will says :
@@ -504,6 +492,12 @@ née op_to_source. Our basic source / asm annotation tool.
 	Now, we can't just allow multiple  profiles because one header file
 	can over-write an existing one. So I think we should force multiple op
 	annotate invocations to be made.
+
+	phe: but isn't the right way to do all the output in one pass ? The
+	underlined samples container support storing samples from different
+	image, If it's possible we must allow allow multiple spec and do
+	$ opannotate /usr/bin/gcc /usr/.../cc1. The current implementation can
+	do that since we do it correctly for inline function
 
 7.3 --source
 
@@ -592,6 +586,8 @@ to the user to do this sensibly.
 
 9.6 --output <outputspec>
 
+FIXME: we no longer use output spec but we must specify the default output
+
     What fields to output in what order, as follows :
 
 	v       vma offset
@@ -615,6 +611,8 @@ p is
 0.2% (+0.1)
  
 9.7 --sort <sortspec>
+
+FIXME: change according to opreport --sort spec
 
 	What field to sort by, as follows :
  
