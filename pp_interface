@@ -672,7 +672,7 @@ FIXME: change according to opreport --sort spec
  
 	r	sort whatever in reverse
 
-To get the symbols that have lost most samples at the top, 
+To get the symbols that have lost most samples at the bottom, 
 for example, is "--sort sr"
  
 10. auto merging
