@@ -483,11 +483,11 @@ née op_to_source. Our basic source / asm annotation tool.
 
 7.4 The source annotation works by prefixing all lines with a certain size comment, e.g.
 
-/* 99 (3.2%)   */ char some_function(void)
-/*             */ {
-/*             */      int i;
-/*             */
-/* 73 (2.3%)   */      for (i = 0; i < 4; i++) {
+ 99 (3.2%)   :char some_function(void)
+             :{ /* some_function total: 366220 19.22% */
+             :       int i;
+             :
+ 73 (2.3%)   :       for (i = 0; i < 4; i++) {
 ...
 
 This is to keep the line numbers the same.
