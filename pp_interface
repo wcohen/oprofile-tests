@@ -339,7 +339,7 @@ sample filename from the profile specification merge specification are applied.
 	--accumulated
 	--reverse-sort (-r)
 	--global-percent
-	--hide-dependent
+	--hide-dependent (-h)
 	--xml-output  (FIXME --xml)
 	<profile spec>
 
