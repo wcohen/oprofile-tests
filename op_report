@@ -1,0 +1,257 @@
+2002-01-29  John Levon  <moz@compsoc.man.ac.uk>
+
+	* start this document
+ 
+Design for new op_report
+------------------------
+
+1. Why a re-design ?
+--------------------
+
+It's worth asking why a re design is worth it. There are a number of reasons.
+The current pp code is in part based on very old crappy code by me. As we have
+rounded out our idea of what sort of use cases pp has, several "hack" solutions
+have been added. Whilst the code generally works pretty well, there are several
+things we would like to do that are made difficult by the current architecture.
+For me, the code would be improved by taking a more object-oriented approach.
+
+A redesign would prove advantageous because we now know a lot better what things
+we want to do. Things like merge and diff can be built in to the design, rather
+than bolt-plated on. Working code can still be used where sensible, but at the
+same time we can do things like turning the symbol processing on its head, as
+has been discussed before.
+
+Whilst the current code works well, its maintainability is becoming suspect. These
+are really problems at the design level. Hence I have started this document in
+an attempt to provide a rationale for a new design, what we want to do, and how
+we decide to do it.
+ 
+Is this a radical re-write of everything ? I don't really think so. It is more a
+sensible re-organisation of the "meat" code, and the addition of a flexible
+architecture for triggering the "meat" code.
+ 
+2. Design aims
+--------------
+
+This section will discuss our basic design aims for the pp code.
+
+1) flexibility
+
+We want to be as flexible as possible. For example, the design, the code, and the
+interface should allow inspection of an arbitrary number of symbols, images, sessions,
+etc. I should be able to do "op_time" on a subset of profiles and have the right
+results.
+
+2) convenience
+
+The user wants results not hassle. We should avoid, for example, requiring the user
+to specify sample filenames. We should cope with failed bfd_openr's, etc.
+
+3) performance
+
+some of our operations are inherently slow, but this doesn't mean we should ignore
+performance.
+
+4) readability and clarity
+
+The output should be readable and clear. Where possible, it should be machine-readable
+as well. We should not output useless or misleading information (consider current
+oprofpp -kl /lib/libc-2.2.2.so).
+ 
+3. Feature requirements
+-----------------------
+
+Image summaries
+
+The user should be able to request summaries of an arbitrary selection of images, with
+percentages to match. These should (automatically ?) show attached shared library image
+summaries where applicable.
+ 
+Symbol summaries
+
+The user should be able to request symbol-based summaries for an arbitrary number of
+images. Sorting must be possible on a symbol basis. Anonymous symbols must be catered for
+and displayed (including symbol-less images). Demangling must be supported in all cases.
+
+Symbol details
+
+The user should be able to request symbol profiles for an arbitrary number of symbols over
+any set of images. This should include a raw output for further text processing. It should
+include a disassemble option.
+
+File range details
+
+The user should be able to request profiles for an arbitrary interval in image profiles,
+along with the usual disassembly options etc.
+
+Counters
+
+All operations must be capable of displaying all counters, including a calculated "total count"
+across all counters. Any sorting operation must be able to arbitrarily sort by a particular
+counter or the total.
+
+Header checks
+
+Headers must be checked and displayed. 
+
+Sessions
+ 
+We must have simple support for specifying one or more sessions to operate on.
+
+Merging
+
+We must support merging of profiles for a given image. This includes merging profiles which are
+not strictly incompatible (e.g. merge counter0 profile with counter1 profile)
+
+Difference
+
+The difference between two profiles of an arbitrary number of images should be possible. This
+should be done on the symbol level to allow for changes in the image layout. Session diffs should
+be possible on a summary and detailed level.
+
+Source generation
+
+We should be able to generate annotated source code and mixed source/asm for any input that makes sense.
+
+Exclusion/inclusion
+
+We should allow for the arbitrary inclusion/exclusion of both images and symbols in all cases. We should
+allow cut-off percentages as well (which do not affect the calculated relative percent).
+
+4. Suggested interface
+----------------------
+
+I think we should have one binary "op_report" that is used for everything.
+
+We should support "./binary", "/bin/binary", and the sample file as we do right now
+as identifying an image (share-samples is a special case here). We need arbitrary
+inclusion and exclusion lists. Something like :
+
+op_report ... --images ALL --exclude-images /lib/libc-2.2.so,./binary
+
+Note the special case "ALL". We could perhaps support a "KERNEL", a "SHARED", etc.
+
+For the shared-samples case, we need to consider how to deal with this. I think that :
+
+op_report /my/bin
+
+should by default consider its shared libraries. We may need to support a --merge,
+or we could do it automatically. 
+
+We can also add an :
+
+	--ignore-images blah
+
+option. This would process the images anyway, but not include their details in the out
+put. (to clarify, --exclude-images affects the percentage counts, --ignore-images does not).
+ 
+We can use the same for symbols.
+
+op_report --symbols ALL --exclude-symbols fgetc --ignore-symbols blah / --ignore-less-than / --exclude-less-than
+etc.
+
+
+For sorting purposes, something like :
+
+	--sort reverse,1
+
+		list in reverse order, primarily by counter 1 value
+
+	--sort t 
+
+		sort by total value of counter 0 + counter 1 ...
+
+	--sort i / --sort -s
+
+		Make the primary sort image / symbol based.
+
+
+For diffing :
+
+op_report --diff -r 0 -r 1 /lib/libc.so
+
+ The difference report for current session and session 1 of the image. Maybe need --merge too.
+We want to be able to diff two library images from shared-samples I suppose - how would we go
+about this ? maybe :
+
+op_report --diff /bin/ls:/lib/libc.so /bin/make:/lib/libc.so
+
+? Should we make them specifiable like this ?
+
+Listing - without any calculations, what is available ? and simple stats. e.g. 
+
+
+op_report --list ALL        (ALL is optional)
+
+session3/ [Date XX/XX/2001 XX:XX, finished XX...]
+	/lib/libc-2.2.so: X big, symbols found, counter setup was blah blah
+	...
+current/
+	/blah/blah
+
+? 
+ 
+I think an interface similar to this is pretty nice - it's simple and clear enough.
+Shared samples is probably going to be the most confusing part. 
+ 
+I saw an interesting thing on source forge for basic single-file monolithic SQL92 code
+that doesn't require client/server. Would it be totally insane to populate such a database
+like this ? It would allow truly arbitrary requests, and as a by-product would provide
+the results caching that would be nice. Alternatively we can hand code a similar thing
+just for caching results.
+
+ 
+5. OO design
+------------
+
+The primary object we have is the image. Every other object is related to one and exactly
+one image. (Note I am treating the same symbol in different versions of the same image as
+essentially separate, although during the diff we compare them).
+
+	class image {
+		string path;
+		bfd bfd;
+		list<profile> profiles;
+	}
+ 
+Now each image has any number of profiles :
+
+	class profile {
+		image & image;
+		sample_file file;
+		session_nr session;
+		container<symbol_profile> symbols;
+		counters_t totals;
+	}
+
+	class sample_file {
+		void * mmap;
+		// ... 
+	}
+ 
+	class counters_t {
+		ulong total;
+		ulong val[OP_MAX_COUNTERS];
+	}
+ 
+	class symbol_profile { 
+		bfd_sym & sym;
+		string pretty_name, name;
+		ulong size;
+		vector<counters_t> vals[size];
+		counters_t totals;
+	}
+ 
+So the class profile constructor will open and parse the sample file, creating the symbol_profile's
+as necessary.
+
+How to represent shared-samples relationship between primary image and shared libs (and kernel profile) ?
+How to represent stuff for source annotation ?
+ 
+The summaries are now simple iterators across images and profiles, that carry exclude info etc. as necessary.
+
+The diff operation means pairing up symbols in two profiles to generate a new thing perhaps class profile_diff
+
+Merging is probably the same operation in reverse.
+
+Sorting operations is just sorting a container of profiles/symbol_profiles by the predicate. 
