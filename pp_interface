@@ -85,9 +85,7 @@ and we can use the same method for every tool.
 
 3.3) the actual samples file to use 
 3.4) the actual binary to bfd_open
-3.5/3.6) Session name FIXME: it's not a part of profile spec but a filter
-  to samples filename candidate, it would be a --session --session-exclude
-  see 3.24
+3.5/3.6) Session name
 3.7) Binary
 3.9) App binary (for shared libraries, e.g. /bin/ls using /lib/libc.so)
 3.11) Event name
@@ -336,7 +334,7 @@ sample filename from the profile specification merge specification are applied.
 	--exclude-symbols <symbollist> (-e)
 	--image-path (-p)
 	--merge <merge spec> (-m)
-	--no-header (-h)
+	--no-header FIXME shortcut for this and below
 	--short-filename
 	--accumulated
 	--reverse-sort (-r)
@@ -427,26 +425,24 @@ by -i, -e, -s, -o.
 Unlike the single-profile tools, it can be useful for us to not auto-merge
 profile specs giving more than one profile result. Two profiles of the same
 thing on CPU #0, and CPU #1, we might want to keep separate in the summary.  So
-we don't do it by default for opsummary, but allow the user to specify merges
+we don't do it by default for opreport, but allow the user to specify merges
 as follows :
 
 	cpu
-
 		Merge all cpu-specific profiles.
 
-	pid
+	tgid
 
 		Merge all process-id specific profiles (this merges all,
-		regardless of tgid vs. tid).
+		regardless of tgid vs. tid). merging tgid imply merging tid
 
-FIXME: allow tgid and tid ?
+	tid
+		Merge all process thread belonging to the same tgid
 
 	lib
-
 		Merge all app-specific library profiles.
  
 	unitmask
-
 		Merge all compatible unit mask differences
 
 5.22 --no-header
@@ -493,7 +489,6 @@ née op_to_source. Our basic source / asm annotation tool.
 	--threshold <threshold> (-t)
 	--source (-s)
 	--assembly (-a)
-	--mixed (-m)    # FIXME: do we need that, user would "-a -s" to get it
 	--objdump-params (-p)
 	<profile spec>
 
@@ -686,6 +681,6 @@ that got merged. (it is a matter of documentation + user education
 to tell them that if they want just the apache profile for libc,
 they do opreport /usr/bin/apache lib-image:/lib/libc.so )
 
-Sometimes we might not want to them to merge though, e.g. opsummary to
+Sometimes we might not want to them to merge though, e.g. opreport to
 show the differing process IDs separately for a number of images. So that's
 why we have --merge where appropriate.
