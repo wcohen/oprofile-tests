@@ -1,5 +1,5 @@
 
-Draft version 4
+Draft version 5
  
 Beta.
  
@@ -46,11 +46,13 @@ shared between the interfaces.
 
 	We demangle by default. This is for avoiding demangler bugs and the like.
 
-2.7 --demangle
+2.7 --demangle (n/a)
 
 	For symmetry only 
 
-2.8 FIXME: --smart-demangle - must make a decision
+2.8 --smart-demangle (-D)
+
+	Use the smart demangler. Not the default.
 
 3. Profile specifications
 -------------------------
@@ -159,8 +161,6 @@ We can use cpu,pid,event,count,unit-mask formats as parameters
 to the daemon too. But we must allow multiple event,count pairs
 so the syntax must be different.
 
-3.18 FIXME: how to find 2.5 modules ? Also, -p/-P equivalents
-
 Sample file mangling
 --------------------
 
@@ -168,15 +168,15 @@ We need to encode a number of the above things in the filename.
 
 3.19 The proposed format is
 
-$SAMPLES_DIR/session/path/to/binary/event.count.unitmask.tgid.pid.cpu
-$SAMPLES_DIR/session/path/to/binary/dependent/path/to/lib/event.count.unitmask.tgid.pid.cpu
+$SAMPLES_DIR/session/root/path/to/binary/event.count.unitmask.tgid.pid.cpu
+$SAMPLES_DIR/session/root/path/to/binary/dep/root/path/to/lib/event.count.unitmask.tgid.pid.cpu
 
 The latter is to be used when using --separate=lib|kernel
 
 (in decimal where relevant) 
 For example,
 
-$SAMPLES_DIR/current/bin/ls/dependent/lib/libc.so/CPU_CLK_UNHALTED.30000.0.434.434.0
+$SAMPLES_DIR/current/root/bin/ls/dep/root/lib/libc.so/CPU_CLK_UNHALTED.30000.0.434.434.0
 
 3.20 The paths must be fully resolved of symbolic links.
 
@@ -184,6 +184,16 @@ $SAMPLES_DIR/current/bin/ls/dependent/lib/libc.so/CPU_CLK_UNHALTED.30000.0.434.4
 value "all", for when profiling method is not splitting
 
 3.22 The current session is defined as "current", all other sessions are free-form
+
+3.23 As well as "root" dir (representing the / fs), there is a "kern" dir,
+     which will contain the 2.5 modules,  e.g :
+
+$SAMPLES_DIR/current/kern/oprofile/CPU_CLK_UNHALTED.30000.0.434.434.0
+$SAMPLES_DIR/current/root/bin/ls/dep/kern/oprofile/CPU_CLK_UNHALTED.30000.0.434.434.0
+
+3.24 The code is expected to be able to disambiguate a binary called "dep", e.g.
+     /bin/dep (/bin is a dir, therefore /bin/dep is the binary ,and /bin/dep/dep will
+     exist)
 
 Resolution algorithm
 --------------------
@@ -248,6 +258,7 @@ auto-merge the resolved list from the profile spec (see below).
 	--sort <sort spec> (-s)
 	--ignore-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
+	--image-path (-p)
 	<profile spec>
 
 5.2 --include-dependent
@@ -350,6 +361,14 @@ v,s,S,p,P,n,m,I,L,i,I :
 	Threshold of minimum values before an entry is printed. Either a sample count
 	or a percentage, e.g. "1", "0.1%"
  
+5.19 --image-path pathcommalist
+
+	Extra path to search for missing binaries. This is used for finding 2.5 modules
+	"oprofile", and 2.4 initrd modules (e.g. /lib/module.o). Resolution is: if a name
+	can be found by appending the path of the unfound binary directly, that is used
+	(in the list order). Otherwise, the basename is searched for. Otherwise, the basename
+	with ".o" appended is searched for.
+
 6. opgprof
 -----------
 
@@ -381,6 +400,15 @@ née op_to_source. Our basic source / asm annotation tool.
 	<profile spec>
 
 7.2 Profile spec must produce exactly 1 profile after auto-merge etc.
+	
+	FIXME: Will says :
+
+	> What about packages with several executables in the sources? For example
+	> gcc has gcc driver program and cc1.
+
+	Now, we can't just allow multiple  profiles because one header file
+	can over-write an existing one. So I think we should force multiple op
+	annotate invocations to be made.
 
 7.3 --source
 
@@ -558,7 +586,7 @@ p is
  
 	r	sort whatever in reverse
 
-To get the symbols that have lost most samples at the bottom,
+To get the symbols that have lost most samples at the top, 
 for example, is "--sort sr"
  
 10. auto merging
