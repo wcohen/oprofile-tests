@@ -387,6 +387,9 @@ by -i, -e, -s, -o.
 	symbol      symbol name
 	debug       source file name and line nr
 	image       image name (this one is useful for merged)
+
+	FIXME: clarify, what is the default order, the order depend also
+	of what we are showing (details, symbols line)
  
 5.15 --ignore-symbols <symbollist>
 
@@ -442,6 +445,9 @@ as follows :
  
 	unitmask
 		Merge all compatible unit mask differences
+
+	all
+		all the above, default if no --merge is given
 
 5.22 --no-header
 	remove all header line from output
