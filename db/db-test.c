@@ -4,6 +4,8 @@
 
 #include "db.h"
 
+#define TEST_FILENAME "test-db.dat"
+
 static int nr_error;
 
 static double user_time()
@@ -22,13 +24,15 @@ static void speed_test(unsigned int nr_item, unsigned int nr_unique_item)
 	double begin, end;
 	root_t root;
 
-	init_root(&root);
+	db_open(&root, TEST_FILENAME, 128, 0);
 	begin = user_time();
 	for (i = 0 ; i < nr_item ; ++i) {
 		insert(&root, (random() % nr_unique_item) + 1, 1);
 	}
 	end = user_time();
-	delete_root(&root);
+	db_close(&root);
+
+	remove(TEST_FILENAME);
 
 	fprintf(stderr, "nr item: %d, unique item: %d, elapsed: %f\n",
 		nr_item, nr_unique_item, end - begin);
@@ -51,7 +55,8 @@ static int test(unsigned int nr_item, unsigned int nr_unique_item)
 	root_t root;
 	int ret;
 
-	init_root(&root);
+	db_open(&root, TEST_FILENAME, 128, 0);
+
 
 	for (i = 0 ; i < nr_item ; ++i) {
 		insert(&root, (random() % nr_unique_item) + 1, 1);
@@ -59,7 +64,9 @@ static int test(unsigned int nr_item, unsigned int nr_unique_item)
 
 	ret = check_tree(&root);
 
-	delete_root(&root);
+	db_close(&root);
+
+	remove(TEST_FILENAME);
 
 	return ret;
 }
@@ -106,7 +113,7 @@ static int callback_test(int nr_item, int nr_unique_item)
 	unsigned int first_key, last_key;
 	unsigned int old_nr_error = nr_error;
 
-	init_root(&root);
+	db_open(&root, TEST_FILENAME, 128, 0);
 
 	for (i = 0 ; i < nr_item ; ++i) {
 		insert(&root, (random() % nr_unique_item) + 1, 1);
@@ -133,7 +140,9 @@ static int callback_test(int nr_item, int nr_unique_item)
 	
 	travel(&root, range_first, range_last, call_back, 0);
 
-	delete_root(&root);
+	db_close(&root);
+
+	remove(TEST_FILENAME);
 
 	return old_nr_error == nr_error ? 0 : 1;
 }

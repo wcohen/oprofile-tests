@@ -24,14 +24,14 @@ static void do_display_tree(const root_t * root, page_idx_t page_idx)
 
 void display_tree(const root_t * root)
 {
-	do_display_tree(root, root->root);
+	do_display_tree(root, root->descr->root_idx);
 }
 
 static void do_raw_display_tree(const root_t * root, int page_idx)
 {
 	unsigned int i;
-	printf("root %d\n", root->root);
-	for (i = 0 ; i < root->current_size ; ++i) {
+	printf("root %d\n", root->descr->root_idx);
+	for (i = 0 ; i < root->descr->current_size ; ++i) {
 		page_t * page;
 		int j;
 
@@ -49,7 +49,7 @@ static void do_raw_display_tree(const root_t * root, int page_idx)
 
 void raw_display_tree(const root_t * root)
 {
-	do_raw_display_tree(root, root->root);
+	do_raw_display_tree(root, root->descr->root_idx);
 }
 
 static int do_check_page_pointer(const root_t * root, unsigned int page_idx,
@@ -62,9 +62,10 @@ static int do_check_page_pointer(const root_t * root, unsigned int page_idx,
 	if (page_idx == nil_page)
 		return 0;
 
-	if (page_idx >= root->current_size) {
+	if (page_idx >= root->descr->current_size) {
 		printf("%s:%d invalid page number, max is %d page_nr is %d\n",
-		       __FILE__, __LINE__, root->current_size, page_idx);
+		       __FILE__, __LINE__, root->descr->current_size,
+		       page_idx);
 		return 1;
 	}
 
@@ -104,14 +105,15 @@ int check_page_pointer(const root_t * root)
 	int ret;
 	int * viewed_page;
 
-	if (root->current_size > root->size) {
+	if (root->descr->current_size > root->descr->size) {
 		printf("%s:%d invalid current size %d, %d\n",
-		       __FILE__, __LINE__, root->current_size, root->size);
+		       __FILE__, __LINE__,
+		       root->descr->current_size, root->descr->size);
 	}
 
-	viewed_page = calloc(root->current_size, sizeof(int));
+	viewed_page = calloc(root->descr->current_size, sizeof(int));
 
-	ret = do_check_page_pointer(root, root->root, viewed_page);
+	ret = do_check_page_pointer(root, root->descr->root_idx, viewed_page);
 
 	free(viewed_page);
 
@@ -147,7 +149,7 @@ int check_tree(const root_t * root)
 {
 	int ret = check_page_pointer(root);
 	if (!ret)
-		ret = do_check_tree(root, root->root, 0u);
+		ret = do_check_tree(root, root->descr->root_idx, 0u);
 
 	return ret;
 }

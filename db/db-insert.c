@@ -1,6 +1,23 @@
+#include <sys/file.h>
 #include <assert.h>
 
 #include "db.h"
+
+static void lock_db(root_t * root)
+{
+	if (root->is_locked == 0) {
+		flock(root->fd, LOCK_EX);
+		root->is_locked = 1;
+	}
+}
+
+static void unlock_db(root_t * root)
+{
+	if (root->is_locked) {
+		flock(root->fd, LOCK_UN);
+		root->is_locked = 0;
+	}
+}
 
 static void copy_item(value_t * dest, const value_t * src,
 		      unsigned int nr_item)
@@ -182,6 +199,7 @@ static int do_insert(root_t * root, page_idx_t page_idx,
 	}
 
 	if (need_reorg) {
+		lock_db(root);
 		need_reorg = do_reorg(root, page_idx, left, excess_elt, value);
 	}
 
@@ -230,6 +248,7 @@ static int do_insert(root_t * root, page_idx_t page_idx,
 	}
 
 	if (need_reorg) {
+		lock_db(root);
 		need_reorg = do_reorg(root, page_idx, pos, excess_elt, value);
 	}
 
@@ -247,34 +266,39 @@ void insert(root_t * root, unsigned int key, unsigned int info)
 	value.info = info;
 	value.child_page = nil_page;
 
-	if (!root->base_area) {
+	if (root->descr->root_idx == nil_page) {
 		/* create the root. */
 		page_t * page;
 
-		root->root = add_page(root);
+		/* we don't need to lock_db() here */
 
-		page = page_nr_to_page_ptr(root, root->root);
+		root->descr->root_idx = add_page(root);
+
+		page = page_nr_to_page_ptr(root, root->descr->root_idx);
 
 		page->page_table[0] = value;
 		page->count = 1;
 		return;
 	}
 
-	need_reorg = do_insert(root, root->root, &excess_elt, &value);
+	need_reorg = do_insert(root, root->descr->root_idx, &excess_elt,
+			       &value);
 	if (need_reorg) {
 		/* increase the level of tree. */
 		page_t * new_page;
 		page_idx_t old_root;
 
-		old_root = root->root;
-		root->root = add_page(root);
+		old_root = root->descr->root_idx;
+		root->descr->root_idx = add_page(root);
 
 		/* page pointer can be invalidated by add_page, reload it */
-		new_page = page_nr_to_page_ptr(root, root->root);
+		new_page = page_nr_to_page_ptr(root, root->descr->root_idx);
 
 		new_page->page_table[0] = excess_elt;
 		new_page->count = 1;
 		new_page->p0 = old_root;
 	}
+
+	unlock_db(root);
 }
 

@@ -1,12 +1,21 @@
-
-/** a tiny data base struct designed for oprofile
- * allow only an insert operation
+/**
+ * \file db.h
+ * Copyright 2002 OProfile authors
+ * Read the file COPYING
+ * this file contains various definitions and iterface for management
+ * of in-memory Btree.
+ *
+ * \author Philippe Elie <phil.el@wanadoo.fr>
  */
 
 #ifndef DB_H
 #define DB_H
 
 #include <assert.h>
+
+#ifndef fd_t
+#define fd_t int
+#endif
 
 /* must be in [2-a sensible value] */
 /* in function of MIN_PAGE two different search algo are selected at compile
@@ -34,24 +43,58 @@ typedef struct {
 typedef struct {
 	unsigned int count;		/*< nr entry used in page_table */
 	page_idx_t p0;			/*< left page index */
-	value_t page_table[MAX_PAGE];	/*< key, data and child pointer */
+	value_t page_table[MAX_PAGE];	/*< key, data and child index */
 } page_t;
 
-/** a "database", for oprofile this a part of the samples files header */
+/** the minimal information which must be stored in the file to reload
+ * properly the data base */
 typedef struct {
-	page_t * base_area;		/*< base memory area */
-	page_idx_t root;		/*< the root page index */
-	unsigned int size;		/*< nr page */
+	unsigned int size;		/*< in page nr */
 	unsigned int current_size;	/*< nr used page */
-	// TODO we need a lock ? or do you want to lock the file itself ?
-	// perhaps a semaphore is more efficient ?
+	page_idx_t root_idx;		/*< the root page index */
+} db_descr;
+
+/** a "database". this is an in memory only description.
+ *
+ * The mmaped file must contain a db_descr struct which manage the current
+ * state of memory allocation (base pointer, root_idx etc.) the point here
+ * is to allow using this library w/o knowning the offset inside the mapped
+ * file of management data or the page base memory offset. A typical is use is:
+ *
+ * struct header { int etc; ... struct db_descr descr; .... };
+ * db_open(&root, filename, offsetof(header, descr), sizeof(header));
+ * so on this library have no dependency on the header type.
+ */
+typedef struct {
+	page_t * page_base;		/*< base memory area of the page */
+	fd_t fd;			/*< file descriptor of the maped mem */
+	void * base_memory;		/*< base memory of the maped memory */
+	db_descr * descr;		/*< the current state of database */
+	unsigned int offset_descr;	/*< from base_memory to descr */
+	unsigned int offset_page;	/*< from base_memory to page_base */
+	unsigned int is_locked;		/*< is fd already locked */
 } root_t;
 
 /* db-manage.c */
-void init_root(root_t * root);
-void delete_root(root_t * root);
+/** 
+ * \param root the data base object to setup 
+ * \param root_idx_ptr an external pointer to put the root index, can be null
+ * \param filename the filename where go the maped memory
+ * \param offset_page offset between the mapped memory and the data base page
+ * area.
+ *
+ * parameter root_idx_ptr and offset allow to use a data base imbeded in
+ * a file containing an header such as opd_header. db_open always preallocate
+ * a few number of page
+ */
+void db_open(root_t * root, const char * filename, unsigned int offset_page,
+	     unsigned int offset_descr);
+/**
+ * \param root the data base to close
+ */
+void db_close(root_t * root);
 
-/** add a page returning his index. Take care all page pointer are
+/** add a page returning its index. Take care all page pointer can be
  * invalidated by this call ! */
 page_idx_t add_page(root_t * root);
 
@@ -85,7 +128,7 @@ static __inline page_t * page_nr_to_page_ptr(const root_t * root,
 					     page_idx_t page_nr)
 {
 	assert(page_nr < root->current_size);
-	return &root->base_area[page_nr];
+	return &root->page_base[page_nr];
 }
 
 #endif /* !DB_H */

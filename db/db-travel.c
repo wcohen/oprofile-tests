@@ -45,5 +45,5 @@ static void do_travel(const root_t * root, unsigned int page_idx,
 void travel(const root_t * root, unsigned int first, unsigned int last,
 	    travel_callback callback, void * data)
 {
-	do_travel(root, root->root, first, last, callback, data);
+	do_travel(root, root->descr->root_idx, first, last, callback, data);
 }
