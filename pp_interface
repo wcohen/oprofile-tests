@@ -414,9 +414,13 @@ by -i, -e, -s, -o.
 	symbol      symbol name
 	debug       source file name and line nr
 	image       image name (this one is useful for merged)
+	app-name    owning application
 
-	FIXME: clarify, what is the default order, the order depend also
-	of what we are showing (details, symbols line)
+	sort is done int the field order specified by user then by the
+	following for the unspecified: sample,image,app-name,symbol,debug,vma
+
+	FIXME: clarify than order depend also of what we are showing
+	(details, symbols line)
  
 5.15 --include-symbols <symbollist>
 
