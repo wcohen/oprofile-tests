@@ -10,7 +10,6 @@
   check spaces around ==, +=, *, etc.
   check for file header
   check for spurious "std::" qualification in .cpp
-  check for "int *f = c" and friends
   not smart enough to recognise "//" in string literals
   'function (...)'
 
@@ -66,6 +65,9 @@ elseif = re.compile(".*#else(if)*")
 doxygen_comment = re.compile(r"(\s*///|.*/\*\*<|.*///<)")
 namespace_close = re.compile(r".*(%s\snamespace|namespace\s%s)" % (identifier, identifier))
 http = re.compile(".*http://.*")
+return_statement = re.compile(".*return ")
+pointer_missing_space = re.compile(".*%s\s+[*]%s" % (identifier, identifier))
+reference_missing_space = re.compile(".*%s\s+[&]%s" % (identifier, identifier))
 
 simple_regexps = [
 	( re.compile(r".*%s\(" % control_keyword), "missing space after control keyword"),
@@ -299,6 +301,12 @@ def check_line(file, nr, line, prev_line):
  
 	if space_prefix.match(line):
 		check_indentation(file, nr, line, prev_line)
+
+	if pointer_missing_space.match(line) and not return_statement.match(line):
+		err(file, nr, line, "warning: possible missing space after pointer declaration")
+
+	if reference_missing_space.match(line) and not return_statement.match(line):
+		err(file, nr, line, "warning: possible missing space after reference declaration")
 
 	if opt.check_length and len(line) > 80:
 		err(file, nr, line, "warning: line is of length %d" % len(line))
