@@ -342,7 +342,7 @@ sample filename from the profile specification merge specification are applied.
 
 5.2 --include-dependent
 
-	Include libs, kernel, modules, etc.
+	Include libs, kernel, modules, etc. Add the 'i' output specifier
 
 5.3 --symbols <symbol-list>
 
@@ -373,10 +373,6 @@ by -i, -e, -s, -o.
 	xmalloc+0x34, for example and some field can be omitted like
 	i, I, n from details lines but not from the symbol lines. This option
 	imply --symbols
-
-5.11	--include-dependent
-
-	add the 'i' output specifier
 
 5.14 --sort <sortspec>
 
