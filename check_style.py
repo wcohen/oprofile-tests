@@ -160,7 +160,7 @@ false_positives = [
 "#define APIC_INTEGRATED(x)	((x)&0xF0)",
 "#define CCCR_RESERVED_BITS 0x38030FFF",
 " *			// do something",
-"			if (it->sample.vma & ~0xffffffffLLU) {",
+"	if (sample.vma & ~0xffffffffLLU)",
 "	address = *(unsigned short *)phys_to_virt(0x40E);",
 "		smp_scan_config(0xF0000,0x10000)) {",
 "	return sum & 0xFF;",
@@ -179,6 +179,7 @@ false_positives = [
 "	{ \"///usr/dir\", \"dir\" },",
 "	{ \"///usr//dir\", \"dir\" },",
 "	{ \".//.//\" \"file_manip_tests.o\", \"file_manip_tests.o\" },",
+"template <typename Throw, typename Catch>",
 ]
 
 def err(file, nr, line, message):
