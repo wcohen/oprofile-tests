@@ -35,7 +35,7 @@ shared between the interfaces.
 
 2.3 --version (-v) 
 
-	As currently, "opsummary: oprofile 0.3cvs compiled on May 15 2002 16:43:40"
+	As currently, "opreport: oprofile 0.3cvs compiled on May 15 2002 16:43:40"
 
 2.4 --verbose (-V)
 
@@ -57,7 +57,7 @@ shared between the interfaces.
 -------------------------
 
 Each tool needs at least one sample file + associated binary image to operate on,
-and some tools (opdiff, opsummary) can have more than one. It would
+and some tools (opdiff, opreport) can have more than one. It would
 be very useful for the user to be able to conveniently specify a subset of profiles,
 and we can use the same method for every tool.
 
@@ -301,9 +301,12 @@ command line after substitution of the alias name
 
 née oprofpp.
 
-This tool is used for providing symbol-based summaries of a particular image.
-The profile spec must resolve to exactly one profile, unless it is possible to
-auto-merge the resolved list from the profile spec (see below). 
+This tool is used for providing symbol-based summaries of a particular set
+of image (possibly including all image profiled). The profile spec don't need
+to resolve to exactly one profile. After selecting candidate sample filename
+from the profile specification merge specification are applied. If this
+resulting contains sample to binary which belong to another binary (shared lib,
+ module) the output specification e is added to default
 
 5.1 opreport <flags> <profile-spec>
 	--symbols (-l)
@@ -316,6 +319,7 @@ auto-merge the resolved list from the profile spec (see below).
 	--ignore-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
 	--image-path (-p)
+	--merge <merge spec>
 	<profile spec>
 
 5.2 --include-dependent
@@ -340,8 +344,9 @@ by -i, -e, -s, -o.
 	S       nr accumulated samples
 	p       nr percent samples
 	P       nr accumulated percent samples
+	q       nr percent samples details
+	Q       nr cumulated percent samples details
 	n       symbol name
-	m	mangled symbol name
 	l       source file name and line nr
 	L       base name of source file and line nr
 	i       image name (these two are useful for merged)
@@ -369,7 +374,8 @@ v,s,S,p,P,n,m,I,L,i,I :
 	Shows per-address samples values not only per-symbol samples,
 	equivalent to 'vspnL' but the "symbol" fields may show
 	xmalloc+0x34, for example and some field can be omitted like
-	i, I, m from details lines but not from the symbol lines
+	i, I, n from details lines but not from the symbol lines. This option
+	imply --symbols
 
 5.11	--include-dependent
 
@@ -386,7 +392,6 @@ v,s,S,p,P,n,m,I,L,i,I :
 	v       vma offset
 	s       nr samples
 	n       symbol name
-	m	mangled symbol name
 	l       source file name and line nr
 	L       base name of source file and line nr
 	i       image name (these two are useful for merged)
@@ -399,7 +404,7 @@ v,s,S,p,P,n,m,I,L,i,I :
 FIXME: separate option --reverse-sort ?
 FIXME: Some sorting option make little sense, I have not a great feeling to
 add a dozen of comparator and map type to sort the sample container.
- 
+  
 5.15 --ignore-symbols <symbollist>
 
 	comma-separated list of symbols to ignore. Ignored symbols are included
@@ -427,6 +432,37 @@ add a dozen of comparator and map type to sort the sample container.
 	can be found by appending the path of the unfound binary directly, that is used
 	(in the list order). Otherwise, the basename is searched for. Otherwise, the basename
 	with ".o" appended is searched for.
+
+5.20 FIXME: should be we consider an "all-kernel" (kernel + modules) profile ?
+FIXME: what the above means ?
+
+5.21 --merge <merge spec>
+
+Unlike the single-profile tools, it can be useful for us to not auto-merge
+profile specs giving more than one profile result. Two profiles of the same
+thing on CPU #0, and CPU #1, we might want to keep separate in the summary.  So
+we don't do it by default for opsummary, but allow the user to specify merges
+as follows :
+
+	cpu
+
+		Merge all cpu-specific profiles.
+
+	pid
+
+		Merge all process-id specific profiles (this merges all,
+		regardless of tgid vs. tid).
+
+FIXME: allow tgid and tid ?
+
+	lib
+
+		Merge all app-specific library profiles.
+ 
+	unitmask
+
+		Merge all compatible unit mask differences
+
 
 6. opgprof
 -----------
@@ -511,68 +547,6 @@ This is to keep the line numbers the same.
 
 	Additional (?) params to objdump, e.g. for Intel syntax asm
 
-8. opsummary
--------------
-
-nee op_time. This is used for either global symbol- or image-based summaries
-inside of one session only.
-
-8.1 opsummary 
-	--symbol-summary (-l)
-	--debug-info (-b)
-	--details (-a)
-	--output <output spec> (-o) 
-	--sort <sort spec> (-s)
-	--merge <merge spec>
-	--include-dependent (-n)
-	--ignore-symbols <symbollist> (-i)
-	--exclude-symbols <symbollist> (-e)
-	--threshold <threshold> (-t)
-	<profile spec>
-
-All as before except when specified
-
-8.2 --symbol-summary
-
-Turns on symbol-based global summary. Make sure to have a 
-useful default output spec in these cases. --debug-info and --details
-are only available with this option.
-
-8.3 --output
-
-As in opreport except the default output format is vspni, if
---include-dependent is specified default output format is vspnie
-
-8.4 --merge <merge spec>
-
-Unlike the single-profile tools, it can be useful for us to not auto-merge
-profile specs giving more than one profile result. Two profiles of the same
-thing on CPU #0, and CPU #1, we might want to keep separate in the summary.  So
-we don't do it by default for opsummary, but allow the user to specify merges
-as follows :
-
-	cpu
-
-		Merge all cpu-specific profiles.
-
-	pid
-
-		Merge all process-id specific profiles (this merges all,
-		regardless of tgid vs. tid).
-
-FIXME: allow tgid and tid ?
-
-	lib
-
-		Merge all app-specific library profiles.
- 
-	unitmask
-
-		Merge all compatible unit mask differences
-
-8.5 FIXME: should be we consider an "all-kernel" (kernel + modules) profile ?
- 
-8.6 --include-dependent does as op_time -k does now.
 
 9. opdiff
 ----------
