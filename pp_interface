@@ -175,7 +175,7 @@ Here's a complete list of tags :
 
 3.9	lib-image: <imagelist>
 		Comma list of library images to consider. Thus when looking for glibc samples
-		due to oprofiled, opreport /usr/bin/oprofiled 'lib-image:*libc*' will show only
+		due to oprofiled, opreport image:/usr/bin/oprofiled 'lib-image:*libc*' will show only
 		those. If not specified, these samples are NOT included by default, EXCEPT
 		in the presence of automerging if image:*libc*, for example.
 
