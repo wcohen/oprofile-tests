@@ -43,7 +43,8 @@ camel_ident = "([a-z]+[0-9:_]*[A-Z]|[A-Z]+[0-9:_]*[a-z])"
 binop = "(==|!=|\*=|-=|/=|<<=|>>=|<<|>>|\|\||&&)"
 
 cpp_file = re.compile(".*\.cpp")
-spurious_std = re.compile("\s+.*std::")
+spurious_std = re.compile(".*std::")
+using = re.compile("^using ")
 open_indent = re.compile(r".*\{\s*$")
 space_prefix = re.compile(r"^[\t]*[ ][\t ]*[^\t ].*\n")
 cpp_io_continue = re.compile(r"\s*<<")
@@ -305,7 +306,7 @@ def check_line(file, nr, line, prev_line):
 	if in_comment:
 		return
 
-	if cpp_file.match(file) and spurious_std.match(line):
+	if cpp_file.match(file) and spurious_std.match(line) and not using.match(line):
 		err(file, nr, line, "warning: spurious std:: qualification")
 
 	check_camel(file, nr, line)
