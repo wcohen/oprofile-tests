@@ -7,8 +7,6 @@ Please don't re-number item in this file as code comment refer this number.
  
 General FIXME: call graphs - for a later spec ?
 
-FIXME: missing e E output field in all place, but it don't make sense to allow
-them in all pp tools.
 
 1. Basic principles
 -------------------
@@ -309,7 +307,7 @@ auto-merge the resolved list from the profile spec (see below).
 
 5.1 opreport <flags> <profile-spec>
 	--symbols (-l)
-	--debug (-b)
+	--debug-info (-b)
 	--details (-a)
 	--output <output spec> (-o) 
 	--threshold <threshold> (-t)
@@ -348,6 +346,8 @@ by -i, -e, -s, -o.
 	L       base name of source file and line nr
 	i       image name (these two are useful for merged)
 	I       base name of image name
+	e	owning application
+	E	base of owning application
  
 	x	reserved for XML output at some point
  
@@ -360,7 +360,7 @@ v,s,S,p,P,n,m,I,L,i,I :
 
 5.8 The default format is vspn. The following options modify this :
 
-5.9	--debug
+5.9	--debug-info
 
 	Shows line number and file information (equivalent to 'vspnL')
 
@@ -375,9 +375,7 @@ v,s,S,p,P,n,m,I,L,i,I :
 
 	Default format becomes 'vspni'
 
-5.12 Specification of either --debug OR --details AND --output is a fatal error.
-FIXME: remove 5.12 since now --debug and --details are modifier but not
-format specifier.
+5.12 Specification of either --debug-info OR --details AND --output is a fatal error.
 
 5.13 Note: --help must output this information and document the default
  
@@ -393,8 +391,14 @@ format specifier.
 	L       base name of source file and line nr
 	i       image name (these two are useful for merged)
 	I       base name of image name
+	e	owning application
+	E	base of owning application
  
 	r	sort whatever in reverse
+
+FIXME: separate option --reverse-sort ?
+FIXME: Some sorting option make little sense, I have not a great feeling to
+add a dozen of comparator and map type to sort the sample container.
  
 5.15 --ignore-symbols <symbollist>
 
@@ -510,14 +514,12 @@ This is to keep the line numbers the same.
 8. opsummary
 -------------
 
-FIXME: this section doen't contain an output format, is it intended ?
-
 nee op_time. This is used for either global symbol- or image-based summaries
 inside of one session only.
 
 8.1 opsummary 
 	--symbol-summary (-l)
-	--debug (-b)
+	--debug-info (-b)
 	--details (-a)
 	--output <output spec> (-o) 
 	--sort <sort spec> (-s)
@@ -528,15 +530,20 @@ inside of one session only.
 	--threshold <threshold> (-t)
 	<profile spec>
 
-All as before.
+All as before except when specified
 
 8.2 --symbol-summary
 
 Turns on symbol-based global summary. Make sure to have a 
-useful default output spec in these cases. --debug and --details
+useful default output spec in these cases. --debug-info and --details
 are only available with this option.
- 
-8.3 --merge <merge spec>
+
+8.3 --output
+
+As in opreport except the default output format is vspni, if
+--include-dependent is specified default output format is vspnie
+
+8.4 --merge <merge spec>
 
 Unlike the single-profile tools, it can be useful for us to not auto-merge
 profile specs giving more than one profile result. Two profiles of the same
@@ -563,9 +570,9 @@ FIXME: allow tgid and tid ?
 
 		Merge all compatible unit mask differences
 
-8.4 FIXME: should be we consider an "all-kernel" (kernel + modules) profile ?
+8.5 FIXME: should be we consider an "all-kernel" (kernel + modules) profile ?
  
-8.5 --include-dependent does as op_time -k does now.
+8.6 --include-dependent does as op_time -k does now.
 
 9. opdiff
 ----------
@@ -625,9 +632,6 @@ to the user to do this sensibly.
  
 	x	reserved for XML output at some point
 
-FIXME: I removed h and d specifier, there was probably a missing --details
---debug option like for opreport.
- 
 e.g. s is
 
 343 (+343)
