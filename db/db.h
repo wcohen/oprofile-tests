@@ -12,7 +12,10 @@
 /* in function of MIN_PAGE two different search algo are selected at compile
  * time, a straight liner search or a dicho search, the best perf for the
  * two method are equal at approximately 6 and 64 item. I defer to later
- * the page size choice. See do_insert() */
+ * the page size choice. See do_insert(). Test show than the better performance
+ * depend on the distribution of key, e.g. for 1E6 item distributed through
+ * 1E4 distinct key 64 give better performance but for 1E5 distinct key 6
+ * give better performance */
 #define MIN_PAGE 6
 #define MAX_PAGE MIN_PAGE*2
 
