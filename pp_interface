@@ -73,6 +73,9 @@ shared between the interfaces.
 
 	Use the smart demangler. Not the default.
 
+2.8
+	2.5, 2.6 and 2.7 are not used by opgprof
+
 3. Profile specifications
 -------------------------
 
