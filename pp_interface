@@ -29,7 +29,7 @@ shared between the interfaces.
 	v       vma offset
 	s       nr samples
 	p       nr percent samples relative to owner symbol
-	q       nr percent samples details relative to owner application
+	q       nr percent samples details relative to the whole samples count
 	n       symbol name
 	l       source file name and line nr
 	i       image name
@@ -85,7 +85,9 @@ and we can use the same method for every tool.
 
 3.3) the actual samples file to use 
 3.4) the actual binary to bfd_open
-3.5/3.6) Session name
+3.5/3.6) Session name FIXME: it's not a part of profile spec but a filter
+  to samples filename candidate, it would be a --session --session-exclude
+  see 3.24
 3.7) Binary
 3.9) App binary (for shared libraries, e.g. /bin/ls using /lib/libc.so)
 3.11) Event name
@@ -145,13 +147,9 @@ Here's a complete list of tags :
 		'image:/usr/bin/oprofiled,*op*,./oprofpp'
 
 		"image:" is default tag, allowing old-style "opreport /usr/bin/oprofiled"
-		The above shortcut don't work if user try to profile a binary
-		with a ':' imbedded in filename or path name, in this case
-		complete syntax image:image_name must be used. FIXME: must
-		we assume than invalid_tag_name:value is a binary name. Cons
-		is code simplification (and better error message ?) Pro is
-		easier to use for guys using ':' in filename (and smallest
-		documentation ?)
+		if an image name is "valid_tag:xxx" above shortcut doesn't
+		work and user must use image:valid_tag:xxxx, the same ambiguity
+		occur if image name is an alias, see 4.4
 
 3.8	image-exclude: <imagelist> 
 		Comma list of images to exclude from the final list
@@ -307,7 +305,7 @@ at the place of alias_name on command line.
 
 Note there is a potential ambiguity with:
 
-$ opreport -l name
+$ opreport name
 
 if name is a binary in the current directory and is a valid alias name, in such
 case name being an alias name is assumed.
@@ -337,12 +335,12 @@ sample filename from the profile specification merge specification are applied.
 	--ignore-symbols <symbollist> (-i)
 	--exclude-symbols <symbollist> (-e)
 	--image-path (-p)
-	--merge <merge spec>
-	--no-header
+	--merge <merge spec> (-m)
+	--no-header (-h)
 	--short-filename
 	--accumulated
-	--reverse-sort
-	--relative-percent
+	--reverse-sort (-r)
+	--global-percent
 	--xml-output  (FIXME --xml)
 	<profile spec>
 
@@ -465,10 +463,9 @@ FIXME: allow tgid and tid ?
 5.25 --reverse-sort
 	sort whatever in reverse
 
-5.26 --relative-percent={image,global}
-	*add* one or two field to output to show samples count percent relative
-	to image or global samples count. image add the 'q' or 'Q' output
-	specifier. FIXME global is perhaps hard to implement
+5.26 --global-percent
+	*add* one field to output to show samples count percent relative
+	to the whole samples count (add the 'q' or 'Q' output specifier)
 
 6. opgprof
 -----------
@@ -496,7 +493,7 @@ née op_to_source. Our basic source / asm annotation tool.
 	--threshold <threshold> (-t)
 	--source (-s)
 	--assembly (-a)
-	--mixed (-m)
+	--mixed (-m)    # FIXME: do we need that, user would "-a -s" to get it
 	--objdump-params (-p)
 	<profile spec>
 
