@@ -3,121 +3,122 @@
 
 #include "db.h"
 
-static void lock_db(root_t * root)
+static void lock_db(db_tree_t * tree)
 {
-	if (root->is_locked == 0) {
-		flock(root->fd, LOCK_EX);
-		root->is_locked = 1;
+	if (tree->is_locked == 0) {
+		flock(tree->fd, LOCK_EX);
+		tree->is_locked = 1;
 	}
 }
 
-static void unlock_db(root_t * root)
+static void unlock_db(db_tree_t * tree)
 {
-	if (root->is_locked) {
-		flock(root->fd, LOCK_UN);
-		root->is_locked = 0;
+	if (tree->is_locked) {
+		flock(tree->fd, LOCK_UN);
+		tree->is_locked = 0;
 	}
 }
 
-static void copy_item(value_t * dest, const value_t * src,
-		      unsigned int nr_item)
+static void copy_item(db_item_t * dest, const db_item_t * src,
+		      size_t nr_item)
 {
-	unsigned int i;
+	size_t i;
 	for (i = 0 ; i < nr_item ; ++i) {
 		dest[i] = src[i];
 	}
 }
 
-static void copy_item_backward(value_t * dest, value_t * src,
-			       unsigned int nr_item)
+static void copy_item_backward(db_item_t * dest, db_item_t * src,
+			       size_t nr_item)
 {
-	unsigned int i;
+	size_t i;
 	for (i = nr_item ; i-- > 0 ; ) {
 		dest[i] = src[i];
 	}
 }
 
-static void split_page(root_t * root, 
-		       page_idx_t page_idx, page_idx_t new_page_idx,
-		       value_t * value, value_t * excess_elt, unsigned int pos)
+static void split_page(db_tree_t * tree,  db_page_idx_t page_idx,
+		       db_page_idx_t new_page_idx,
+		       db_item_t * value, db_item_t * excess_elt,
+		       size_t pos)
 {
-	page_t * page, * new_page;
+	db_page_t * page, * new_page;
 
-	new_page = page_nr_to_page_ptr(root, new_page_idx);
-	page = page_nr_to_page_ptr(root, page_idx);
+	new_page = page_nr_to_page_ptr(tree, new_page_idx);
+	page = page_nr_to_page_ptr(tree, page_idx);
 
 	/* split page in two piece of equal size */
 
-	if (pos < MIN_PAGE) {
+	if (pos < DB_MIN_PAGE) {
 		/* save the pivot. */
-		*excess_elt = page->page_table[MIN_PAGE - 1];
+		*excess_elt = page->page_table[DB_MIN_PAGE - 1];
 
 		/* split-up the page. */
 		copy_item(&new_page->page_table[0],
-			  &page->page_table[MIN_PAGE],
-			  MIN_PAGE);
+			  &page->page_table[DB_MIN_PAGE],
+			  DB_MIN_PAGE);
 
-		assert((MIN_PAGE - (pos + 1)) < MAX_PAGE);
+		assert((DB_MIN_PAGE - (pos + 1)) < DB_MAX_PAGE);
 
 		/* shift the old page to make the hole. */
-		/* pos < MIN_PAGE so on copy size is >= 0 */
+		/* pos < DB_MIN_PAGE so on copy size is >= 0 */
 		copy_item_backward(&page->page_table[pos + 1],
 				   &page->page_table[pos],
-				   MIN_PAGE - (pos +  1));
+				   DB_MIN_PAGE - (pos +  1));
 
 		/* insert the item. */
 		page->page_table[pos] = *value;
-	} else if (pos > MIN_PAGE) {
+	} else if (pos > DB_MIN_PAGE) {
 		/* save the pivot. */
-		*excess_elt = page->page_table[MIN_PAGE];
+		*excess_elt = page->page_table[DB_MIN_PAGE];
 
-		assert((pos - (MIN_PAGE+1)) < MAX_PAGE);
+		assert((pos - (DB_MIN_PAGE+1)) < DB_MAX_PAGE);
 
 		/* split-up the page. */
 		copy_item(&new_page->page_table[0],
-			  &page->page_table[MIN_PAGE + 1],
-			  pos - (MIN_PAGE+1));
+			  &page->page_table[DB_MIN_PAGE + 1],
+			  pos - (DB_MIN_PAGE+1));
 
 		/* insert the elt. */
-		new_page->page_table[pos - (MIN_PAGE + 1)] = *value;
+		new_page->page_table[pos - (DB_MIN_PAGE + 1)] = *value;
 
-		assert(((int)(MAX_PAGE - pos)) >= 0);
+		assert(((int)(DB_MAX_PAGE - pos)) >= 0);
 
-		copy_item(&new_page->page_table[pos - MIN_PAGE],
+		copy_item(&new_page->page_table[pos - DB_MIN_PAGE],
 			  &page->page_table[pos],
-			  MAX_PAGE - pos);
-	} else { /* pos  == MIN_PAGE */
+			  DB_MAX_PAGE - pos);
+	} else { /* pos  == DB_MIN_PAGE */
 		/* the pivot is the item to insert */
 		*excess_elt = *value;
 
 		/* split-up the page */
 		copy_item(&new_page->page_table[0],
-			  &page->page_table[MIN_PAGE],
-			  MIN_PAGE);
+			  &page->page_table[DB_MIN_PAGE],
+			  DB_MIN_PAGE);
 	}
 
 	/* can setup now the page */
-	page->count = new_page->count = MIN_PAGE;
+	page->count = new_page->count = DB_MIN_PAGE;
 	new_page->p0 = excess_elt->child_page;
 	excess_elt->child_page = new_page_idx;
 }
 
-static int do_reorg(root_t * root, page_idx_t page_idx, unsigned int pos,
-		    value_t * excess_elt, value_t * value)
+static int do_reorg(db_tree_t * tree, db_page_idx_t page_idx, size_t pos,
+		    db_item_t * excess_elt, db_item_t * value)
 {
 	int need_reorg;
-	page_t * page;
+	db_page_t * page;
 
-	page = page_nr_to_page_ptr(root, page_idx);
+	page = page_nr_to_page_ptr(tree, page_idx);
 
-	assert(page->count <= MAX_PAGE);
+	assert(page->count <= DB_MAX_PAGE);
 	
 	/* the insertion pos can be at the end of the page so <= */
-	assert(pos <= MAX_PAGE);
+	assert(pos <= DB_MAX_PAGE);
 
-	if (page->count < MAX_PAGE) {
+	if (page->count < DB_MAX_PAGE) {
 		/* insert at pos, shift to make a hole. */
-		assert((page->count - pos < MAX_PAGE));
+		assert((page->count - pos < DB_MAX_PAGE));
 
 		copy_item_backward(&page->page_table[pos + 1],
 				   &page->page_table[pos],
@@ -129,12 +130,12 @@ static int do_reorg(root_t * root, page_idx_t page_idx, unsigned int pos,
 
 		need_reorg = 0;
 	} else {
-		page_idx_t new_page_idx = add_page(root);
+		db_page_idx_t new_page_idx = db_add_page(tree);
 
 		/* we can not pass page, the page pointer can be invalidated
-		 * by add_page so pass page_idx here, call will re-get the page
-		 * pointer */
-		split_page(root, page_idx, new_page_idx, value,
+		 * by db_add_page so pass page_idx here, call will re-get the
+		 * page pointer */
+		split_page(tree, page_idx, new_page_idx, value,
 			   excess_elt, pos);
 
 		need_reorg = 1;
@@ -143,16 +144,16 @@ static int do_reorg(root_t * root, page_idx_t page_idx, unsigned int pos,
 	return need_reorg;
 }
 
-#if MIN_PAGE > 6
-static int do_insert(root_t * root, page_idx_t page_idx,
-		     value_t * excess_elt, value_t * value)
+#if DB_MIN_PAGE > 6
+static int do_insert(db_tree_t * tree, db_page_idx_t page_idx,
+		     db_item_t * excess_elt, db_item_t * value)
 {
 	int need_reorg;
 	int left, right, pos;
-	page_idx_t child_page_idx;
-	page_t * page;
+	db_page_idx_t child_page_idx;
+	db_page_t * page;
 
-	page = page_nr_to_page_ptr(root, page_idx);
+	page = page_nr_to_page_ptr(tree, page_idx);
 
 	assert(page->count != 0);
 
@@ -190,8 +191,8 @@ static int do_insert(root_t * root, page_idx_t page_idx,
 
 	need_reorg = 0;
 
-	if (child_page_idx != nil_page) {
-		need_reorg = do_insert(root, child_page_idx,
+	if (child_page_idx != db_nil_page) {
+		need_reorg = do_insert(tree, child_page_idx,
 				       excess_elt, value);
 		*value = *excess_elt;
 	} else {
@@ -199,22 +200,22 @@ static int do_insert(root_t * root, page_idx_t page_idx,
 	}
 
 	if (need_reorg) {
-		lock_db(root);
-		need_reorg = do_reorg(root, page_idx, left, excess_elt, value);
+		lock_db(tree);
+		need_reorg = do_reorg(tree, page_idx, left, excess_elt, value);
 	}
 
 	return need_reorg;
 }
 #else
-static int do_insert(root_t * root, page_idx_t page_idx,
-		     value_t * excess_elt, value_t * value)
+static int do_insert(db_tree_t * tree, db_page_idx_t page_idx,
+		     db_item_t * excess_elt, db_item_t * value)
 {
 	int need_reorg;
 	int pos;
-	page_idx_t child_page_idx;
-	page_t * page;
+	db_page_idx_t child_page_idx;
+	db_page_t * page;
 
-	page = page_nr_to_page_ptr(root, page_idx);
+	page = page_nr_to_page_ptr(tree, page_idx);
 
 	assert(page->count != 0);
 
@@ -239,8 +240,8 @@ static int do_insert(root_t * root, page_idx_t page_idx,
 
 	need_reorg = 0;
 
-	if (child_page_idx != nil_page) {
-		need_reorg = do_insert(root, child_page_idx,
+	if (child_page_idx != db_nil_page) {
+		need_reorg = do_insert(tree, child_page_idx,
 				       excess_elt, value);
 		*value = *excess_elt;
 	} else {
@@ -248,57 +249,57 @@ static int do_insert(root_t * root, page_idx_t page_idx,
 	}
 
 	if (need_reorg) {
-		lock_db(root);
-		need_reorg = do_reorg(root, page_idx, pos, excess_elt, value);
+		lock_db(tree);
+		need_reorg = do_reorg(tree, page_idx, pos, excess_elt, value);
 	}
 
 	return need_reorg;
 }
 #endif
 
-void insert(root_t * root, unsigned int key, unsigned int info)
+void db_insert(db_tree_t * tree, db_key_t key, db_value_t info)
 {
-	value_t excess_elt;
-	value_t value;
+	db_item_t excess_elt;
+	db_item_t value;
 	int need_reorg;
 
 	value.key = key;
 	value.info = info;
-	value.child_page = nil_page;
+	value.child_page = db_nil_page;
 
-	if (root->descr->root_idx == nil_page) {
+	if (tree->descr->root_idx == db_nil_page) {
 		/* create the root. */
-		page_t * page;
+		db_page_t * page;
 
 		/* we don't need to lock_db() here */
 
-		root->descr->root_idx = add_page(root);
+		tree->descr->root_idx = db_add_page(tree);
 
-		page = page_nr_to_page_ptr(root, root->descr->root_idx);
+		page = page_nr_to_page_ptr(tree, tree->descr->root_idx);
 
 		page->page_table[0] = value;
 		page->count = 1;
 		return;
 	}
 
-	need_reorg = do_insert(root, root->descr->root_idx, &excess_elt,
+	need_reorg = do_insert(tree, tree->descr->root_idx, &excess_elt,
 			       &value);
 	if (need_reorg) {
 		/* increase the level of tree. */
-		page_t * new_page;
-		page_idx_t old_root;
+		db_page_t * new_page;
+		db_page_idx_t old_root;
 
-		old_root = root->descr->root_idx;
-		root->descr->root_idx = add_page(root);
+		old_root = tree->descr->root_idx;
+		tree->descr->root_idx = db_add_page(tree);
 
-		/* page pointer can be invalidated by add_page, reload it */
-		new_page = page_nr_to_page_ptr(root, root->descr->root_idx);
+		/* page pointer can be invalidated by db_add_page, reload it */
+		new_page = page_nr_to_page_ptr(tree, tree->descr->root_idx);
 
 		new_page->page_table[0] = excess_elt;
 		new_page->count = 1;
 		new_page->p0 = old_root;
 	}
 
-	unlock_db(root);
+	unlock_db(tree);
 }
 

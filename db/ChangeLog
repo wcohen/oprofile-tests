@@ -1,3 +1,8 @@
+2002-04-18  Philippe Elie  <phil.el@wanadoo.fr>
+
+	* *.c;*.h: prefix all public identifier with db_.
+	  Use typedef as much I can rather than plain unsigned int.
+
 2002-04-17  Philippe Elie  <phil.el@wanadoo.fr>
 
 	* db-debug.c:

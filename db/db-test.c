@@ -18,19 +18,19 @@ static double user_time()
 }
 
 /* create nr item randomly created with nr_unique_item distinct items */
-static void speed_test(unsigned int nr_item, unsigned int nr_unique_item)
+static void speed_test(size_t nr_item, size_t nr_unique_item)
 {
 	int i;
 	double begin, end;
-	root_t root;
+	db_tree_t tree;
 
-	db_open(&root, TEST_FILENAME, 128, 0);
+	db_open(&tree, TEST_FILENAME, 128, 0);
 	begin = user_time();
 	for (i = 0 ; i < nr_item ; ++i) {
-		insert(&root, (random() % nr_unique_item) + 1, 1);
+		db_insert(&tree, (random() % nr_unique_item) + 1, 1);
 	}
 	end = user_time();
-	db_close(&root);
+	db_close(&tree);
 
 	remove(TEST_FILENAME);
 
@@ -49,22 +49,22 @@ static void do_speed_test(void)
 	}
 }
 
-static int test(unsigned int nr_item, unsigned int nr_unique_item)
+static int test(size_t nr_item, size_t nr_unique_item)
 {
 	int i;
-	root_t root;
+	db_tree_t tree;
 	int ret;
 
-	db_open(&root, TEST_FILENAME, 128, 0);
+	db_open(&tree, TEST_FILENAME, 128, 0);
 
 
 	for (i = 0 ; i < nr_item ; ++i) {
-		insert(&root, (random() % nr_unique_item) + 1, 1);
+		db_insert(&tree, (random() % nr_unique_item) + 1, 1);
 	}
 
-	ret = check_tree(&root);
+	ret = db_check_tree(&tree);
 
-	db_close(&root);
+	db_close(&tree);
 
 	remove(TEST_FILENAME);
 
@@ -89,9 +89,9 @@ static void do_test(void)
 }
 
 
-static unsigned int range_first, range_last;
-static unsigned int last_key_found;
-static void call_back(unsigned int key, unsigned int info, void * data)
+static db_key_t range_first, range_last;
+static db_key_t last_key_found;
+static void call_back(db_key_t key, db_value_t info, void * data)
 {
 	if (key <= last_key_found) {
 		printf("%x %x\n", key, last_key_found);
@@ -109,18 +109,18 @@ static void call_back(unsigned int key, unsigned int info, void * data)
 static int callback_test(int nr_item, int nr_unique_item)
 {
 	int i;
-	root_t root;
-	unsigned int first_key, last_key;
-	unsigned int old_nr_error = nr_error;
+	db_tree_t tree;
+	db_key_t first_key, last_key;
+	int old_nr_error = nr_error;
 
-	db_open(&root, TEST_FILENAME, 128, 0);
+	db_open(&tree, TEST_FILENAME, 128, 0);
 
 	for (i = 0 ; i < nr_item ; ++i) {
-		insert(&root, (random() % nr_unique_item) + 1, 1);
+		db_insert(&tree, (random() % nr_unique_item) + 1, 1);
 	}
 
 
-	last_key = (unsigned int)-1;
+	last_key = (db_key_t)-1;
 	first_key = 0;
 	
 	for ( ; first_key < last_key ; last_key /= 2) {
@@ -129,18 +129,12 @@ static int callback_test(int nr_item, int nr_unique_item)
 		range_first = first_key;
 		range_last = last_key;
 
-		travel(&root, first_key, last_key, call_back, 0);
+		db_travel(&tree, first_key, last_key, call_back, 0);
 
 		first_key = first_key == 0 ? 1 : first_key * 2;
 	}
 
-	last_key_found = 0;
-	range_first = 0;
-	range_last = -1;
-	
-	travel(&root, range_first, range_last, call_back, 0);
-
-	db_close(&root);
+	db_close(&tree);
 
 	remove(TEST_FILENAME);
 
