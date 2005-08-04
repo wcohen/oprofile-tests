@@ -37,6 +37,14 @@ import sys
 import os
 import popen2
 
+# in case psyco jit is available, if it's not install it or take a cup of tea
+# whilst the script run.
+try:
+    import psyco
+    psyco.full()
+except ImportError:
+    pass
+
 def generate_filename(top_dir):
     for root, dirs, files in os.walk(top_dir):
         for f in files:
