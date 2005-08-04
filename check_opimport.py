@@ -9,10 +9,14 @@
  for both samples files means the conversion code itself is not very well
  tested.
 
+
  This file can be used also to import a session to the current abi with a two
- lines python script::
+ lines python script:
+ 
    import check_opimport
-   import_files_session('/var/lib/oprofile', 'session_directory', 'output_dir')
+   check_opimport.import_files_session('/var/lib/oprofile/', '/var/lib/oprofile/samples/current/', 'output_dir')
+
+ The first parameter gives the directory where live the abi file.
  
 
  TODO:
@@ -37,6 +41,7 @@ def generate_filename(top_dir):
     for root, dirs, files in os.walk(top_dir):
         for f in files:
             yield (root, f)
+
 
 def import_files_session(oprofile_dir, oprofile_samples_dir, output_dir):
     for (directory, filename) in generate_filename(oprofile_samples_dir):
