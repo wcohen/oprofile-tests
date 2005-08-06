@@ -284,7 +284,15 @@ def check_trailing_comment(file, nr, line):
 	err(file, nr, line, "trailing comment")
 
 def check_brace(file, nr, lines):
-	if nr >= 3 and lines[nr-1].strip().endswith('}') and lines[nr-3].strip().endswith('{'):
+	if nr >= 3:
+		cur = lines[nr-1].rstrip()
+		last = lines[nr-3].rstrip()
+		if '{' in last and '}' in last:
+			return
+		if cur == '}' or '{' in cur or not cur.endswith('}'):
+			return
+		if last == '{' or not last.endswith('{'):
+			return
 		err(file, nr, lines[nr-1], "unnecessary brace around one line block")
 
 in_comment = False
