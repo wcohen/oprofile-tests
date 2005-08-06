@@ -283,9 +283,13 @@ def check_trailing_comment(file, nr, line):
 
 	err(file, nr, line, "trailing comment")
 
+def check_brace(file, nr, lines):
+	if nr >= 3 and lines[nr-1].strip().endswith('}') and lines[nr-3].strip().endswith('{'):
+		err(file, nr, lines[nr-1], "unnecessary brace around one line block")
+
 in_comment = False
 
-def check_line(file, nr, line, prev_line):
+def check_line(file, nr, line, prev_line, lines):
 
 	global in_comment
 
@@ -331,6 +335,8 @@ def check_line(file, nr, line, prev_line):
 	if opt.check_length and len(line) > 80:
 		err(file, nr, line, "warning: line is of length %d" % len(line))
 
+	check_brace(file, nr, lines)
+
 	for regexp, error in simple_regexps:
 		if regexp.match(line):
 			err(file, nr, line, error)
@@ -346,7 +352,7 @@ def check_file(filename):
 		if nr - 1 > 0:
 			prev_line = lines[nr - 2]
 
-		check_line(filename, nr, line, prev_line)
+		check_line(filename, nr, line, prev_line, lines)
 		nr = nr + 1
 
 def do_files(files):
