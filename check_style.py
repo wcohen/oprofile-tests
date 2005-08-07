@@ -73,6 +73,7 @@ pointer_missing_space = re.compile(".*%s\s+[*]%s" % (identifier, identifier))
 reference_missing_space = re.compile(".*%s\s+[&]%s" % (identifier, identifier))
 binop_missing_space_before = re.compile(".*[^ \t\n]+%s" % binop)
 binop_missing_space_after = re.compile(".*%s[^ ;\t\n]+" % binop)
+spurious_one_line_block = re.compile("\s*[ ]|[\t]+catch .*{.*|[\t]+try {.*")
 
 simple_regexps = [
 	( re.compile(r".*%s\(" % control_keyword), "missing space after control keyword"),
@@ -283,6 +284,7 @@ def check_trailing_comment(file, nr, line):
 
 	err(file, nr, line, "trailing comment")
 
+# false positives are difficult to avoid for inline function defined in class
 def check_brace(file, nr, lines):
 	if nr >= 3:
 		cur = lines[nr-1].rstrip()
@@ -292,6 +294,10 @@ def check_brace(file, nr, lines):
 		if cur == '}' or '{' in cur or not cur.endswith('}'):
 			return
 		if last == '{' or not last.endswith('{'):
+			return
+		if spurious_one_line_block.match(last):
+			return
+		if len(lines[nr-2].expandtabs()) >= 80:
 			return
 		err(file, nr, lines[nr-1], "unnecessary brace around one line block")
 
