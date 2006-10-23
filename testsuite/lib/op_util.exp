@@ -1,0 +1,144 @@
+# op_util.exp
+#   Copyright (C) 2006 Red Hat, Inc.
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+
+# globals which might change, perhaps?
+set op_proc_prefix "/dev/oprofile"
+set op_var_prefix "/var/lib/oprofile"
+
+
+# read contents of file and return
+proc op_get_file_contents {fname} {
+    set fd [open $fname]
+    set res [read $fd]
+    close $fd
+    return $res
+}
+
+# cycle-waster routine
+proc op_spin {count} {    
+    verbose "spinning cpu for $count \"work units\""
+    set j 23523
+    set k 15431
+    set m 73141
+    set n 93802    
+    for {set i 0} {$i < $count} {incr i} {
+	set j [expr $k * $m - ($n >> 2)]
+	set k [expr $m + $n * ($j ^ $k)]
+	set m [expr $n * $j - ($k << 2)]
+	set n [expr $j + $k * ($m ^ $k)]
+    }
+    local_exec "dd bs=16 if=/dev/urandom of=/dev/null count=$count" "" "" 10
+}
+
+# detect CPU type
+proc op_cpu_type {} {
+    
+    global op_proc_prefix
+    set type rtc
+    set cpu_type [op_get_file_contents "$op_proc_prefix/cpu_type"]
+
+    verbose "cpu_type is $cpu_type"
+    switch -exact "$cpu_type" {
+	0 {set type ppro}
+ 	i386/ppro {set type ppro}
+	1 {set type ppro}
+	i386/pii {set type ppro}
+	2 {set type ppro}
+	i386/piii {set type ppro}
+	3 {set type athlon}
+	i386/athlon {set type athlon}
+	4 {set type timer}
+	timer {set type timer}
+	5 {set type rtc}
+	rtc {set type rtc}
+	6 {set type p4}
+	i386/p4 {set type p4}
+	7 {set type ia64}
+	ia64/ia64 {set type ia64}
+	8 {set type ia64}
+	ia64/itanium {set type ia64}
+	9 {set type ia64}
+	ia64/itanium2 {set type ia64}
+	10 {set type athlon}
+	x86-64/hammer {set type athlon}
+	11 {set type p4}
+	i386/p4-ht {set type p4}
+	12 {set type alpha}
+	alpha/ev4 {set type alpha}
+	13 {set type alpha}
+	alpha/ev5 {set type alpha}
+	14 {set type alpha}
+	alpha/pca56 {set type alpha}
+	15 {set type alpha}
+	alpha/ev6 {set type alpha}
+	16 {set type alpha7}
+	alpha/ev67 {set type alpha}
+	17 {set type ppro}
+ 	i386/p6_mobile {set type ppro}
+	18 {set type xscale}
+	arm/xscale1 {set type xscale1}
+	19 {set type xscale}
+	arm/xscale2 {set type xscale2}
+	20 {set type power4}
+	ppc64/power4 {set type power4}
+	21 {set type power5}
+	ppc64/power5 {set type power5}
+	22 {set type power5p}
+	ppc64/power5+ {set type power5p}
+	23 {set type power970}
+	ppc64/970 {set type ppc970}
+	24 {set type mips}
+	mips/20K {set type mips}
+	25 {set type mips}
+	mips/24K {set type mips}
+	26 {set type mips}
+	mips/25K {set type mips}
+	27 {set type mips}
+	mips/34K {set type mips}
+	28 {set type mips}
+	mips/5K {set type mips}
+	29 {set type mips}
+	mips/r10000 {set type mips}
+	30 {set type mips}
+	mips/r12000 {set type mips}
+	31 {set type mips}
+	mips/rm7000 {set type mips}
+	32 {set type mips}
+	mips/rm9000 {set type mips}
+	33 {set type mips}
+	mips/sb1 {set type mips}
+	34 {set type mips}
+	mips/vr5432 {set type mips}
+	35 {set type mips}
+	mips/vr5500 {set type mips}
+	36 {set type mips}
+	ppc/e500 {set type e500}
+	37 {set type e500}
+	ppc/e500v2 {set type e500}
+	38 {set type ppro}
+	i386/core {set type ppro}
+	39 {set type ppc7450}
+	ppc/7450 {set type ppc7450}
+	40 {set type core2}
+ 	i386/core_2 {set type core2}
+    }
+
+    verbose "cpu type is $type"
+    return $type
+}

@@ -1,0 +1,162 @@
+# unix.exp
+#   Copyright (C) 2006 Red Hat, Inc.
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+
+# this file is a target-specific support library. its structure reflects
+# somewhat odd dejagnu-isms:
+#
+# * dejagnu thinks it is talking to "tools", which it has to start and
+#   stop, and feed commands to inbetween starting and stopping.
+#
+# * for each tool foo, you need <foo>_start, <foo>_exit, and <foo>_version
+#
+# * the <foo>_version and <foo>_exit routines are called when dejagnu is
+#   shutting down, but...
+#
+# * you have to call the appropriate <foo>_start routine yourself during
+#   test startup, wherever you see fit
+#
+# make sense? good.
+#
+# now, as far as dejagnu is concerned, we're calling the oprofile *module*
+# the tool (which dejagnu will setup and tear down for us using these
+# functions below) and a cycle of the oprofile *daemon* represents a single
+# testcase, done in the test file oprofile/oprofile-run.exp
+#
+
+set op_module_active 0
+set op_vmlinux 0
+
+load_lib "op_util.exp"
+
+# we need to find a linux image, before anything else
+
+proc oprofile_start {} {
+    global op_vmlinux
+    global op_module_active
+
+    set op_linux_version [exec /bin/uname -r]
+    set op_vmlinux "/boot/vmlinux-$op_linux_version"
+    set test "check for linux image"
+    if {[file exists $op_vmlinux] == 1} {
+	verbose "using linux image $op_vmlinux"
+#	pass $test
+    } else {
+	# try the debuginfo location
+	set op_vmlinux "/usr/lib/debug/lib/modules/${op_linux_version}/vmlinux"
+	if {[file exists $op_vmlinux] == 1} {
+	    verbose "using linux image $op_vmlinux"
+#	    pass $test
+	} else {
+	    verbose "linux image for $op_linux_version not found"
+	    set op_vmlinux 0
+#	    fail $test
+	}
+    }
+
+    # clear out existing state, daemon, etc.
+    verbose "oprofile_start: flushing any running version..."
+    local_exec "/usr/bin/killall -9 oprofiled" "" "" 100
+    local_exec "/bin/umount /dev/oprofile" "" "" 100
+    local_exec "/sbin/rmmod oprofile" "" "" 100
+
+    if {[regexp oprofile [exec /sbin/lsmod]] == 1} {
+	note "oprofile module not removed on system reset"
+    }
+
+    verbose "oprofile_start: initializing..."
+    set test "opcontrol --init"
+    if {[lindex [local_exec "opcontrol --init" "" "" 100] 0] == 0} {
+	verbose "opcontrol --init succeeded"
+	pass $test
+    } else {
+	verbose "opcontrol --init failed. are you root?"
+	fail $test
+    }
+
+    set test "check module presence"
+    if {[regexp oprofile [exec /sbin/lsmod]] == 1} {
+	verbose "oprofile module successfully inserted"
+	pass $test
+	set op_module_active 1
+    } else {
+	verbose "oprofile module not inserted"
+	fail $test
+	set op_module_active 0
+    }
+
+    set test "check /dev/oprofile filesystem presence"
+    if {[file exists /dev/oprofile/cpu_type] == 1} {
+	verbose "oprofile filesystem mounted"
+	pass $test
+    } else {
+	verbose "oprofile filesystem not mounted"
+	fail $test
+    }
+
+
+}
+
+proc oprofile_exit {} {
+    global op_module_active
+
+    verbose "oprofile_exit: deinitializing..."
+    set test "opcontrol --deinit"
+    if {[lindex [local_exec "opcontrol --deinit" "" "" 100] 0] == 0} {
+	verbose "oprofile deinitialized ok"
+	pass $test
+    } else {
+	verbose "oprofile deinitialization failed. are you root?"
+	fail $test
+    }
+
+    set test "check module absence"
+    if {[regexp oprofile [exec /sbin/lsmod]] == 0} {
+	verbose "oprofile module successfully removed"
+	set op_module_active 0
+	pass $test
+    } else {
+	verbose "oprofile module still present"
+	fail $test
+    }
+
+    set test "check /dev/oprofile filesystem absence"
+    if {[file exists /dev/oprofile/cpu_type] == 0} {
+	verbose "oprofile filesystem unmounted"
+	pass $test
+    } else {
+	verbose "oprofile filesystem still present"
+	fail $test
+    }
+}
+
+proc oprofile_version {} {
+
+    set version [exec /bin/uname -r]
+    set modpath [glob -nocomplain /lib/modules/$version/kernel/arch/*/oprofile/oprofile.o]
+
+    set oprof "oprofile unknown"
+    regexp {oprofile \d+\..*$} [lindex [local_exec "opcontrol --version" "" "" 100] 1] oprof
+
+    print ""
+    print "kernel version: $version"
+    print "module path: $modpath"
+    print "userspace version: $oprof"
+}
+
+

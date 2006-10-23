@@ -1,0 +1,29 @@
+This testsuite directory contains a simple testsuite to check the
+functionality of OProfile on the machine. Running the OProfile
+testsuite requires the following:
+
+-Superuser privileges
+-The dejagnu and expect packages installed
+-The OProfile commands to be on the PATH
+
+The tests are run by being in this directory and running the following command:
+
+runtest --tool oprofile
+
+The tests will run and at the end should print out the number of tests
+that passed and failed. Ideally, there should be no failures listed,
+only "# of expected passes".
+
+The testsuite is flexible and should run on a variety of different
+architectures without change, but there may be some architectures
+which are not yet included in the testsuite.
+
+The testsuite suite is not a exhaustive test of all the options and
+features of OProfile. It is designed to automate the simple smoke
+tests that people commonly do to make sure that nothing is "horribly
+wrong" and that the basic functionality works.
+
+Comments about and additions to the testsuite infrastructure are
+appreciated.
+
+-Will
