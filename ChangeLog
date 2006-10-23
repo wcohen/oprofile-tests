@@ -1,3 +1,7 @@
+2005-10-23  William Cohen  <wcohen@redhat.com>
+
+	* testsuite/*: New testsuite addition.
+
 2005-08-04  Philippe Elie  <phil.el@wanadoo.fr>
 
 	* check_opimport.py: opimport test, provide also an example on how to
