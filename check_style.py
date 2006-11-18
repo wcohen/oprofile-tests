@@ -68,12 +68,14 @@ doxygen_comment = re.compile(r"(\s*///|.*/\*\*<|.*///<)")
 namespace_close = re.compile(r".*(%s\snamespace|namespace\s%s)" % (identifier, identifier))
 http = re.compile(".*http://.*")
 return_statement = re.compile(".*return ")
-operator_decl = re.compile(".*operator%s" % binop)
+operator_decl = re.compile(".*operator..*\(")
+bin_operator_decl = re.compile(".*operator%s" % binop)
 pointer_missing_space = re.compile(".*%s\s+[*]%s" % (identifier, identifier))
 reference_missing_space = re.compile(".*%s\s+[&]%s" % (identifier, identifier))
 binop_missing_space_before = re.compile(".*[^ \t\n]+%s" % binop)
 binop_missing_space_after = re.compile(".*%s[^ ;\t\n]+" % binop)
 spurious_one_line_block = re.compile("\s*[ ]|[\t]+catch .*{.*|[\t]+try {.*")
+const_inline_func = re.compile(".*const {")
 
 simple_regexps = [
 	( re.compile(r".*%s\(" % control_keyword), "missing space after control keyword"),
@@ -137,9 +139,11 @@ camel_ok = [
 	"QFileDialog::getExistingDirectory",
 	"QFileDialog::getOpenFileName",
 	"isNull",
+	"CPU_PPC64_POWER5p",
 ]
 
 false_positives = [
+"#define KERNEL_OFFSET 0xC0000000",
 "	To value;",
 "template <typename To, typename From>",
 "To op_lexical_cast(From const & src)",
@@ -168,7 +172,7 @@ false_positives = [
 "#define GET_APIC_MAXLVT(x)	(((x)>>16)&0xFF)",
 "#define APIC_INTEGRATED(x)	((x)&0xF0)",
 "#define CCCR_RESERVED_BITS 0x38030FFF",
-" *			// do something",
+" *		// do something",
 "	if (sample.vma & ~0xffffffffLLU)",
 "	address = *(unsigned short *)phys_to_virt(0x40E);",
 "		smp_scan_config(0xF0000,0x10000)) {",
@@ -189,7 +193,7 @@ false_positives = [
 "	{ \"///usr//dir\", \"dir\" },",
 "	{ \".//.//\" \"file_manip_tests.o\", \"file_manip_tests.o\" },",
 "template <typename Throw, typename Catch>",
-"		     \"verbose output\", \"all,debug,bfd,level1,sfile,stats\"),",
+"		     \"verbose output\", \"all,debug,bfd,level1,sfile,stats,xml\"),",
 "	sscanf(arg, \"%lx,%lx\", &kernel_start, &kernel_end);",
 "		event->user = copy_ulong(&c, ',');",
 "	glob_filter f1(\"foo,*bar\", \"foobar\");",
@@ -218,6 +222,14 @@ false_positives = [
 "	var_name_rule.add_pattern(\"^\\\\$([_a-zA-Z][_a-zA-Z0-9]*)[ ]*=.*\", \"\\\\1\");",
 "	synth_syms.reset(new asymbol * [cur_symcount + start]);",
 "	                                + \" [self]\");",
+"#elif (defined(__mips__) && (_MIPS_SIM == _MIPS_SIM_ABI32)) /*_MIPSEL */",
+"	sscanf(arg, \"%llx,%llx\", &xen_image.start, &xen_image.end);",
+"		      << \" valid range is [0 (use default), buffer size/2] \"",
+"		      << \" valid range is [\" << OP_MIN_CPU_BUF_SIZE << \", \"",
+"		      << \" valid range is [\" << OP_MIN_CPU_BUF_SIZE << \", \"",
+"		    ordered_samples.find(node[pos].key);",
+"		      << \" valid range is [\" << 0 << \", \"",
+"	void fill(size_type size, T const & value) {",
 ]
 
 def err(file, nr, line, message):
@@ -299,6 +311,13 @@ def check_brace(file, nr, lines):
 			return
 		if len(lines[nr-2].expandtabs()) >= 80:
 			return
+		if operator_decl.match(last):
+			return
+		if const_inline_func.match(last):
+			return
+		for false in false_positives:
+			if false == last:
+				return
 		err(file, nr, lines[nr-1], "unnecessary brace around one line block")
 
 in_comment = False
@@ -340,10 +359,10 @@ def check_line(file, nr, line, prev_line, lines):
 	if reference_missing_space.match(line) and not return_statement.match(line):
 		err(file, nr, line, "warning: possible missing space after reference declaration")
 
-	if binop_missing_space_before.match(line) and not operator_decl.match(line):
+	if binop_missing_space_before.match(line) and not bin_operator_decl.match(line):
 		err(file, nr, line, "warning: missing space before binary operator")
 
-	if binop_missing_space_after.match(line) and not operator_decl.match(line):
+	if binop_missing_space_after.match(line) and not bin_operator_decl.match(line):
 		err(file, nr, line, "warning: missing space after binary operator")
 
 	if opt.check_length and len(line) > 80:
