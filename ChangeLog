@@ -1,3 +1,7 @@
+2007-06-27  William Cohen  <wcohen@redhat.com>
+
+	* testsuite/lib/op_events.exp: Correct unit_mask for ppro.
+
 2005-10-23  William Cohen  <wcohen@redhat.com>
 
 	* testsuite/*: New testsuite addition.

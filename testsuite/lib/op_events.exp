@@ -140,7 +140,7 @@ set op_event_table(ppro)                            \
              {1 CPU_CLK_UNHALTED  0 500000}         \
 	}                                           \
 	{                                           \
-             {0 L2_RQSTS          0 500000}         \
+             {0 L2_RQSTS          0xf 500000}       \
              {1 DATA_MEM_REFS     0 500000}         \
 	}                                           \
     }
