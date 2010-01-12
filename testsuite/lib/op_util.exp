@@ -38,10 +38,10 @@ proc op_spin {count} {
     set m 73141
     set n 93802    
     for {set i 0} {$i < $count} {incr i} {
-	set j [expr $k * $m - ($n >> 2)]
-	set k [expr $m + $n * ($j ^ $k)]
-	set m [expr $n * $j - ($k << 2)]
-	set n [expr $j + $k * ($m ^ $k)]
+	set j [expr {($k * $m - ($n >> 2)) % 4294967296}]
+	set k [expr {($m + $n * ($j ^ $k)) % 4294967296}]
+	set m [expr {($n * $j - ($k << 2)) % 4294967296}]
+	set n [expr {($j + $k * ($m ^ $k)) % 4294967296}]
     }
     local_exec "dd bs=16 if=/dev/urandom of=/dev/null count=$count" "" "" 10
 }

@@ -1,3 +1,8 @@
+2010-01-11  Maynard Johnson  <maynardj@us.ibm.com>
+
+	* testsuite/lib/op_util.exp: Fix up spin function to work properly with
+	  recent versions of tcl that use arbitrary length integers
+
 2007-06-27  William Cohen  <wcohen@redhat.com>
 
 	* testsuite/lib/op_events.exp: Correct unit_mask for ppro.
