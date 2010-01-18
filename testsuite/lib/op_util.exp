@@ -91,10 +91,10 @@ proc op_cpu_type {} {
 	alpha/ev67 {set type alpha}
 	17 {set type ppro}
  	i386/p6_mobile {set type ppro}
-	18 {set type xscale}
-	arm/xscale1 {set type xscale1}
-	19 {set type xscale}
-	arm/xscale2 {set type xscale2}
+	18 {set type gen_arm}
+	arm/xscale1 {set type gen_arm}
+	19 {set type gen_arm}
+	arm/xscale2 {set type gen_arm}
 	20 {set type power4}
 	ppc64/power4 {set type power4}
 	21 {set type power5}
@@ -137,6 +137,42 @@ proc op_cpu_type {} {
 	ppc/7450 {set type ppc7450}
 	40 {set type core2}
  	i386/core_2 {set type core2}
+	41 {set type power6}
+	ppc64/power6 {set type power6}
+	42 {set type power970}
+	ppc64/970MP {set type power970}
+	43 {set type cell_be}
+	ppc64/cell-be {set type cell_be}
+	44 {set type athlon}
+	x86-64/family10 {set type athlon}
+	45 {set type pa6t}
+	ppc64/pa6t {set type pa6t}
+	46 {set type gen_arm}
+	arm/mpcore {set type gen_arm}
+	47 {set type gen_arm}
+	arm/armv6 {set type gen_arm}
+	48 {set type power5pp}
+	ppc64/power5++ {set type power5pp}
+	49 {set type e500}
+	ppc/e300 {set type e500}
+	50 {set type avr32}
+	avr32 {set type avr32}
+	51 {set type arm7}
+	arm/armv7 {set type arm7}
+	52 {set type arch_perf}
+ 	i386/arch_perfmon {set type arch_perf}
+	53  {set type athlon}
+	x86-64/family11h {set type athlon}
+	54 {set type power7}
+	ppc64/power7 {set type power7}
+	55 {set type ibm_compat_v1}
+	ppc64/ibm-compat-v1 {set type ibm_compat_v1}
+	56 {set type arch_perf}
+   	i386/core_i7 {set type arch_perf}
+	57 {set type arch_perf}
+	i386/atom {set type arch_perf}
+	58 {set type mips}
+	mips/loongson2 {set type mips}
     }
 
     verbose "cpu type is $type"

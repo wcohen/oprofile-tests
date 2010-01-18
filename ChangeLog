@@ -1,3 +1,9 @@
+2010-01-18  William Cohen  <wcohen@redhat.com>
+
+	* testsuite/lib/op_events.exp
+	* testsuite/lib/op_util.exp: Add test support for arch_perfmon,
+	  core_i7, atom, power6, 970MP, cell-be, family10, pa6t, and arm.
+
 2010-01-11  Maynard Johnson  <maynardj@us.ibm.com>
 
 	* testsuite/lib/op_util.exp: Fix up spin function to work properly with
