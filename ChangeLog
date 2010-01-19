@@ -1,5 +1,9 @@
 2010-01-18  William Cohen  <wcohen@redhat.com>
 
+	* testsuite/lib/op_util.exp: Correct arch set.
+
+2010-01-18  William Cohen  <wcohen@redhat.com>
+
 	* testsuite/lib/op_events.exp
 	* testsuite/lib/op_util.exp: Add test support for arch_perfmon,
 	  core_i7, atom, power6, 970MP, cell-be, family10, pa6t, and arm.

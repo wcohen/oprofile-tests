@@ -127,7 +127,7 @@ proc op_cpu_type {} {
 	mips/vr5432 {set type mips}
 	35 {set type mips}
 	mips/vr5500 {set type mips}
-	36 {set type mips}
+	36 {set type e500}
 	ppc/e500 {set type e500}
 	37 {set type e500}
 	ppc/e500v2 {set type e500}
