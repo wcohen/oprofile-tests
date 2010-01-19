@@ -89,23 +89,16 @@ proc oprofile_start {} {
 	fail $test
     }
 
-    set test "check module presence"
-    if {[regexp oprofile [exec /sbin/lsmod]] == 1} {
-	verbose "oprofile module successfully inserted"
-	pass $test
-	set op_module_active 1
-    } else {
-	verbose "oprofile module not inserted"
-	fail $test
-	set op_module_active 0
-    }
-
     set test "check /dev/oprofile filesystem presence"
     if {[file exists /dev/oprofile/cpu_type] == 1} {
 	verbose "oprofile filesystem mounted"
+	set op_module_active 1
 	pass $test
     } else {
 	verbose "oprofile filesystem not mounted"
+	if {[regexp oprofile [exec /sbin/lsmod]] != 1} {
+		verbose "oprofile module may not have loaded/initialized properly.  See system log."
+	}
 	fail $test
     }
 

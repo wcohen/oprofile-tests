@@ -1,3 +1,8 @@
+2010-01-19  Maynard Johnson  <maynardj@us.ibm.com>
+
+	* testsuite/config/unix.exp: Fix to support built-in oprofile
+	  kernel driver
+
 2010-01-18  William Cohen  <wcohen@redhat.com>
 
 	* testsuite/lib/op_util.exp: Correct arch set.
