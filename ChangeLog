@@ -1,3 +1,7 @@
+2010-01-25  William Cohen <wcohen@redhat.com>
+
+    * testsuite/lib/op_events.exp: Fix sample interval for LLC* events.
+
 2010-01-19  Maynard Johnson  <maynardj@us.ibm.com>
 
 	* testsuite/config/unix.exp: Fix to support built-in oprofile

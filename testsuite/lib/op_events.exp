@@ -164,8 +164,8 @@ set op_event_table(arch_perf)                       \
              {1 CPU_CLK_UNHALTED  0 500000}         \
 	}                                           \
 	{                                           \
-             {0 LLC_MISSES        0x41 500000}      \
-             {1 LLC_REFS          0x4f 500000}      \
+             {0 LLC_MISSES        0x41 10000}       \
+             {1 LLC_REFS          0x4f 10000}       \
 	}                                           \
 	{                                           \
              {0 BR_INST_RETIRED   0 500000}         \
