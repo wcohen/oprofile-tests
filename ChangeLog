@@ -1,3 +1,9 @@
+2011-01-07  William Cohen  <wcohen@redhat.com>
+
+	* testsuite/lib/op_util.exp: Add test support for Intel nehalem,
+	armv7-ca9, mips/74K, mips/1004K, AMD family12h, AMD family 14h,
+	AMD family 15h, and Intel westmere.
+
 2010-01-25  William Cohen <wcohen@redhat.com>
 
     * testsuite/lib/op_events.exp: Fix sample interval for LLC* events.

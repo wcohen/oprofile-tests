@@ -173,6 +173,22 @@ proc op_cpu_type {} {
 	i386/atom {set type arch_perf}
 	58 {set type mips}
 	mips/loongson2 {set type mips}
+	59 {set type arch_perf}
+	i386/nehalem {set type arch_perf}
+	60 {set type arm7}
+	arm/armv7-ca9 {set type arm7}
+	61 {set type mips}
+	mips/74K {set type mips}
+	62 {set type mips}
+	mips/1004K {set type mips}
+	63 {set type athlon}
+	x86-64/family12h {set type athlon}
+	64 {set type athlon}
+	x86-64/family14h {set type athlon}
+	65 {set type athlon}
+	x86-64/family15h {set type athlon}
+	66 {set type arch_perf}
+	i386/westmere  {set type arch_perf}
     }
 
     verbose "cpu type is $type"
