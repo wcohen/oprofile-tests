@@ -5,7 +5,7 @@ and test to easier understand how work some part of the profiler
 Ideas on how to set up the testing harness are welcome.
 
 thanks
-john
+John Levon
 
 The directory understanding contains test not intended to be run
 automatically but rather to provide an easier way to understand
