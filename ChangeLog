@@ -1,3 +1,9 @@
+2011-02-25  Maynard Johnson  <maynardj@us.ibm.com>
+
+	From this date forward, ChangeLog entries will not
+	be necessary, since 'git log' can now be used to show
+	changes in the repository.
+
 2011-01-07  William Cohen  <wcohen@redhat.com>
 
 	* testsuite/lib/op_util.exp: Add test support for Intel nehalem,
