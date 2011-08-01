@@ -232,7 +232,7 @@ proc op_cpu_type {} {
 	68 {set type arm7}
 	arm/armv7-scorpionmp {set type arm7}
 	69 {set type arch_perf}
-	i386/sandybridge {set type sandybridge}
+	i386/sandybridge {set type arch_perf}
     }
 
     verbose "cpu type is $type"
