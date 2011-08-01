@@ -46,12 +46,50 @@ proc op_spin {count} {
     local_exec "dd bs=16 if=/dev/urandom of=/dev/null count=$count" "" "" 10
 }
 
+# If the processor is i386/arch_perfmon, it could be a variant.
+proc op_intel_perf_arch {cpu_type} {
+    if {[regexp "i386/arch_perfmon" $cpu_type dummy] != 1} {
+	return $cpu_type
+    }
+
+    #get information from /proc/cpuinfo
+    set cpuinfo [ local_exec "cat /proc/cpuinfo" "" "" 100 ]
+    if { [ regexp -line "model\t\t: \[0-9\]+" $cpuinfo line] != 1 } {
+	return $cpu_type
+    }
+
+    if {[regexp "\[0-9]+" $line model] == 1} {
+	switch -exact "$model" {
+	    15 {set cpu_type i386/core_2}
+	    22 {set cpu_type i386/core_2}
+	    23 {set cpu_type i386/core_2}
+	    29 {set cpu_type i386/core_2}
+	    26 {set cpu_type i386/core_i7}
+	    30 {set cpu_type i386/core_i7}
+	    31 {set cpu_type i386/core_i7}
+	    46 {set cpu_type i386/core_i7}
+	    28 {set cpu_type i386/atom}
+	    37 {set cpu_type i386/westmere}
+	    44 {set cpu_type i386/westmere}
+	    47 {set cpu_type i386/westmere}
+	    42 {set cpu_type i386/sandybridge}
+	    45 {set cpu_type i386/sandybridge}
+	}
+    }
+   
+    verbose "arch_perfmon variant is $cpu_type"
+    return $cpu_type
+}
+
 # detect CPU type
 proc op_cpu_type {} {
     
     global op_proc_prefix
     set type rtc
     set cpu_type [op_get_file_contents "$op_proc_prefix/cpu_type"]
+
+    # Do additional mappings for Intel architected performance counters
+    set cpu_type [ op_intel_perf_arch "$cpu_type"]
 
     verbose "cpu_type is $cpu_type"
     switch -exact "$cpu_type" {
