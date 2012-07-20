@@ -5,12 +5,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
@@ -31,12 +31,12 @@ proc op_get_file_contents {fname} {
 }
 
 # cycle-waster routine
-proc op_spin {count} {    
+proc op_spin {count} {
     verbose "spinning cpu for $count \"work units\""
     set j 23523
     set k 15431
     set m 73141
-    set n 93802    
+    set n 93802
     for {set i 0} {$i < $count} {incr i} {
 	set j [expr {($k * $m - ($n >> 2)) % 4294967296}]
 	set k [expr {($m + $n * ($j ^ $k)) % 4294967296}]
@@ -76,14 +76,14 @@ proc op_intel_perf_arch {cpu_type} {
 	    45 {set cpu_type i386/sandybridge}
 	}
     }
-   
+
     verbose "arch_perfmon variant is $cpu_type"
     return $cpu_type
 }
 
 # detect CPU type
 proc op_cpu_type {} {
-    
+
     global op_proc_prefix
     set type rtc
     set cpu_type [op_get_file_contents "$op_proc_prefix/cpu_type"]
@@ -94,7 +94,7 @@ proc op_cpu_type {} {
     verbose "cpu_type is $cpu_type"
     switch -exact "$cpu_type" {
 	0 {set type ppro}
- 	i386/ppro {set type ppro}
+	i386/ppro {set type ppro}
 	1 {set type ppro}
 	i386/pii {set type ppro}
 	2 {set type ppro}
@@ -128,7 +128,7 @@ proc op_cpu_type {} {
 	16 {set type alpha7}
 	alpha/ev67 {set type alpha}
 	17 {set type ppro}
- 	i386/p6_mobile {set type ppro}
+	i386/p6_mobile {set type ppro}
 	18 {set type gen_arm}
 	arm/xscale1 {set type gen_arm}
 	19 {set type gen_arm}
@@ -174,7 +174,7 @@ proc op_cpu_type {} {
 	39 {set type ppc7450}
 	ppc/7450 {set type ppc7450}
 	40 {set type core2}
- 	i386/core_2 {set type core2}
+	i386/core_2 {set type core2}
 	41 {set type power6}
 	ppc64/power6 {set type power6}
 	42 {set type power970}
@@ -198,7 +198,7 @@ proc op_cpu_type {} {
 	51 {set type arm7}
 	arm/armv7 {set type arm7}
 	52 {set type arch_perf}
- 	i386/arch_perfmon {set type arch_perf}
+	i386/arch_perfmon {set type arch_perf}
 	53  {set type athlon}
 	x86-64/family11h {set type athlon}
 	54 {set type power7}
@@ -206,7 +206,7 @@ proc op_cpu_type {} {
 	55 {set type ibm_compat_v1}
 	ppc64/ibm-compat-v1 {set type ibm_compat_v1}
 	56 {set type arch_perf}
-   	i386/core_i7 {set type arch_perf}
+	i386/core_i7 {set type arch_perf}
 	57 {set type arch_perf}
 	i386/atom {set type arch_perf}
 	58 {set type mips}

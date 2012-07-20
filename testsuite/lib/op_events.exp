@@ -5,12 +5,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
@@ -48,13 +48,13 @@ if {! [array exists op_comprehensive_event_table]} {
 }
 
 
-set op_comprehensive_event_table(ppro) \
-    {\
-	 {{0 1} {\
+set op_comprehensive_event_table(ppro)                     \
+    {                                                      \
+	 {{0 1} {                                          \
 		     INST_RETIRED         UOPS_RETIRED     \
 		     INST_DECODED         CPU_CLK_UNHALTED \
-		 }                      0                    7000} \
-	 {{0 1} {\
+		 }                      0            7000} \
+	 {{0 1} {                                          \
 		     DATA_MEM_REFS        DCU_LINES_IN     \
 		     DCU_M_LINES_IN       DCU_M_LINES_OUT  \
 		     DCU_MISS_OUTSTANDING IFU_IFETCH       \
@@ -63,21 +63,21 @@ set op_comprehensive_event_table(ppro) \
 		     L2_LINES_IN          L2_LINES_OUT     \
 		     L2_M_LINES_INM       L2_LINES_OUTM    \
 		     L2_DBUS_BUSY         L2_DBUS_BUSY_RD  \
-	             BUS_DATA_RCV         BUS_BNR_DRV      \
+		     BUS_DATA_RCV         BUS_BNR_DRV      \
 		     BUS_HIT_DRV          BUS_HITM_DRV     \
 		     BUS_SNOOP_STALL      LD_BLOCKS        \
 		     SB_DRAINS            MISALIGN_MEM_REF \
 		     BR_INST_RETIRED      BR_TAKEN_RETIRED \
 		     BR_MISS_PRED_RETIRED                  \
-	             BR_MISS_PRED_TAKEN_RET                \
-	             BR_INST_DECODED      BTB_MISSES       \
-	             BR_BOGUS             RESOURCE_STALLS  \
-	             PARTIAL_RAT_STALLS                    \
-		 }                      0                     7000} \
+		     BR_MISS_PRED_TAKEN_RET                \
+		     BR_INST_DECODED      BTB_MISSES       \
+		     BR_BOGUS             RESOURCE_STALLS  \
+		     PARTIAL_RAT_STALLS                    \
+		 }                      0            7000} \
 	 {{0 1} {\
 		     L2_IFETCH            L2_LD            \
-	             L2_ST                L2_RQSTS         \
-		 }                      {8 4 2 1 f}           7000} \
+		     L2_ST                L2_RQSTS         \
+		 }                      {8 4 2 1 f}  7000} \
 	 {{0 1} {\
 		     BUS_DRDY_CLOCKS      BUS_LOCK_CLOCKS  \
 		     BUS_TRAN_BRD         BUS_TRAN_RFO     \
@@ -86,25 +86,25 @@ set op_comprehensive_event_table(ppro) \
 		     BUS_TRAN_BRD         BUS_TRANS_P      \
 		     BUS_TRANS_IO         BUS_TRANS_DEF    \
 		     BUS_TRAN_BURST       BUS_TRAN_ANY     \
-	             BUS_TRAN_MEM                          \
-		 }                      {0 2}                7000} \
+		     BUS_TRAN_MEM                          \
+		 }                      {0 2}        7000} \
      }
 
 
 set op_comprehensive_event_table(athlon) \
     {\
-	 {{0 1 2 3} {\
-			 RETIRED_BRANCHES             RETIRED_BRANCHES_MISPREDICTED        \
-			 RETIRED_TAKEN_BRANCHES       RETIRED_TAKEN_BRANCHES_MISPREDICTED  \
-			 L1_DTLB_MISSES_L2_DTLD_HITS  L1_AND_L2_DTLB_MISSES                \
-			 MISALIGNED_DATA_REFS         L1_ITLB_MISSES_L2_ITLB_HITS          \
-			 L1_AND_L2_ITLB_MISSES        RETIRED_FAR_CONTROL_TRANSFERS        \
-			 RETIRED_RESYNC_BRANCHES      RETIRED_OPS                          \
-			 ICACHE_FETCHES               ICACHE_MISSES                        \
-			 DATA_CACHE_ACCESSES          DATA_CACHE_MISSES                    \
+	 {{0 1 2 3} {                                       \
+		     RETIRED_BRANCHES             RETIRED_BRANCHES_MISPREDICTED        \
+		     RETIRED_TAKEN_BRANCHES       RETIRED_TAKEN_BRANCHES_MISPREDICTED  \
+		     L1_DTLB_MISSES_L2_DTLD_HITS  L1_AND_L2_DTLB_MISSES                \
+		     MISALIGNED_DATA_REFS         L1_ITLB_MISSES_L2_ITLB_HITS          \
+		     L1_AND_L2_ITLB_MISSES        RETIRED_FAR_CONTROL_TRANSFERS        \
+		     RETIRED_RESYNC_BRANCHES      RETIRED_OPS                          \
+		     ICACHE_FETCHES               ICACHE_MISSES                        \
+		     DATA_CACHE_ACCESSES          DATA_CACHE_MISSES                    \
 		     }                  0                    7000} \
 	 {{0 1 2 3} {\
-			 DATA_CACHE_REFILLS_FROM_L2   DATA_CACHE_REFILLS_FROM_SYSTEM       \
+		     DATA_CACHE_REFILLS_FROM_L2   DATA_CACHE_REFILLS_FROM_SYSTEM       \
 		     }                  {1 2 4 8 10 1f}      7000} \
      }
 
@@ -115,16 +115,16 @@ set op_comprehensive_event_table(p4) \
 	 {{3 7} MISPRED_BRANCH_RETIRED 1                     7000} \
 	 {{0 4} BPU_FETCH_REQUEST      1                     7000} \
 	 {{0 4} ITLB_REFERENCE         {1 2}                 7000} \
- 	 {{2 6} MEMORY_CANCEL          {4 8}                 7000} \
- 	 {{2 6} LOAD_PORT_REPLAY       2                     7000} \
+	 {{2 6} MEMORY_CANCEL          {4 8}                 7000} \
+	 {{2 6} LOAD_PORT_REPLAY       2                     7000} \
 	 {{0 4} MOB_LOAD_REPLAY        {2 8 10 20}           7000} \
 	 {{0 4} BSQ_CACHE_REFERENCE    {1 2 4 100}           7000} \
 	 {{0 4} GLOBAL_POWER_EVENTS    1                   100000} \
- 	 {{1 5} TC_MS_XFER             1                     7000} \
- 	 {{1 5} UOP_QUEUE_WRITES       {1 2 4}             100000} \
+	 {{1 5} TC_MS_XFER             1                     7000} \
+	 {{1 5} UOP_QUEUE_WRITES       {1 2 4}             100000} \
 	 {{3 7} INSTR_RETIRED          {1 4}               100000} \
- 	 {{1 5} RETIRED_MISPRED_BRANCH_TYPE {2 8 10}         7000} \
- 	 {{1 5} RETIRED_BRANCH_TYPE    {2 4 8 10}            7000} \
+	 {{1 5} RETIRED_MISPRED_BRANCH_TYPE {2 8 10}         7000} \
+	 {{1 5} RETIRED_BRANCH_TYPE    {2 4 8 10}            7000} \
      }
 
 # the normal event table is just for smoke tests, and contains un-factored
@@ -136,23 +136,23 @@ set op_comprehensive_event_table(p4) \
 set op_event_table(ppro)                            \
     {                                               \
 	{                                           \
-             {0 INST_RETIRED      0 500000}         \
-             {1 CPU_CLK_UNHALTED  0 500000}         \
+	     {0 INST_RETIRED      0 500000}         \
+	     {1 CPU_CLK_UNHALTED  0 500000}         \
 	}                                           \
 	{                                           \
-             {0 L2_RQSTS          0xf 500000}       \
-             {1 DATA_MEM_REFS     0 500000}         \
+	     {0 L2_RQSTS          0xf 500000}       \
+	     {1 DATA_MEM_REFS     0 500000}         \
 	}                                           \
     }
 
 set op_event_table(core2)                           \
     {                                               \
 	{                                           \
-             {0 INST_RETIRED      0 500000}         \
-             {1 CPU_CLK_UNHALTED  0 500000}         \
+	     {0 INST_RETIRED      0 500000}         \
+	     {1 CPU_CLK_UNHALTED  0 500000}         \
 	}                                           \
 	{                                           \
-             {0 L2_LINES_IN       0 500}            \
+	     {0 L2_LINES_IN       0 500}            \
 	     {1 L2_LINES_OUT      0 500}            \
 	}                                           \
     }
@@ -160,48 +160,48 @@ set op_event_table(core2)                           \
 set op_event_table(arch_perf)                       \
     {                                               \
 	{                                           \
-             {0 INST_RETIRED      0 500000}         \
-             {1 CPU_CLK_UNHALTED  0 500000}         \
+	     {0 INST_RETIRED      0 500000}         \
+	     {1 CPU_CLK_UNHALTED  0 500000}         \
 	}                                           \
 	{                                           \
-             {0 LLC_MISSES        0x41 10000}       \
-             {1 LLC_REFS          0x4f 10000}       \
+	     {0 LLC_MISSES        0x41 10000}       \
+	     {1 LLC_REFS          0x4f 10000}       \
 	}                                           \
 	{                                           \
-             {0 BR_INST_RETIRED   0 500000}         \
-             {1 BR_MISS_PRED_RETIRED 0 500000}      \
+	     {0 BR_INST_RETIRED   0 500000}         \
+	     {1 BR_MISS_PRED_RETIRED 0 500000}      \
 	}                                           \
     }
 
 set op_event_table(sandybridge)                     \
     {                                               \
 	{                                           \
-             {0 INST_RETIRED      0 500000}         \
-             {1 CPU_CLK_UNHALTED  0 500000}         \
+	     {0 INST_RETIRED      0 500000}         \
+	     {1 CPU_CLK_UNHALTED  0 500000}         \
 	}                                           \
 	{                                           \
-             {0 LLC_MISSES        0x41 10000}       \
-             {1 LLC_REFS          0x4f 10000}       \
+	     {0 LLC_MISSES        0x41 10000}       \
+	     {1 LLC_REFS          0x4f 10000}       \
 	}                                           \
 	{                                           \
-             {0 BR_INST_RETIRED   0 500000}         \
-             {1 BR_MISS_PRED_RETIRED 0 500000}      \
+	     {0 BR_INST_RETIRED   0 500000}         \
+	     {1 BR_MISS_PRED_RETIRED 0 500000}      \
 	}                                           \
 	{                                           \
-             {0 uops_issued stall_cycles 2000000}   \
-             {1 uops_retired stall_cycles 2000000}  \
+	     {0 uops_issued stall_cycles 2000000}   \
+	     {1 uops_retired stall_cycles 2000000}  \
 	}                                           \
     }
 
 set op_event_table(athlon)                          \
     {                                               \
 	{                                           \
-             {0 CPU_CLK_UNHALTED  0 500000}         \
-             {1 DATA_CACHE_ACCESSES 0 500000}       \
+	     {0 CPU_CLK_UNHALTED  0 500000}         \
+	     {1 DATA_CACHE_ACCESSES 0 500000}       \
 	}                                           \
 	{                                           \
-             {0 DATA_CACHE_ACCESSES   0 500000}     \
-             {1 DATA_CACHE_MISSES     0 500000}     \
+	     {0 DATA_CACHE_ACCESSES   0 500000}     \
+	     {1 DATA_CACHE_MISSES     0 500000}     \
 	}                                           \
     }
 
@@ -237,46 +237,46 @@ set op_event_table(alpha)                           \
 set op_event_table(gen_arm)                         \
     {                                               \
 	{                                           \
-             {1 INSN_EXECUTED     0 500000}         \
-             {0 CPU_CYCLES        0 500000}         \
+	     {1 INSN_EXECUTED     0 500000}         \
+	     {0 CPU_CYCLES        0 500000}         \
 	}                                           \
 	{                                           \
-             {0 DCACHE_MISS       0 500000}         \
-             {1 DCACHE_ACCESS     0 500000}         \
+	     {0 DCACHE_MISS       0 500000}         \
+	     {1 DCACHE_ACCESS     0 500000}         \
 	}                                           \
     }
 
 set op_event_table(arm7)                            \
     {                                               \
 	{                                           \
-             {1 INSTR_EXECUTED    0 500000}         \
-             {0 CPU_CYCLES        0 500000}         \
+	     {1 INSTR_EXECUTED    0 500000}         \
+	     {0 CPU_CYCLES        0 500000}         \
 	}                                           \
 	{                                           \
-             {0 DCACHE_REFILL     0 500000}         \
-             {1 DCACHE_ACCESS     0 500000}         \
+	     {0 DCACHE_REFILL     0 500000}         \
+	     {1 DCACHE_ACCESS     0 500000}         \
 	}                                           \
     }
 
 set op_event_table(power4)                          \
     {                                               \
 	{                                           \
-	    {1 CYCLES 0 500000}			    \
+	    {1 CYCLES 0 500000}                     \
 	}                                           \
 	{                                           \
-	    {0 PM_RUN_CYC_GRP1 0 500000}	    \
-	    {1 PM_CYC_GRP1 0 500000}		    \
-	    {3 PM_INST_CMPL_GRP1 0 500000}	    \
+	    {0 PM_RUN_CYC_GRP1 0 500000}            \
+	    {1 PM_CYC_GRP1 0 500000}                \
+	    {3 PM_INST_CMPL_GRP1 0 500000}          \
 	}                                           \
 	{                                           \
-	    {0 PM_INST_CMPL_GRP4 0 500000}	    \
+	    {0 PM_INST_CMPL_GRP4 0 500000}          \
 	    {1 PM_BIQ_IDU_FULL_CYC_GRP4 0 500000}   \
-	    {2 PM_BR_ISSUED_GRP4 0 500000}	    \
-	    {3 PM_BR_MPRED_CR_GRP4 0 500000}	    \
-	    {4 PM_INST_FETCH_CYC_GRP4 0 500000}	    \
-	    {5 PM_CYC_GRP4 0 500000}		    \
-	    {6 PM_BR_MPRED_TA_GRP4 0 500000}	    \
-	    {7 PM_L1_WRITE_CYC_GRP4 0 500000}	    \
+	    {2 PM_BR_ISSUED_GRP4 0 500000}          \
+	    {3 PM_BR_MPRED_CR_GRP4 0 500000}        \
+	    {4 PM_INST_FETCH_CYC_GRP4 0 500000}     \
+	    {5 PM_CYC_GRP4 0 500000}                \
+	    {6 PM_BR_MPRED_TA_GRP4 0 500000}        \
+	    {7 PM_L1_WRITE_CYC_GRP4 0 500000}       \
 	}                                           \
     }
 
@@ -287,26 +287,26 @@ set op_event_table(power5)                          \
 	}                                           \
 	{                                           \
 	    {0 PM_BR_UNCOND_GRP42 0 500000}         \
-	    {1 PM_BR_PRED_TA_GRP42 0 500000}	    \
-	    {2 PM_BR_PRED_CR_GRP42 0 500000}	    \
-	    {3 PM_BR_PRED_CR_TA_GRP42 0 500000}	    \
-	    {4 PM_INST_CMPL_GRP42 0 500000}	    \
-	    {5 PM_RUN_CYC_GRP42 0 500000}	    \
+	    {1 PM_BR_PRED_TA_GRP42 0 500000}        \
+	    {2 PM_BR_PRED_CR_GRP42 0 500000}        \
+	    {3 PM_BR_PRED_CR_TA_GRP42 0 500000}     \
+	    {4 PM_INST_CMPL_GRP42 0 500000}         \
+	    {5 PM_RUN_CYC_GRP42 0 500000}           \
 	}                                           \
     }
 
-set op_event_table(power5p)			    \
+set op_event_table(power5p)                         \
     {                                               \
 	{                                           \
 	    {3 CYCLES 0 500000}                     \
 	}                                           \
 	{                                           \
 	    {0 PM_BR_UNCOND_GRP43 0 500000}         \
-	    {1 PM_BR_PRED_TA_GRP43 0 500000}	    \
-	    {2 PM_BR_PRED_CR_GRP43 0 500000}	    \
-	    {3 PM_BR_PRED_CR_TA_GRP43 0 500000}	    \
-	    {4 PM_RUN_INST_CMPL_GRP43 0 500000}	    \
-	    {5 PM_RUN_CYC_GRP43 0 500000}	    \
+	    {1 PM_BR_PRED_TA_GRP43 0 500000}        \
+	    {2 PM_BR_PRED_CR_GRP43 0 500000}        \
+	    {3 PM_BR_PRED_CR_TA_GRP43 0 500000}     \
+	    {4 PM_RUN_INST_CMPL_GRP43 0 500000}     \
+	    {5 PM_RUN_CYC_GRP43 0 500000}           \
 	}                                           \
     }
 
@@ -317,32 +317,32 @@ set op_event_table(power5pp)                        \
 	}                                           \
 	{                                           \
 	    {0 PM_BR_UNCOND_GRP43 0 500000}         \
-	    {1 PM_BR_PRED_TA_GRP43 0 500000}	    \
-	    {2 PM_BR_PRED_CR_GRP43 0 500000}	    \
-	    {3 PM_BR_PRED_CR_TA_GRP43 0 500000}	    \
+	    {1 PM_BR_PRED_TA_GRP43 0 500000}        \
+	    {2 PM_BR_PRED_CR_GRP43 0 500000}        \
+	    {3 PM_BR_PRED_CR_TA_GRP43 0 500000}     \
 	}                                           \
     }
 
 set op_event_table(ppc970)                          \
-    {						    \
-        {					    \
-            {1 CYCLES 0 500000}			    \
-	}					    \
-	{					    \
-	    {0 PM_RUN_CYC_GRP1 0 500000}	    \
-	    {1 PM_CYC_GRP1 0 500000}		    \
-	    {3 PM_INST_CMPL_GRP1 0 500000}	    \
-	}					    \
-	{					    \
-	    {0 PM_INST_CMPL_GRP25 0 500000}	    \
-	    {1 PM_CYC_GRP25 0 500000}		    \
-	    {2 PM_LD_MISS_L1_GRP25 0 500000}	    \
-	    {3 PM_BR_ISSUED_GRP25 0 500000}	    \
-	    {4 PM_LSU0_BUSY_GRP25 0 500000}	    \
-	    {5 PM_CYC_GRP25 0 500000}		    \
-	    {6 PM_BR_MPRED_CR_GRP25 0 500000}	    \
-	    {7 PM_BR_MPRED_TA_GRP25 0 500000}	    \
-	}					    \
+    {                                               \
+	{                                           \
+	    {1 CYCLES 0 500000}                     \
+	}                                           \
+	{                                           \
+	    {0 PM_RUN_CYC_GRP1 0 500000}            \
+	    {1 PM_CYC_GRP1 0 500000}                \
+	    {3 PM_INST_CMPL_GRP1 0 500000}          \
+	}                                           \
+	{                                           \
+	    {0 PM_INST_CMPL_GRP25 0 500000}         \
+	    {1 PM_CYC_GRP25 0 500000}               \
+	    {2 PM_LD_MISS_L1_GRP25 0 500000}        \
+	    {3 PM_BR_ISSUED_GRP25 0 500000}         \
+	    {4 PM_LSU0_BUSY_GRP25 0 500000}         \
+	    {5 PM_CYC_GRP25 0 500000}               \
+	    {6 PM_BR_MPRED_CR_GRP25 0 500000}       \
+	    {7 PM_BR_MPRED_TA_GRP25 0 500000}       \
+	}                                           \
     }
 
 set op_event_table(power6)                          \
@@ -350,17 +350,17 @@ set op_event_table(power6)                          \
 	{                                           \
 	    {3 CYCLES 0 500000}                     \
 	}                                           \
-	{					    \
-	    {0 PM_RUN_CYC_GRP1 0 500000}	    \
-	    {1 PM_INST_CMPL_GRP1 0 500000}	    \
-	    {3 PM_CYC_GRP1 0 500000}		    \
-	}					    \
+	{                                           \
+	    {0 PM_RUN_CYC_GRP1 0 500000}            \
+	    {1 PM_INST_CMPL_GRP1 0 500000}          \
+	    {3 PM_CYC_GRP1 0 500000}                \
+	}                                           \
 	{                                           \
 	    {0 PM_BR_PRED_CR_GRP3 0 500000}         \
 	    {1 PM_BR_MPRED_CR_GRP3 0 500000}        \
 	    {2 PM_BR_PRED_GRP3  0 500000}           \
 	    {3 PM_BR_MPRED_COUNT_GRP3 0 500000}     \
-        }					    \
+	}                                           \
     }
 
 set op_event_table(power7)                          \
@@ -371,7 +371,7 @@ set op_event_table(power7)                          \
 	{                                           \
 	    {0 PM_BR_PRED_GRP3 0 500000}            \
 	    {1 PM_BR_PRED_CR_GRP3 0 500000}         \
-            {2 PM_BR_PRED_CCACHE_GRP3 0 500000}     \
+	    {2 PM_BR_PRED_CCACHE_GRP3 0 500000}     \
 	    {3 PM_BR_PRED_LSTACK_GRP3 0 500000}     \
 	    {4 PM_RUN_INST_CMPL_GRP3 0 500000}      \
 	    {5 PM_RUN_CYC_GRP3  0 500000}           \
@@ -441,7 +441,7 @@ set op_event_table(timer)                           \
     }
 
 #Placeholder for mips based
-set op_event_table(mips)                           \
+set op_event_table(mips)                            \
     {                                               \
 	{                                           \
 	}                                           \
@@ -460,11 +460,10 @@ set op_event_table(ppc7450)                         \
 	{                                           \
 	}                                           \
     }
- 
+
 #Placeholder for avr32 based
 set op_event_table(avr32)                           \
     {                                               \
 	{                                           \
 	}                                           \
     }
-

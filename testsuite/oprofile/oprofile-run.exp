@@ -5,12 +5,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
@@ -43,7 +43,7 @@ proc op_daemon_flush {} {
 }
 
 proc op_daemon_delete_any_samples {ctrs} {
-    
+
     global op_var_prefix
     foreach ctr $ctrs {
 	set n [lindex $ctr 0]
@@ -102,7 +102,7 @@ proc op_daemon_check_samples_exist {ctrs} {
 			pass "$test: {$ctr} created nonzero sample files"
 		    }
 		}
- 	    }
+	    }
 	    { 0.6* 0.7* 0.8* 0.9* } {
 		verbose "running opreport --long-filenames event:$event"
 		set result [local_exec "opreport --long-filenames event:$event" "" "" 100 ]
@@ -142,7 +142,7 @@ proc op_daemon_start {ctrs} {
 		append ctr_opts " --ctr${n}-event=${event}"
 		append ctr_opts " --ctr${n}-count=${count}"
 		append ctr_opts " --ctr${n}-unit-mask=${um}"
- 	    }
+	    }
 	    { 0.6* 0.7* 0.8* 0.9* } {
 		append ctr_opts " --event=${event}:${count}:${um}"
 	    }
@@ -151,7 +151,7 @@ proc op_daemon_start {ctrs} {
 	    }
 	}
     }
-    
+
     verbose "running opcontrol --reset"
     local_exec "opcontrol --reset" "" "" 100
 
@@ -222,7 +222,7 @@ proc op_daemon_stop {} {
 	} else {
 	    fail $test
 	}
-    }    
+    }
 }
 
 proc op_daemon_cycle {ctrs} {
@@ -240,7 +240,7 @@ proc op_check_daemon {} {
     set cpu [op_cpu_type]
     foreach spec $op_event_table($cpu) {
 	op_daemon_cycle $spec
-    } 
+    }
 }
 
 
