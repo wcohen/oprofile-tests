@@ -249,12 +249,12 @@ set op_event_table(gen_arm)                         \
 set op_event_table(arm7)                            \
     {                                               \
 	{                                           \
-	     {1 INSTR_EXECUTED    0 500000}         \
+	     {1 INST_RETIRED      0 500000}         \
 	     {0 CPU_CYCLES        0 500000}         \
 	}                                           \
 	{                                           \
-	     {0 DCACHE_REFILL     0 500000}         \
-	     {1 DCACHE_ACCESS     0 500000}         \
+	     {0 L1D_CACHE_REFILL  0 500000}         \
+	     {1 L1D_CACHE         0 500000}         \
 	}                                           \
     }
 
