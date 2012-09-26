@@ -1,0 +1,181 @@
+# oprofile-run.exp
+#   Copyright (C) 2012 Carl Love, IBM
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+
+load_lib "op_events.exp"
+load_lib "op_util.exp"
+
+
+set operf_version ""
+
+proc operf_get_version {} {
+    global operf_version
+
+    set test "OProfile operf version check"
+    verbose $test
+    set result [ local_exec "operf -v" "" "" 100 ]
+
+    if {[regexp "\[0-9\]+\(.\[0-9\]+\)+\[a-zA-Z_\]*" $result operf_version] == 1} {
+
+#	Need to make sure the kernel has operf support as well
+	if {[lindex [local_exec op-check-perfevents "" "" 100] 0] == 0} {
+	    pass $test
+	} else {
+	    verbose "Kernel does not support operf\n"
+	    set operf_version 0
+	}
+    } else {
+	verbose "unable to determine version"
+	set operf_version 0
+	fail $test
+    }
+}
+
+proc do_test {ctrs} {
+#   The tests are run in system-wide mode which requires the user to be
+#   root.  System-wide mode is being used to make the operf interface
+#   testing as functionally equivalent to the opcontrol interface testing
+#   as possible.
+#
+#   The operf --system-wide command is started in system-wide mode in the
+#   background.  Operf in system-wide mode runs until it received a kill
+#   command.  The test script captures the parent process id printed by
+#   operf.  After the workload has run, a script is called to kill the
+#   operf data collection processes.
+
+    set ctr_opts {}
+    set kernel 1
+    set user 1
+    set count 5000
+
+    set test "operf do test"
+    foreach ctr $ctrs {
+#       n - counter number, no longer used but didn't want to change
+#       specification format
+	set n [lindex $ctr 0]
+	set event [lindex $ctr 1]
+	set um [lindex $ctr 2]
+	set count [lindex $ctr 3]
+	append ctr_opts "${event}:${count}:${um}:${kernel}:${user},"
+    }
+
+    # create the script to run operf command
+    set filename "/tmp/operf_run.zzzz"
+    set fileId [open $filename "w"]
+    puts $fileId "#!/bin/bash"
+    puts -nonewline $fileId "operf --system-wide --events "
+    puts -nonewline $fileId $ctr_opts
+    puts -nonewline $fileId " 2>&1  | tee > /tmp/operf_out.zzzz"
+    close $fileId
+
+    local_exec "chmod 755 /tmp/operf_run.zzzz" "" "" 10
+
+    #  Start operf data collection in the background
+    exec /tmp/operf_run.zzzz &
+
+    # Create the script to stop the operf data collection.  Note this
+    # must be done after operf starts and writes the kill command out to
+    # operf_out.zzzz.
+    set filename "/tmp/operf_create_stop.zzzz"
+    set fileId [open $filename "w"]
+    puts $fileId "#!/bin/bash"
+    puts $fileId "echo -n  \"pkill -9 -P  \" > /tmp/operf_stop.zzzz "
+
+    # Get the process id to kill
+    puts $fileId "cat /tmp/operf_out.zzzz | grep \"kill\" | cut -d\"\'\" -f2 | cut -d\" \" -f3 >> /tmp/operf_stop.zzzz "
+    close $fileId
+
+    # check that operf started correctly
+    if {[lindex [local_exec "grep \"usage\" /tmp/operf_out.zzzz " "" "" 100] 0] == 1} {
+	pass $test
+    } else {
+	fail $test
+    }
+
+#   Run the script to create the operf stop script based on the
+#   output of the operf command.
+    local_exec "sleep 1" "" "" 10
+    local_exec "chmod 755 /tmp/operf_create_stop.zzzz" "" "" 10
+    exec /tmp/operf_create_stop.zzzz
+
+#   Run the workload
+    op_spin $count
+
+    local_exec "chmod 755 /tmp/operf_stop.zzzz" "" "" 10
+    exec /tmp/operf_stop.zzzz
+
+#   cleanup the files created
+    local_exec "rm -f /tmp/operf_out.zzzz" "" "" 10
+    local_exec "rm -f /tmp/operf_stop.zzzz" "" "" 10
+    local_exec "rm -f /tmp/operf_run.zzzz" "" "" 10
+    local_exec "rm -f /tmp/operf_create_stop.zzzz" "" "" 10
+}
+
+proc operf_check_samples_exist {ctrs} {
+    set test "nonzero-sized sample file creation"
+
+    verbose "checking for nonzero sample files"
+
+    foreach ctr $ctrs {
+	set n [lindex $ctr 0]
+	set event [lindex $ctr 1]
+
+	verbose "running opreport --long-filenames event:$event"
+	set result [ local_exec "opreport --long-filenames event:$event" "" "" 100 ]
+	if { [regexp "error:" "$result" ]} {
+	    fail "$test: {$event} created nonzero sample files"
+	} else {
+	    pass "$test: {$event} created nonzero sample files"
+	}
+    }
+}
+
+proc oprofile-operf_run_tests {} {
+    global op_event_table
+    set cpu [operf_cpu_type]
+
+    if {$cpu == "bogus"} {
+	send "Error, not able find cpu type exiting.\n"
+
+    } else {
+
+	foreach spec $op_event_table($cpu) {
+	    do_test $spec
+	    operf_check_samples_exist $spec
+	}
+	operf_delete_samples
+    }
+}
+
+
+#main
+check_user
+if {$user_is_root == 0} {
+    send "\nYou must be root to run the operf --system-wide command.\n"
+    send "Will not run operf tests.\n"
+} else {
+
+    operf_get_version
+
+    if { $operf_version == 0} {
+	send "\nSystem does not support OProfile operf interface.  Will not run operf tests.\n"
+    } else {
+	operf_delete_samples
+	oprofile-operf_run_tests
+    }
+}

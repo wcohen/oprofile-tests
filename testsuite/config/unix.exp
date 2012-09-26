@@ -43,6 +43,7 @@ set op_module_active 0
 set op_vmlinux 0
 
 load_lib "op_util.exp"
+load_lib "operf_util.exp"
 
 # we need to find a linux image, before anything else
 
@@ -105,49 +106,88 @@ proc oprofile_start {} {
 
 }
 
-proc oprofile_exit {} {
-    global op_module_active
-
-    verbose "oprofile_exit: deinitializing..."
-    set test "opcontrol --deinit"
-    if {[lindex [local_exec "opcontrol --deinit" "" "" 100] 0] == 0} {
-	verbose "oprofile deinitialized ok"
-	pass $test
-    } else {
-	verbose "oprofile deinitialization failed. are you root?"
-	fail $test
-    }
-
-    set test "check module absence"
-    if {[regexp oprofile [exec /sbin/lsmod]] == 0} {
-	verbose "oprofile module successfully removed"
-	set op_module_active 0
-	pass $test
-    } else {
-	verbose "oprofile module still present"
-	fail $test
-    }
-
-    set test "check /dev/oprofile filesystem absence"
-    if {[file exists /dev/oprofile/cpu_type] == 0} {
-	verbose "oprofile filesystem unmounted"
-	pass $test
-    } else {
-	verbose "oprofile filesystem still present"
-	fail $test
-    }
+proc op-userspace-version {} {
+# Use 'opreport --version' to get userspace version since we know this
+# should always be available; i.e. operf not available in pre-0.9.8 and
+# opcontrol will probably go away ~ 1.0 timeframe.
+    set oprof "oprofile unknown"
+    regexp {oprofile \d+\..*$} [lindex [local_exec "opreport --version" "" "" 100] 1] oprof
+    print "userspace version: $oprof"
 }
 
-proc oprofile_version {} {
+proc oprofile-opcontrol_version {} {
 
     set version [exec /bin/uname -r]
-    set modpath [glob -nocomplain /lib/modules/$version/kernel/arch/*/oprofile/oprofile.o]
-
-    set oprof "oprofile unknown"
-    regexp {oprofile \d+\..*$} [lindex [local_exec "opcontrol --version" "" "" 100] 1] oprof
+    set modpath [glob -nocomplain /lib/modules/$version/kernel/arch/*/oprofile/oprofile.ko]
 
     print ""
     print "kernel version: $version"
     print "module path: $modpath"
-    print "userspace version: $oprof"
+    op-userspace-version
 }
+
+proc oprofile-operf_version {} {
+    set version [exec /bin/uname -r]
+    print ""
+    print "kernel version: $version"
+    op-userspace-version
+}
+
+proc oprofile_version {} {
+    oprofile-opcontrol_version
+}
+
+proc opcontrol_exit {} {
+    global op_module_active
+    global user_is_root
+    global op_version
+
+    if {$user_is_root == 1 && $op_version == 1} {
+	verbose "oprofile_exit: deinitializing..."
+	set test "opcontrol --deinit"
+	if {[lindex [local_exec "opcontrol --deinit" "" "" 100] 0] == 0} {
+	    verbose "oprofile deinitialized ok"
+	    pass $test
+	} else {
+	    verbose "oprofile deinitialization failed. are you root?"
+	    fail $test
+	}
+
+	set test "check module absence"
+	if {[regexp oprofile [exec /sbin/lsmod]] == 0} {
+	    verbose "oprofile module successfully removed"
+	    set op_module_active 0
+	    pass $test
+	} else {
+	    verbose "oprofile module still present"
+	    fail $test
+	}
+
+	set test "check /dev/oprofile filesystem absence"
+	if {[file exists /dev/oprofile/cpu_type] == 0} {
+	    verbose "oprofile filesystem unmounted"
+	    pass $test
+	} else {
+	    verbose "oprofile filesystem still present"
+	    fail $test
+	}
+    }
+}
+
+proc operf_exit {} {
+    verbose "operf exiting "
+}
+
+proc oprofile-opcontrol_exit {} {
+    opcontrol_exit
+}
+
+proc oprofile-operf_exit {} {
+    operf_exit
+}
+
+proc oprofile_exit {} {
+    opcontrol_exit
+    operf_exit
+}
+

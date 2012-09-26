@@ -1,14 +1,37 @@
 This testsuite directory contains a simple testsuite to check the
-functionality of OProfile on the machine. Running the OProfile
-testsuite requires the following:
+functionality of OProfile on the machine. The testsuite supports testing
+the previous user interface using opcontrol and the new operf interface.
+
+
+Running the opcontrol OProfile testsuite requires the following:
 
 -Superuser privileges
--The dejagnu and expect packages installed
+-The dejagnu and expect packages are installed
 -The OProfile commands to be on the PATH
 
-The tests are run by being in this directory and running the following command:
+The opcontrol tests are run by being in this directory and running the
+following command:
+
+runtest --tool oprofile-opcontrol
+
+
+The operf OProfile testsuite requires the following:
+
+-Superuser privileges
+-The dejagnu and expect packages are installed
+-The OProfile commands to be on the PATH
+
+The operf tests are run by being in this directory and running the following
+command:
+
+runtest --tool oprofile-operf
+
+
+Both testsuites can be run at the sametime, provided you meet the requirement
+for running OProfile opcontrol and the OPerf testsuites, with the command
 
 runtest --tool oprofile
+
 
 The tests will run and at the end should print out the number of tests
 that passed and failed. Ideally, there should be no failures listed,

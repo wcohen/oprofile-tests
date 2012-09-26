@@ -106,7 +106,7 @@ proc op_daemon_check_samples_exist {ctrs} {
 	    { 0.6* 0.7* 0.8* 0.9* } {
 		verbose "running opreport --long-filenames event:$event"
 		set result [local_exec "opreport --long-filenames event:$event" "" "" 100 ]
-		if { [regexp "opreport error:" "$result" ]} {
+		if { [regexp "error:" "$result" ]} {
 		    fail "$test: {$event} created nonzero sample files"
 		} else {
 		    pass "$test: {$event} created nonzero sample files"
@@ -125,6 +125,9 @@ proc op_daemon_start {ctrs} {
     global op_daemon_running
     global op_vmlinux
     global op_version
+
+    # make sure the daemonrc file is deleted to clear any unwanted settings
+    local_exec "rm -f /root/.oprofile/daemonrc" "" "" 100
 
     if {$op_module_active == 0} {
 	unsupported "daemon start"
@@ -223,6 +226,9 @@ proc op_daemon_stop {} {
 	    fail $test
 	}
     }
+
+    # delete the daemonrc file to remove any settings from the testsuite
+    local_exec "rm -f /root/.oprofile/daemonrc" "" "" 100
 }
 
 proc op_daemon_cycle {ctrs} {
@@ -243,7 +249,6 @@ proc op_check_daemon {} {
     }
 }
 
-
 proc op_get_version {} {
     global op_version
     # this assumes that things work well enough for op_help
@@ -263,7 +268,23 @@ proc op_get_version {} {
 }
 
 # main
+check_user
+if {$user_is_root == 0} {
+    send "\nYou must be root to run the OProfile opcontrol interface.\n"
+    send "Will not run opcontrol tests.\n"
+} else {
+    op_get_version
 
-oprofile_start
-op_get_version
-op_check_daemon
+    if {$op_version == 0} {
+	send "\nUnable to find the opcontrol command.  Check to make sure \n"
+	send "OProfile is properly installed and the opcontrol command is \n"
+	send "in the root's path.  Will not run opcontrol tests.\n"
+    } else {
+	# just to be paranoid and make sure there is no operf data that
+	# opreport might pickup by mistake, delete any existing operf data
+	operf_delete_samples
+
+	oprofile_start
+	op_check_daemon
+    }
+}

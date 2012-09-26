@@ -169,7 +169,7 @@ set op_event_table(arch_perf)                       \
 	}                                           \
 	{                                           \
 	     {0 BR_INST_RETIRED   0 500000}         \
-	     {1 BR_MISS_PRED_RETIRED 0 500000}      \
+	     {1 BR_MISS_PRED_RETIRED 0 50000}       \
 	}                                           \
     }
 
@@ -185,7 +185,7 @@ set op_event_table(sandybridge)                     \
 	}                                           \
 	{                                           \
 	     {0 BR_INST_RETIRED   0 500000}         \
-	     {1 BR_MISS_PRED_RETIRED 0 500000}      \
+	     {1 BR_MISS_PRED_RETIRED 0 50000}       \
 	}                                           \
 	{                                           \
 	     {0 uops_issued stall_cycles 2000000}   \

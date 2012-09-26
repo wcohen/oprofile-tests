@@ -242,3 +242,17 @@ proc op_cpu_type {} {
     verbose "cpu type is $type"
     return $type
 }
+
+proc check_user {} {
+    global user_is_root
+
+    set result [ local_exec "whoami" "" "" 100 ]
+
+    if {[regexp "root" $result] == 1} {
+	verbose "Running as root"
+	set user_is_root 1
+    } else {
+	verbose "Not running as root"
+	set user_is_root 0
+    }
+}
