@@ -42,7 +42,7 @@ proc operf_get_version {} {
     } else {
 	verbose "unable to determine version"
 	set operf_version 0
-	fail $test
+	warning $test
     }
 }
 
@@ -173,7 +173,7 @@ if {$user_is_root == 0} {
     operf_get_version
 
     if { $operf_version == 0} {
-	send "\nSystem does not support OProfile operf interface.  Will not run operf tests.\n"
+	send "\nThe OProfile operf user tool is not supported.  Will not run operf tests.\n"
     } else {
 	operf_delete_samples
 	oprofile-operf_run_tests
