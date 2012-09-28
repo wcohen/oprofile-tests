@@ -94,7 +94,7 @@ proc do_test {ctrs} {
     set filename "/tmp/operf_create_stop.zzzz"
     set fileId [open $filename "w"]
     puts $fileId "#!/bin/bash"
-    puts $fileId "echo -n  \"pkill -9 -P  \" > /tmp/operf_stop.zzzz "
+    puts $fileId "echo -n  \"kill -s INT  \" > /tmp/operf_stop.zzzz "
 
     # Get the process id to kill
     puts $fileId "cat /tmp/operf_out.zzzz | grep \"kill\" | cut -d\"\'\" -f2 | cut -d\" \" -f3 >> /tmp/operf_stop.zzzz "
