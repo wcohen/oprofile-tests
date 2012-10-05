@@ -175,7 +175,11 @@ if {$user_is_root == 0} {
     if { $operf_version == 0} {
 	send "\nThe OProfile operf user tool is not supported.  Will not run operf tests.\n"
     } else {
+	# Make sure there are no samples from the opcontrol or operf laying
+	# around that opreport might inadvertenly pick up.
+	op_daemon_delete_any_samples
 	operf_delete_samples
+
 	oprofile-operf_run_tests
     }
 }

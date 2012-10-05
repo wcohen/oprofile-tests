@@ -21,6 +21,11 @@
 set op_proc_prefix "/dev/oprofile"
 set op_var_prefix "/var/lib/oprofile"
 
+proc found_error {msg} {
+    print "ERROR:  $msg"
+    opcontrol_exit
+    exit 1
+}
 
 # read contents of file and return
 proc op_get_file_contents {fname} {
@@ -44,6 +49,17 @@ proc op_spin {count} {
 	set n [expr {($j + $k * ($m ^ $k)) % 4294967296}]
     }
     local_exec "dd bs=16 if=/dev/urandom of=/dev/null count=$count" "" "" 10
+}
+
+proc op_daemon_delete_any_samples {} {
+    set cmd "opcontrol --reset"
+    set result [local_exec $cmd "" "" 100]
+
+    if {[lindex $result 0] == 0} {
+	verbose "OProfile reset successfully deleted all samples"
+    } else {
+	found_error "OProfile --reset FAILED"
+    }
 }
 
 # If the processor is i386/arch_perfmon, it could be a variant.

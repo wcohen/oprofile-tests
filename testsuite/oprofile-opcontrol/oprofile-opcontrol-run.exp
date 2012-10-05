@@ -42,29 +42,6 @@ proc op_daemon_flush {} {
     }
 }
 
-proc op_daemon_delete_any_samples {ctrs} {
-
-    global op_var_prefix
-    foreach ctr $ctrs {
-	set n [lindex $ctr 0]
-	foreach f [glob -nocomplain -types f "$op_var_prefix/samples/*#$n"] {
-	    if {[catch "file delete $f" err]} {
-		verbose "could not delete $f ($err)"
-	    } else {
-		verbose "deleted $f"
-	    }
-	}
-    }
-
-    foreach sess [glob -nocomplain -types d "$op_var_prefix/samples/session-*"] {
-	    if {[catch "file delete -force $sess" err]} {
-		verbose "could not delete session $sess ($err)"
-	    } else {
-		verbose "deleted $sess"
-	    }
-    }
-}
-
 proc op_daemon_check_samples_exist {ctrs} {
 
     global op_var_prefix op_daemon_running
@@ -232,13 +209,13 @@ proc op_daemon_stop {} {
 }
 
 proc op_daemon_cycle {ctrs} {
-    op_daemon_delete_any_samples $ctrs
+    op_daemon_delete_any_samples
     op_daemon_start $ctrs
     op_spin 5000
     op_daemon_flush
     op_daemon_check_samples_exist $ctrs
     op_daemon_stop
-    op_daemon_delete_any_samples $ctrs
+    op_daemon_delete_any_samples
 }
 
 proc op_check_daemon {} {
