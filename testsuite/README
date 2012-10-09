@@ -2,6 +2,11 @@ This testsuite directory contains a simple testsuite to check the
 functionality of OProfile on the machine. The testsuite supports testing
 the previous user interface using opcontrol and the new operf interface.
 
+The testsuite consists of several workloads.  Each workload is run using
+an architecture specific list of event sets.  The OProfile report for
+each workload run is then checked to make sure the expected symbols that
+are specific to that workload are found in the profile report.
+
 
 Running the opcontrol OProfile testsuite requires the following:
 
@@ -15,20 +20,20 @@ following command:
 runtest --tool oprofile-opcontrol
 
 
-The operf OProfile testsuite requires the following:
+The system-wide operf OProfile testsuite requires the following:
 
 -Superuser privileges
 -The dejagnu and expect packages are installed
 -The OProfile commands to be on the PATH
 
-The operf tests are run by being in this directory and running the following
-command:
+The system-wide operf tests are run by being in this directory and running
+the following command:
 
 runtest --tool oprofile-operf
 
 
-Both testsuites can be run at the sametime, provided you meet the requirement
-for running OProfile opcontrol and the OPerf testsuites, with the command
+To run both oprontrol and operf testsuites (provided the requirements for
+both are met), use the command
 
 runtest --tool oprofile
 

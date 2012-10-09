@@ -19,7 +19,8 @@
 
 load_lib "op_events.exp"
 load_lib "op_util.exp"
-
+load_lib "op_workloads.exp"
+load_lib "verify.exp"
 
 set operf_version ""
 
@@ -46,7 +47,7 @@ proc operf_get_version {} {
     }
 }
 
-proc do_test {ctrs} {
+proc do_test {ctrs symbol_check} {
 #   The tests are run in system-wide mode which requires the user to be
 #   root.  System-wide mode is being used to make the operf interface
 #   testing as functionally equivalent to the opcontrol interface testing
@@ -58,12 +59,11 @@ proc do_test {ctrs} {
 #   operf.  After the workload has run, a script is called to kill the
 #   operf data collection processes.
 
-    set ctr_opts {}
+    global op_workload_table
     set kernel 1
     set user 1
-    set count 5000
+    set ctr_opts {}
 
-    set test "operf do test"
     foreach ctr $ctrs {
 #       n - counter number, no longer used but didn't want to change
 #       specification format
@@ -74,56 +74,75 @@ proc do_test {ctrs} {
 	append ctr_opts "${event}:${count}:${um}:${kernel}:${user},"
     }
 
-    # create the script to run operf command
-    set filename "/tmp/operf_run.zzzz"
-    set fileId [open $filename "w"]
-    puts $fileId "#!/bin/bash"
-    puts -nonewline $fileId "operf --system-wide --events "
-    puts -nonewline $fileId $ctr_opts
-    puts -nonewline $fileId " 2>&1  | tee > /tmp/operf_out.zzzz"
-    close $fileId
+    foreach entry [array name op_workload_table] {
+	set workload_src [lindex $op_workload_table($entry) 0]
+	set compile_options [lindex $op_workload_table($entry) 1]
+	set test "operf do test"
 
-    local_exec "chmod 755 /tmp/operf_run.zzzz" "" "" 10
+	set workload_exc [compile_workload $workload_src  $compile_options]
 
-    #  Start operf data collection in the background
-    exec /tmp/operf_run.zzzz &
+	# create the script to run operf command
+	set filename "/tmp/operf_run.zzzz"
+	set fileId [open $filename "w"]
+	puts $fileId "#!/bin/bash"
+	puts -nonewline $fileId "operf --system-wide --events "
+	puts -nonewline $fileId $ctr_opts
+	puts -nonewline $fileId " 2>&1  | tee > /tmp/operf_out.zzzz"
+	close $fileId
 
-    # Create the script to stop the operf data collection.  Note this
-    # must be done after operf starts and writes the kill command out to
-    # operf_out.zzzz.
-    set filename "/tmp/operf_create_stop.zzzz"
-    set fileId [open $filename "w"]
-    puts $fileId "#!/bin/bash"
-    puts $fileId "echo -n  \"kill -s INT  \" > /tmp/operf_stop.zzzz "
+	local_exec "chmod 755 /tmp/operf_run.zzzz" "" "" 10
 
-    # Get the process id to kill
-    puts $fileId "cat /tmp/operf_out.zzzz | grep \"kill\" | cut -d\"\'\" -f2 | cut -d\" \" -f3 >> /tmp/operf_stop.zzzz "
-    close $fileId
+	#  Start operf data collection in the background
+	exec /tmp/operf_run.zzzz &
 
-    # check that operf started correctly
-    if {[lindex [local_exec "grep \"usage\" /tmp/operf_out.zzzz " "" "" 100] 0] == 1} {
-	pass $test
-    } else {
-	fail $test
+	# Create the script to stop the operf data collection.  Note this
+	# must be done after operf starts and writes the kill command out to
+	# operf_out.zzzz.
+	set filename "/tmp/operf_create_stop.zzzz"
+	set fileId [open $filename "w"]
+	puts $fileId "#!/bin/bash"
+	puts $fileId "echo -n  \"kill -s INT  \" > /tmp/operf_stop.zzzz "
+
+	# Get the process id to kill
+	puts $fileId "cat /tmp/operf_out.zzzz | grep \"kill\" | cut -d\"\'\" -f2 | cut -d\" \" -f3 >> /tmp/operf_stop.zzzz "
+	close $fileId
+
+	# check that operf started correctly
+	if {[lindex [local_exec "grep \"usage\" /tmp/operf_out.zzzz " "" "" 100] 0] == 1} {
+	    pass $test
+	} else {
+	    fail $test
+	}
+
+	# Run the script to create the operf stop script based on the
+	# output of the operf command.
+	local_exec "sleep 2" "" "" 10
+	local_exec "chmod 755 /tmp/operf_create_stop.zzzz" "" "" 10
+	exec /tmp/operf_create_stop.zzzz
+
+	# Run the workload
+	set result [local_exec "$workload_exc" "" "" 60]
+
+	local_exec "chmod 755 /tmp/operf_stop.zzzz" "" "" 10
+	exec /tmp/operf_stop.zzzz
+
+	operf_check_samples_exist $ctrs
+
+	# Verify the interesting symbols for this test are found in
+	# the output.  Only checking the symbols for the first group of
+	# events.
+	if {$symbol_check == 1} {
+	    local_exec "sleep 2" "" "" 10
+	    verify_output $op_workload_table($entry) $workload_exc $ctr_opts
+	}
+
+	# cleanup the files created
+	local_exec "rm -f /tmp/operf_out.zzzz" "" "" 10
+	local_exec "rm -f /tmp/operf_stop.zzzz" "" "" 10
+	local_exec "rm -f /tmp/operf_run.zzzz" "" "" 10
+	local_exec "rm -f /tmp/operf_create_stop.zzzz" "" "" 10
+	operf_delete_samples
     }
-
-#   Run the script to create the operf stop script based on the
-#   output of the operf command.
-    local_exec "sleep 1" "" "" 10
-    local_exec "chmod 755 /tmp/operf_create_stop.zzzz" "" "" 10
-    exec /tmp/operf_create_stop.zzzz
-
-#   Run the workload
-    op_spin $count
-
-    local_exec "chmod 755 /tmp/operf_stop.zzzz" "" "" 10
-    exec /tmp/operf_stop.zzzz
-
-#   cleanup the files created
-    local_exec "rm -f /tmp/operf_out.zzzz" "" "" 10
-    local_exec "rm -f /tmp/operf_stop.zzzz" "" "" 10
-    local_exec "rm -f /tmp/operf_run.zzzz" "" "" 10
-    local_exec "rm -f /tmp/operf_create_stop.zzzz" "" "" 10
 }
 
 proc operf_check_samples_exist {ctrs} {
@@ -135,8 +154,8 @@ proc operf_check_samples_exist {ctrs} {
 	set n [lindex $ctr 0]
 	set event [lindex $ctr 1]
 
-	verbose "running opreport --long-filenames event:$event"
-	set result [ local_exec "opreport --long-filenames event:$event" "" "" 100 ]
+	verbose "running opreport --symbols --long-filenames event:$event"
+	set result [ local_exec "opreport --symbols --long-filenames event:$event" "" "" 100 ]
 	if { [regexp "error:" "$result" ]} {
 	    fail "$test: {$event} created nonzero sample files"
 	} else {
@@ -154,11 +173,14 @@ proc oprofile-operf_run_tests {} {
 
     } else {
 
+	set symbol_check 1
 	foreach spec $op_event_table($cpu) {
-	    do_test $spec
-	    operf_check_samples_exist $spec
+	    # Just do the symbol check on the first event group.  The
+	    # assumption is the first event group contains cycles or count
+	    # instructions which will reliably collect a lot of samples.
+	    do_test $spec $symbol_check
+	    set symbol_check 0
 	}
-	operf_delete_samples
     }
 }
 

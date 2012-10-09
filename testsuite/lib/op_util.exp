@@ -272,3 +272,32 @@ proc check_user {} {
 	set user_is_root 0
     }
 }
+
+proc compile_workload {workload_src compile_options } {
+
+    # Ideally the TCL command target_compile should be used.  However,
+    # target_compile is ignoring the compiler options argument.
+
+    set compiler "cc"
+    set extension [lindex [split $workload_src "."] 1]
+    set workload_exc [ lindex [split $workload_src "."] 0]_bin
+
+    if { [string compare $extension "c"] == 0 } {
+	# workload is a C program, see if it needs to be compiled.
+	set test [local_exec "ls $workload_exc" "" "" 10]
+
+	if { [lindex $test 0] == 1 } {
+	    # workload has not been compiled
+	    set result [local_exec "$compiler -o $workload_exc $workload_src $compile_options" "" "" 10 ]
+	    if { [lindex $result 0] == 1 } {
+		print "\nERROR compiling workload: $workload_src"
+		print "Compiler error message: $result\n"
+	    }
+	}
+	return [ lindex [split $workload_src "."] 0]_bin
+    }
+
+    # Assume the workload is a script, set the executable
+    # name to the same as the source name.
+    return $workload_src
+}

@@ -132,6 +132,11 @@ set op_comprehensive_event_table(p4) \
 # represents a single testcase. so in these CPUs there's 2 testcases per
 # CPU. it's not much, but then, that makes it somewhat easier to run and
 # less likely to fail.
+#
+# The symbol check test only uses the first event group when collecting data
+# to check for a symbol.  It is best that the first event group contain an
+# event such as CYCLES or count instructions which will reliably collect
+# a significant number of samples.
 
 set op_event_table(ppro)                            \
     {                                               \

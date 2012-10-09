@@ -1,0 +1,55 @@
+
+
+if {! [array exists op_workload_table]} {
+    array set op_workload_table {}
+}
+
+# Make sure the workload binary name is unique and not a substring of the
+# directory or the test to see if the symbol exists may find the symbol in
+# the directory name not the executable.
+#
+# The op_workload_table consists of three or more entries.  The entries
+# are as follows:
+#
+# First entry is the C code source file name for a program or
+#   the complete command to run the script if the workload is a script
+#
+# Second entry is any compile line options for a C program
+#
+# Remaining entries are symbols which should be found in the OProfile
+#   output
+#
+# Specifically the op_workload_table for C program foo.c that has the symbols
+# foo, foo_symbol1 and foo_symbol2 in the binary file and is to be compiled
+# with the "-O2" compiler option would be:
+#
+#  set op_workload_table(foo) \
+#  { \
+#     { workloads/foo.c }  \
+#     { -O2 }              \
+#     { foo_symbol1 }      \
+#     { foo_symbol2 }      \
+#  {
+
+set op_workload_table(tcl)                         \
+    {                                              \
+      {tclsh workloads/tcl_src/workload.tcl 150000}\
+      {}                                           \
+      {/bin/dd}                                    \
+    }
+
+set op_workload_table(memcpy)                      \
+    {                                              \
+      {workloads/memcpyt_src/memcpyt.c}            \
+      {}                                           \
+      {memcpyt_bin}                                \
+      {main}                                       \
+    }
+
+set op_workload_table(thread)                      \
+    {                                              \
+      {workloads/thread_src/thread.c}              \
+      {-pthread}                                   \
+      {thread_bin}                                 \
+      {mythread}                                   \
+    }

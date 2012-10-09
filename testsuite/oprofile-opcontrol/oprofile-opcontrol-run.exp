@@ -19,6 +19,8 @@
 
 load_lib "op_events.exp"
 load_lib "op_util.exp"
+load_lib "op_workloads.exp"
+load_lib "verify.exp"
 
 set op_daemon_running 0
 
@@ -50,6 +52,7 @@ proc op_daemon_check_samples_exist {ctrs} {
     set test "nonzero-sized sample file creation"
 
     if {$op_daemon_running == 0} {
+	print "op_daemon_check_samples_exist, op_daemon not running as expected"
 	unsupported $test
 	return
     }
@@ -208,21 +211,53 @@ proc op_daemon_stop {} {
     local_exec "rm -f /root/.oprofile/daemonrc" "" "" 100
 }
 
-proc op_daemon_cycle {ctrs} {
-    op_daemon_delete_any_samples
-    op_daemon_start $ctrs
-    op_spin 5000
-    op_daemon_flush
-    op_daemon_check_samples_exist $ctrs
-    op_daemon_stop
-    op_daemon_delete_any_samples
+proc op_daemon_cycle {ctrs symbol_check} {
+    global op_workload_table
+
+    set ctr_opts {}
+    foreach ctr $ctrs {
+	set n [lindex $ctr 0]
+	set event [lindex $ctr 1]
+	set um [lindex $ctr 2]
+	set count [lindex $ctr 3]
+	append ctr_opts "{$n $event $um $count} "
+    }
+
+    foreach entry [array name op_workload_table] {
+
+	set workload_src [lindex $op_workload_table($entry) 0]
+	set compile_options [lindex $op_workload_table($entry) 1]
+	set workload_exc [compile_workload $workload_src  $compile_options]
+
+	op_daemon_start $ctrs
+
+        # run the workload
+	local_exec ${workload_exc} "" "" 100
+
+	op_daemon_flush
+	op_daemon_check_samples_exist $ctrs
+	op_daemon_stop
+
+	# Verify the interesting symbols for this test are found in
+	# the output.  Only checking the symbols for the first group of
+	# events.
+	if {$symbol_check == 1} {
+	    local_exec "sleep 2" "" "" 10
+	    verify_output $op_workload_table($entry) $workload_exc $ctr_opts
+	}
+
+	op_daemon_delete_any_samples
+    }
 }
 
 proc op_check_daemon {} {
     global op_event_table
     set cpu [op_cpu_type]
+    set symbol_check 1
+
     foreach spec $op_event_table($cpu) {
-	op_daemon_cycle $spec
+	op_daemon_cycle $spec $symbol_check
+	set symbol_check 0
     }
 }
 
@@ -257,9 +292,11 @@ if {$user_is_root == 0} {
 	send "OProfile is properly installed and the opcontrol command is \n"
 	send "in the root's path.  Will not run opcontrol tests.\n"
     } else {
-	# just to be paranoid and make sure there is no operf data that
-	# opreport might pickup by mistake, delete any existing operf data
+	# Just to be paranoid and make sure there is no operf or opcontrol
+	# data that opreport might pickup by mistake, delete any existing
+	# data.
 	operf_delete_samples
+	op_daemon_delete_any_samples
 
 	oprofile_start
 	op_check_daemon

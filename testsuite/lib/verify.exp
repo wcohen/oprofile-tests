@@ -1,0 +1,25 @@
+proc verify_output { workload_table_entry workload ctr_opts} {
+
+    set workload_spec $workload_table_entry
+    set max [llength $workload_spec]
+
+    # Note, starting with the second entry in the workload spec is the name
+    # of the workload executable file. The remaining entries are symbols
+    # which should be found in opreport output.
+    for {set index 2} {$index < $max} {incr index} {
+	set symbol [lindex $workload_spec $index]
+	set result [local_exec "opreport --symbols --long-filenames" "" "" 100 ]
+
+        if { [regexp $symbol "$result" ]} {
+	    verbose "Verify the symbols for workload: $workload"
+	    verbose "  Performance counter events: $ctr_opts"
+	    pass "    opreport contains symbol: $symbol"
+	    verbose "\n"
+	} else {
+	    print "Verify the symbols for workload: $workload"
+	    print "  Performance counter events: $ctr_opts"
+	    fail "    opreport does not contain symbol: $symbol"
+	    print "\n"
+	}
+    }
+}
