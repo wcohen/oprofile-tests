@@ -232,3 +232,47 @@ proc operf_delete_samples {} {
 	verbose "Failed to delete exiting data directory"
     }
 }
+
+proc operf_check_samples_exist {ctrs} {
+    set test "nonzero-sized sample file creation"
+
+    verbose "checking for nonzero sample files"
+
+    foreach ctr $ctrs {
+	set n [lindex $ctr 0]
+	set event [lindex $ctr 1]
+
+	verbose "running opreport --symbols --long-filenames event:$event"
+	set result [ local_exec "opreport --symbols --long-filenames event:$event" "" "" 100 ]
+	if { [regexp "error:" "$result" ]} {
+	    fail "$test: {$event} created nonzero sample files"
+	} else {
+	    pass "$test: {$event} created nonzero sample files"
+	}
+    }
+}
+
+
+proc operf_get_version {} {
+    global operf_version
+
+    set test "OProfile operf version check"
+    verbose $test
+    set result [ local_exec "operf -v" "" "" 100 ]
+
+
+    if {[regexp "\[0-9\]+\(.\[0-9\]+\)+\[a-zA-Z_\]*" $result operf_version] == 1} {
+
+#	Need to make sure the kernel has operf support as well
+	if {[lindex [local_exec op-check-perfevents "" "" 100] 0] == 0} {
+	    pass $test
+	} else {
+	    verbose "Kernel does not support operf\n"
+	    set operf_version 0
+	}
+    } else {
+	verbose "unable to determine version"
+	set operf_version 0
+	warning $test
+    }
+}

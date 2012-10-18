@@ -31,9 +31,24 @@ the following command:
 
 runtest --tool oprofile-operf
 
+The single process operf testsuite requires the following:
 
-To run both oprontrol and operf testsuites (provided the requirements for
-both are met), use the command
+-The dejagnu and expect packages are installed
+-The OProfile commands to be on the PATH
+-Note, you should run the command "opcontrol --reset" as root to make sure
+ there are no opcontrol data samples around that opreport might accidentally
+ pickup on.  The testsuite is setup so it can run as a regular user.  Regular
+ users can't delete the opcontrol data.
+-In order to run oprofile--single_process as an normal user, the testsuite
+ directories need to be writable by normal user running the test.
+
+The single process operf tests are run by being in this directory and running
+the following command as either root or a normal user:
+
+runtest --tool oprofile-single_process
+
+To run all three testsuites (provided the requirements for all of them are
+met), use the command
 
 runtest --tool oprofile
 

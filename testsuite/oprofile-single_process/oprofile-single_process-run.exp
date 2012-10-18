@@ -1,0 +1,106 @@
+# oprofile-single_process-run.exp
+#   Copyright (C) 2012 Carl Love, IBM
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+
+load_lib "op_events.exp"
+load_lib "op_util.exp"
+load_lib "op_workloads.exp"
+load_lib "verify.exp"
+
+set operf_version 0
+
+proc do_test {ctrs symbol_check} {
+#   The tests are run in single process mode which does not require root
+#
+    global op_workload_table
+    set kernel 1
+    set user 1
+    set ctr_opts {}
+
+    foreach ctr $ctrs {
+#       n - counter number, no longer used but didn't want to change
+#       specification format
+	set n [lindex $ctr 0]
+	set event [lindex $ctr 1]
+	set um [lindex $ctr 2]
+	set count [lindex $ctr 3]
+	append ctr_opts "${event}:${count}:${um}:${kernel}:${user},"
+    }
+
+    foreach entry [array name op_workload_table] {
+	set workload_src [lindex $op_workload_table($entry) 0]
+	set compile_options [lindex $op_workload_table($entry) 1]
+	set workload_exc [compile_workload $workload_src  $compile_options]
+	set test "operf do test"
+
+
+	# Run the workload
+        set cmd "operf --events  ${ctr_opts} ${workload_exc}"
+        set test $cmd
+
+        if {[lindex [local_exec $cmd "" "" 100] 0] == 0} {
+            pass $test
+        } else {
+            fail $test
+	}
+
+	operf_check_samples_exist $ctrs
+
+	# Verify the interesting symbols for this test are found in
+	# the output.  Only checking the symbols for the first group of
+	# events.
+	if {$symbol_check == 1} {
+	    local_exec "sleep 1" "" "" 10
+	    verify_output $op_workload_table($entry) $workload_exc $ctr_opts
+	}
+	operf_delete_samples
+    }
+}
+
+proc oprofile-single_process_run_tests {} {
+    global op_event_table
+    set cpu [operf_cpu_type]
+
+    if {$cpu == "bogus"} {
+	send "Error, not able find cpu type exiting.\n"
+
+    } else {
+
+	set symbol_check 1
+
+	# The goal here is a quick sanity check so we will just do the
+	# test using the first event entry
+	set spec [lindex $op_event_table($cpu) 0]
+	do_test $spec $symbol_check
+    }
+}
+
+#main
+
+operf_get_version
+
+if { $operf_version == 0} {
+    send "\nThe OProfile operf user tool is not supported.  Will not run operf tests.\n"
+} else {
+    # Make sure there are no samples from operf laying around that opreport
+    # might inadvertenly pick up.  Unfortunately, the user needs to make sure
+    # the opcontrol data was previously deleted as root.  The goal is to be
+    # able to run this test as a regular user.
+    operf_delete_samples
+    oprofile-single_process_run_tests
+}

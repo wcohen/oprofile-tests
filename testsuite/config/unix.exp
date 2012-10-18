@@ -133,6 +133,13 @@ proc oprofile-operf_version {} {
     op-userspace-version
 }
 
+proc oprofile-single_process_version {} {
+    set version [exec /bin/uname -r]
+    print ""
+    print "kernel version: $version"
+    op-userspace-version
+}
+
 proc oprofile_version {} {
     oprofile-opcontrol_version
 }
@@ -183,6 +190,10 @@ proc oprofile-opcontrol_exit {} {
 }
 
 proc oprofile-operf_exit {} {
+    operf_exit
+}
+
+proc oprofile-single_process_exit {} {
     operf_exit
 }
 
