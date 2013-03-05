@@ -375,9 +375,8 @@ set op_event_table(power7)                          \
 	}                                           \
 	{                                           \
 	    {0 PM_BR_PRED_GRP3 0 500000}            \
-	    {1 PM_BR_PRED_CR_GRP3 0 500000}         \
-	    {2 PM_BR_PRED_CCACHE_GRP3 0 500000}     \
-	    {3 PM_BR_PRED_LSTACK_GRP3 0 500000}     \
+	    {1 PM_BR_PRED_CR_GRP3 0 50000}         \
+	    {3 PM_BR_PRED_LSTACK_GRP3 0 50000}     \
 	    {4 PM_RUN_INST_CMPL_GRP3 0 500000}      \
 	    {5 PM_RUN_CYC_GRP3  0 500000}           \
 	}                                           \
