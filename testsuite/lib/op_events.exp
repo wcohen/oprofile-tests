@@ -715,6 +715,8 @@ proc select_cpu_events {cpu_name} {
 	78 {set type arm7}
 	arm/armv7-ca15 {set type arm7}
 	ARM_Cortex-A15 {set type arm7}
+	i386/haswell {set type sandybridge}
+	Intel_Haswell_microarchitecture {set type sandybridge}
     }
 
     verbose "cpu type is $type"
