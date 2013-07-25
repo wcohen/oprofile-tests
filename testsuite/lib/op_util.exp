@@ -90,6 +90,13 @@ proc op_intel_perf_arch {cpu_type} {
 	    47 {set cpu_type i386/westmere}
 	    42 {set cpu_type i386/sandybridge}
 	    45 {set cpu_type i386/sandybridge}
+	    58 {set cpu_type i386/ivybridge}
+	    62 {set cpu_type i386/ivybridge}
+	    60 {set cpu_type i386/haswell}
+	    63 {set cpu_type i386/haswell}
+	    66 {set cpu_type i386/haswell}
+	    70 {set cpu_type i386/haswell}
+	    71 {set cpu_type i386/haswell}
 	}
     }
 
