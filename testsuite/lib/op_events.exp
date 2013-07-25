@@ -193,8 +193,8 @@ set op_event_table(sandybridge)                     \
 	     {1 BR_MISS_PRED_RETIRED 0 50000}       \
 	}                                           \
 	{                                           \
-	     {0 uops_issued stall_cycles 2000000}   \
-	     {1 uops_retired stall_cycles 2000000}  \
+	     {0 uops_issued stall_cycles 2000003}   \
+	     {1 uops_retired stall_cycles 2000003}  \
 	}                                           \
     }
 
