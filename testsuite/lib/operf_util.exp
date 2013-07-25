@@ -212,12 +212,12 @@ proc operf_cpu_type {} {
 	IBM_zEnterprize_z196 {set type z196}
 	75 {set type ivybridge}
 	Intel_Ivy_Bridge_microarchitecture {set type ivybridge}
-	76 {set type arm_cortex}
-	ARM_Cortex-A5 {set type arm_cortex}
-	77 {set type arm_cortex}
-	ARM_Cortex-A7 {set type arm_cortex}
-	78 {set type arm_cortex}
-	ARM_Cortex-A15 {set type arm_cortex}
+	76 {set type arm_arm7}
+	ARM_Cortex-A5 {set type arm7}
+	77 {set type arm7}
+	ARM_Cortex-A7 {set type arm7}
+	78 {set type arm7}
+	ARM_Cortex-A15 {set type arm7}
     }
 
     verbose "cpu type is $type"
