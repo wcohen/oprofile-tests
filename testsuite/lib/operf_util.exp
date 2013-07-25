@@ -211,7 +211,7 @@ proc operf_cpu_type {} {
 	74 {set type z196}
 	IBM_zEnterprize_z196 {set type z196}
 	75 {set type ivybridge}
-	Intel_Ivy_Bridge_microarchitecture {set type ivybridge}
+	Intel_Ivy_Bridge_microarchitecture {set type sandybridge}
 	76 {set type arm_arm7}
 	ARM_Cortex-A5 {set type arm7}
 	77 {set type arm7}
