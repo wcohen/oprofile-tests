@@ -1,0 +1,208 @@
+# ocount_util.exp
+#   Copyright (C) 2013 IBM
+#
+#   Author: Carl Love  <carll@us.ibm.com>
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+proc get_cycles_event {} {
+    # local exec output of ophelp output is of the form:
+    #   "0 {CYCLES:100000:0:1:1}".  Extract the cycles event
+    set string [local_exec "ophelp -d" "" "" 10]
+    set line [regexp -all -inline {\S+} $string]
+    set word [split [string trimleft [lindex $line 1 ] "\{" ] ":"]
+    set event [lindex $word  0]
+    return $event
+}
+
+proc compile_ocount_workload {workload_src } {
+
+    set compiler "cc"
+    set compile_options " "
+    set extension [lindex [split $workload_src "."] 1]
+    set workload_exec [ lindex [split $workload_src "."] 0]_bin
+
+    set result [local_exec "$compiler -o $workload_exec $workload_src $compile_options" "" "" 10 ]
+    if { [lindex $result 0] == 1 } {
+        print "\nERROR compiling workload: $workload_src"
+        print "Compiler error message: $result\n"
+    }
+    return $workload_exec
+}
+
+# proc check that the result was with in the expected percent of the
+# expected value
+proc check_expected_value {actual_value expected_value percent} {
+
+    set min_val [expr ($expected_value * (100 - $percent))/100]
+    set max_val [expr ($expected_value * (100 + $percent))/100]
+
+    if {$actual_value >= $min_val && $actual_value <= $max_val} {
+        return 1
+    } else {
+        return 0
+    }
+}
+
+proc check_nonzero_count {count workload event} {
+    set test "Non-zero count for workload $workload and event $event"
+    if {$count == 0} {
+        fail $test
+        return 0
+    } else {
+        pass $test
+        return 1
+    }
+}
+
+proc get_event_count { result symbol} {
+
+    set words [regexp -all -inline {\S+} $result]
+
+    set count 0
+    set index 0
+    foreach entry $words {
+        if {[string match $entry $symbol ]  == 1} {
+            set count [lindex $words $index+1 ]
+        }
+        set index [expr $index + 1]
+    }
+
+    # remove all commas in the count value
+    return [regsub -all {,} $count ""]
+}
+
+proc get_event_count_brief { result symbol} {
+    # Output is assumed to be in the brief format which
+    # consists of a string of fields separated by commas
+
+    set words [regexp -all -inline {\S+} $result]
+    set count 0
+    set index 0
+    foreach entry $words {
+        set sub_field [split $entry ","]
+        set index 0
+        foreach sub_entry $sub_field {
+           if {[string match $sub_entry $symbol ]  == 1} {
+               set count [lindex $sub_field $index+1 ]
+               break
+           }
+           set index [expr $index + 1]
+        }
+    }
+    return $count
+}
+
+proc test_kill_workload {pid} {
+    set test "Kill the running workload. Note, if this fails it could be the reason the some non-zero tests failing.\n"
+    set result [local_exec "kill $pid" "" "" 10]
+
+    set words [regexp -all -inline {\S+} $result]
+    if {[ lindex $words 0] == 0 } {
+        pass $test
+    } else {
+        fail $test
+    }
+}
+
+proc get_cpu_frequency {} {
+    set file_exists [file exists "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq" ]
+    set freq 0
+
+    if { $file_exists } {
+        # The frequency specified in this file seem to be in units of KHz,
+        # return the frequency in units of Hz.
+        set fp [open "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq" r]
+        set result [read $fp]
+        if {[ string is integer -strict $result ]} {
+            set freq [ expr $result * 1000 ]
+        }
+    }
+
+    # if the frequency was not found in cpuinfo_max_freq, try /proc/cpuinfo
+    if { $freq == 0 } {
+        # The frequency specified in this file may be in MHz, Hz or bogomips.
+        # Return the frequency in units of Hz.
+        set fp [open "/proc/cpuinfo" r]
+        set result [read $fp]
+        set words [regexp -all -inline {\S+} $result]
+        set index 0
+
+        foreach entry $words {
+           # look for x86/parisc/ia64/x86_64 entry "cpu MHz : %lf"
+            if {([string match $entry "cpu" ]  == 1) &&
+                ([string match [lindex $words $index+1] "MHz"]  == 1)} {
+                set freq_str [lindex $words $index+3 ]
+                set freq [ expr $freq_str * 1000000 ]
+                break
+            }
+
+            # look for ppc/ppc64 entry, "clock : %lfMHz"
+            if {[string match $entry "clock" ]  == 1} {
+                set freq_str [lindex $words $index+2 ]
+                set freq_str_trim [string trimright $freq_str "MHz"]
+                set freq [ expr $freq_str_trim * 1000000 ]
+                break
+            }
+
+            # look for alpha, "cycle frequency [Hz] : %lu"
+            if {([string match $entry "cycle" ]  == 1) &&
+                ([string match [lindex $words $index+1] "frequency"]  == 1)} {
+                set freq [lindex $words $index+4 ]
+                break
+            }
+
+            # look for sparc64, "Cpu0ClkTck : %lx"
+            if {[string match $entry "Cpu0ClkTck" ]  == 1} {
+                set freq [lindex $words $index+2 ]
+                break
+            }
+
+            # look for  mips including loongson2, "BogoMIPS   : %lu"
+            if {[string match $entry "BogoMIPS" ]  == 1} {
+                set freq_str [lindex $words $index+2 ]
+                set freq [ expr ($freq_str * 2) / 3 ]
+                break
+            }
+
+            set index [expr $index + 1]
+        }
+    }
+    return $freq
+}
+
+proc ocount_get_version {} {
+    global ocount_version
+
+    set test "OProfile ocount version check"
+    verbose $test
+    set result [ local_exec "ocount -v" "" "" 100 ]
+
+
+    if {[regexp "\[0-9\]+\(.\[0-9\]+\)+\[a-zA-Z_\]*" $result ocount_version] == 1} {
+#       Need to make sure the kernel has operf support as well
+        if {[lindex [local_exec op-check-perfevents "" "" 100] 0] == 0} {
+            pass $test
+        } else {
+            verbose "Kernel does not support ocount\n"
+            set ocount_version 0
+        }
+    } else {
+        verbose "unable to determine version"
+        set ocount_version 0
+        warning $test
+    }
+}

@@ -1,6 +1,7 @@
 This testsuite directory contains a simple testsuite to check the
 functionality of OProfile on the machine. The testsuite supports testing
 the previous user interface using opcontrol and the new operf interface.
+The testsuite also includes tests for the ocount tool.
 
 The testsuite consists of several workloads.  Each workload is run using
 an architecture specific list of event sets.  The OProfile report for
@@ -8,49 +9,99 @@ each workload run is then checked to make sure the expected symbols that
 are specific to that workload are found in the profile report.
 
 
-Running the opcontrol OProfile testsuite requires the following:
+Profiling Tool tests
 
--Superuser privileges
--The dejagnu and expect packages are installed
--The OProfile commands to be on the PATH
+  Running the opcontrol OProfile testsuite requires the following:
 
-The opcontrol tests are run by being in this directory and running the
-following command:
+  -Superuser privileges
+  -The dejagnu and expect packages are installed
+  -The OProfile commands to be on the PATH
 
-runtest --tool oprofile-opcontrol
+  The opcontrol tests are run by being in this directory and running the
+  following command:
+
+  runtest --tool oprofile-opcontrol
 
 
-The system-wide operf OProfile testsuite requires the following:
+  The system-wide operf OProfile testsuite requires the following:
 
--Superuser privileges
--The dejagnu and expect packages are installed
--The OProfile commands to be on the PATH
+  -Superuser privileges
+  -The dejagnu and expect packages are installed
+  -The OProfile commands to be on the PATH
 
-The system-wide operf tests are run by being in this directory and running
-the following command:
+  The system-wide operf tests are run by being in this directory and running
+  the following command:
 
-runtest --tool oprofile-operf
+  runtest --tool oprofile-operf
 
-The single process operf testsuite requires the following:
+  The single process operf testsuite requires the following:
 
--The dejagnu and expect packages are installed
--The OProfile commands to be on the PATH
--Note, you should run the command "opcontrol --reset" as root to make sure
- there are no opcontrol data samples around that opreport might accidentally
- pickup on.  The testsuite is setup so it can run as a regular user.  Regular
- users can't delete the opcontrol data.
--In order to run oprofile--single_process as an normal user, the testsuite
- directories need to be writable by normal user running the test.
+  -The dejagnu and expect packages are installed
+  -The OProfile commands to be on the PATH
+  -Note, you should run the command "opcontrol --reset" as root to make sure
+   there are no opcontrol data samples around that opreport might accidentally
+   pickup on.  The testsuite is setup so it can run as a regular user.  Regular
+   users can't delete the opcontrol data.
+  -In order to run oprofile-single_process as an normal user, the testsuite
+   directories need to be writable by normal user running the test.
 
-The single process operf tests are run by being in this directory and running
-the following command as either root or a normal user:
+  The single process operf tests are run by being in this directory and running
+  the following command as either root or a normal user:
 
-runtest --tool oprofile-single_process
+  runtest --tool oprofile-single_process
 
-To run all three testsuites (provided the requirements for all of them are
-met), use the command
 
-runtest --tool oprofile
+Event Counting tool tests
+
+  The testsuite oprofile-ocount tests the event counting tool ocount.  The
+  testsuite runs a series of tests using the ocount tool.
+
+   The tests include:
+
+     - each sample generates non-zero counts
+     - counting cycles for an interval of n seconds, 2*n and 4*n scale as
+       expected
+     - the sum of the counts cycles in user mode only, kernel mode
+       only match counting cycles in user and kernel mode
+
+  The ocount tests are run by being in this directory and running the following
+  command as either root or a normal user:
+
+  runtest --tool oprofile-ocount
+
+
+  The testsuite cycle-check-ocount tests tool ocount counting of cycles versus
+  the reported CPU frequency.  The reported frequency is not correct for all
+  platforms.  Some of the Intel processors can be running in Turbo mode.  In
+  Turbo mode the CPU frequency is higher then the reported frequency.  The
+  CPU frequency may be lowered by automatic thermal regulation circuits for
+  heat management.  This is true for the Power processors.  In this case, the
+  actual CPU frequency may be lower then the reported frequency.  These tests
+  were put into a separate tool as they should only be run when the user
+  has a good understanding of what the actual rather then reported frequency
+  for the CPU is.
+
+  The tests include:
+
+     - each sample generates non-zero counts
+     - counting cycles for an interval of n seconds matches n*proc_frequency
+
+  The tests will pass or fail based on the reported frequency.  The user will
+  need to manually verify if the reported count makes sense for the actual
+  CPU frequency.
+
+  The cycle check tests are run by being in this directory and running the
+  following command as either root or a normal user:
+
+  runtest --tool cycle-check-ocount
+
+
+Combined profiling and counting tests
+
+  To run all of the testsuites, with the exception of the cycle check tests,
+  (provided the requirements for all of them are met), use the command
+
+  runtest --tool oprofile
 
 
 The tests will run and at the end should print out the number of tests
@@ -68,5 +119,3 @@ wrong" and that the basic functionality works.
 
 Comments about and additions to the testsuite infrastructure are
 appreciated.
-
--Will

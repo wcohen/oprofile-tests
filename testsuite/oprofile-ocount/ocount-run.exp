@@ -1,0 +1,191 @@
+# ocount-run.exp
+#   Copyright (C) 2013 IBM
+#
+#   Author:  Carl Love <carll@us.ibm.com>
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+load_lib "ocount_util.exp"
+
+
+proc do_test_ocount_cycle_test {workload_exec output_format} {
+
+    # Check that counting cycles for "interval" seconds is non-zero
+    set event [get_cycles_event]
+    set interval 1
+
+    set pid [exec $workload_exec  > /tmp/junky.xwyesu.xse &]
+
+    # allow workload to reach steady state
+    local_exec "sleep 1" "" "" 10
+
+    set result [local_exec "ocount $output_format -e $event --time-interval $interval:1 -p $pid " "" "" 60]
+
+    test_kill_workload $pid
+
+    if {[string match $output_format "--brief-format"]} {
+        set count [get_event_count_brief $result $event]
+    } else {
+        set count [get_event_count $result $event]
+    }
+
+    local_exec "rm /tmp/junky.xwyesu.xse" "" "" 10
+
+    set test "Count cycles matches CPU frequency"
+
+    # check the count is not zero
+    if {[check_nonzero_count $count $workload_exec $event] == 0} {
+        return
+    }
+
+}
+
+proc do_test_ocount_scaling {workload_exec} {
+
+    # The actual result is expected to be within the following percent of the
+    # actual count
+    set percent   5
+    set interval1 1
+    set interval2 2
+    set interval4 4
+
+    set event [get_cycles_event]
+
+    set pid [exec $workload_exec > /tmp/junky.xwyesu.xse &]
+
+    # allow workload to reach steady state
+    local_exec "sleep 1" "" "" 10
+
+    set result1 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $interval1:1 -p $pid" "" "" 60]
+    set result2 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $interval2:1 -p $pid" "" "" 60]
+    set result4 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $interval4:1 -p $pid" "" "" 60]
+
+    test_kill_workload $pid
+
+    set count1 [get_event_count $result1 $event]
+    set count2 [get_event_count $result2 $event]
+    set count4 [get_event_count $result4 $event]
+
+    # Check the results are not zero
+    check_nonzero_count $count1 $workload_exec $event
+    check_nonzero_count $count2 $workload_exec $event
+    check_nonzero_count $count4 $workload_exec $event
+
+    # Check the scaling of the results
+    set test "Event $event count scales by 2, workload $workload_exec"
+
+    set expt_count [expr $count1 * 2]
+    if {[check_expected_value $count2 $expt_count $percent] == 1} {
+        pass $test
+    } else {
+        fail $test
+        send "Initial count $count1, expected count $expt_count, actual $count2\n\n"
+    }
+
+    local_exec "rm /tmp/junky.xwyesu.xse" "" "" 10
+
+    set test "Event $event count scales by 4, workload $workload_exec"
+    set expt_count [expr $count1 * 4]
+
+    if {[check_expected_value $count4 $expt_count $percent] == 1} {
+        pass $test
+    } else {
+        fail $test
+        send "Initial count $count1, expected count $expt_count, actual $count4\n\n"
+    }
+}
+
+proc do_test_ocount_modes {workload_exec} {
+
+    # The actual result is expected to be within the following percent of the
+    # actual count
+    set percent 5
+    set interval 1
+
+    set event [get_cycles_event]
+
+    # Run the workloads in user only, kernel only, then user and kernel
+    # modes.
+    set pid [exec $workload_exec > /tmp/junky.xwyesu.xse &]
+
+    # allow workload to reach steady state
+    local_exec "sleep 1" "" "" 10
+
+    set user_result [local_exec "taskset -c 0 ocount -e ${event}:0:0:1 --time-interval $interval:1 -p $pid" "" "" 60]
+
+    set kernel_result [local_exec "taskset -c 0 ocount -e ${event}:0:1:0 --time-interval $interval:1 -p $pid" "" "" 60]
+
+    set user_kernel_result [local_exec "taskset -c 0 ocount -e ${event}:0:1:1 --time-interval $interval:1 -p $pid" "" "" 60]
+
+    test_kill_workload $pid
+
+    local_exec "rm /tmp/junky.xwyesu.xse" "" "" 10
+
+    # get the counts from the results
+    set u_count [get_event_count $user_result $event]
+    set k_count [get_event_count $kernel_result $event]
+    set u_k_count [get_event_count $user_kernel_result $event]
+
+    # Check the counts are not zero
+    check_nonzero_count $u_count $workload_exec $event
+    check_nonzero_count $k_count $workload_exec $event]
+    check_nonzero_count $u_k_count $workload_exec $event
+
+    # Check the scaling of the results
+    set test "Event $event, user mode count plus kernel mode count matches user and kernel mode count, workload $workload_exec"
+
+    set expt_count [expr $u_count + $k_count]
+
+    if {[check_expected_value $u_k_count $expt_count $percent] == 1} {
+        pass $test
+    } else {
+        fail $test
+        send "User count $u_count, kernel count $k_count, sum  $expt_count\n"
+        send "User and kernel count, $u_k_count\n"
+    }
+}
+
+
+proc ocount_run_tests {} {
+
+    set workload_exec [compile_ocount_workload "workload_ocount/load.c"]
+
+send "ocount_run_tests\n"
+
+    # Check the brief format counting cycles gives non-zero count
+    do_test_ocount_cycle_test $workload_exec "--brief-format"
+
+    # Check the cycles count  gives non-zero count
+    do_test_ocount_cycle_test $workload_exec ""
+
+    # Check counts for workload scale as expected
+    do_test_ocount_scaling $workload_exec
+
+    # Check counts for workload for user, kernel, user and kernel modes
+    do_test_ocount_modes $workload_exec
+
+}
+
+
+#main
+
+ocount_get_version
+
+if { $ocount_version == 0 } {
+    send "\nThe OProfile ocount user tool is not supported.  Will not run ocount tests.\n"
+} else {
+    ocount_run_tests
+}

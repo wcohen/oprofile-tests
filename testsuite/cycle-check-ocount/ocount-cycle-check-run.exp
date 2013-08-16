@@ -1,0 +1,95 @@
+# ocount-cycle-check-run.exp
+#   Copyright (C) 2013 IBM
+#
+#   author:  Carl Love <carll@us.ibm.com>
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+load_lib "ocount_util.exp"
+
+proc do_test_ocount_cycle_test {workload_exec output_format} {
+
+    # Get processor frequency in Hz
+    set freq  [get_cpu_frequency]
+
+    # Check that counting cycles for "interval" seconds is equal to the
+    # processor frequency.  Note, we run this with a workload so we don't have
+    # issues with partitioned machines ceeding the processor because it is
+    # idle.
+
+    set event [get_cycles_event]
+    set interval 1
+
+    set pid [exec $workload_exec  > /tmp/junky.xwyesu.xse &]
+
+    # allow workload to reach steady state
+    local_exec "sleep 1" "" "" 10
+
+    set result [local_exec "ocount $output_format -e $event --time-interval $interval:1 -p $pid " "" "" 60]
+
+    test_kill_workload $pid
+
+    if {[string match $output_format "--brief-format"]} {
+        set count [get_event_count_brief $result $event]
+    } else {
+        set count [get_event_count $result $event]
+    }
+
+    local_exec "rm /tmp/junky.xwyesu.xse" "" "" 10
+    set test "Count cycles matches CPU frequency"
+
+    # check the count is not zero
+    if {[check_nonzero_count $count $workload_exec $event] == 0} {
+        return
+    }
+
+    # The frequency is specified in units of Hz
+    set expt_count [expr $interval * $freq]
+
+    # Count of cycles and frequency should be within the following percentage
+    set percent 5
+
+    if {[check_expected_value $count $expt_count $percent] == 1} {
+        pass $test
+    } else {
+        fail $test
+        send "CPU freq $freq Hz, collection interval $interval. \n"
+        send "Expected count $expt_count, actual count $count. \n"
+        send "See the README for an explanation about why the \n"
+        send "ocount-cycle-check test may have failed. \n\n"
+    }
+}
+
+proc cycle_run_tests {} {
+
+    set workload_exec [compile_ocount_workload "workload_ocount/load.c"]
+
+    # Check the brief format counting cycles versus CPU frequency
+    do_test_ocount_cycle_test $workload_exec "--brief-format"
+
+    # Check the cycles count versus CPU frequency
+    do_test_ocount_cycle_test $workload_exec ""
+}
+
+
+#main
+ocount_get_version
+
+if { $ocount_version == 0 } {
+    send "\nThe OProfile ocount user tool is not supported.  Will not run ocount tests.\n"
+} else {
+    cycle_run_tests
+}
