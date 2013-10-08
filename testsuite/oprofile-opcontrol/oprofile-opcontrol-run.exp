@@ -63,6 +63,9 @@ proc op_daemon_check_samples_exist {ctrs} {
 	set n [lindex $ctr 0]
 	set event [lindex $ctr 1]
 	case $op_version {
+	    { 0.1* 0.2* 0.3* 0.4* } {
+		fail "ERROR: testsuite not supported on version {$op_version}"
+	    }
 	    { 0.5* } {
 		set files [glob -nocomplain -types f "$op_var_prefix/samples/*#$n"]
 		if {[llength $files] == 0} {
@@ -83,7 +86,8 @@ proc op_daemon_check_samples_exist {ctrs} {
 		    }
 		}
 	    }
-	    { 0.6* 0.7* 0.8* 0.9* } {
+	    { * } {
+		# default for all newer versions of oprofile
 		verbose "running opreport --long-filenames event:$event"
 		set result [local_exec "opreport --long-filenames event:$event" "" "" 100 ]
 		if { [regexp "error:" "$result" ]} {
@@ -91,9 +95,6 @@ proc op_daemon_check_samples_exist {ctrs} {
 		} else {
 		    pass "$test: {$event} created nonzero sample files"
 		}
-	    }
-	    { * } {
-		fail "Do not know how to handle version {$op_version}"
 	    }
 	}
     }
@@ -121,16 +122,17 @@ proc op_daemon_start {ctrs} {
 	set um [lindex $ctr 2]
 	set count [lindex $ctr 3]
 	case $op_version {
+	    { 0.1* 0.2* 0.3* 0.4* } {
+		fail "ERROR: testsuite not supported on version {$op_version}"
+	    }
 	    { 0.5* } {
 		append ctr_opts " --ctr${n}-event=${event}"
 		append ctr_opts " --ctr${n}-count=${count}"
 		append ctr_opts " --ctr${n}-unit-mask=${um}"
 	    }
-	    { 0.6* 0.7* 0.8* 0.9* } {
-		append ctr_opts " --event=${event}:${count}:${um}"
-	    }
 	    { * } {
-		fail "Do not know how to handle version {$op_version}"
+		# default for all newer versions of oprofile
+		append ctr_opts " --event=${event}:${count}:${um}"
 	    }
 	}
     }
