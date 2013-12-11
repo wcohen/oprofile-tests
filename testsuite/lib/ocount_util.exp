@@ -75,7 +75,10 @@ proc get_event_count { result symbol} {
     set count 0
     set index 0
     foreach entry $words {
-        if {[string match $entry $symbol ]  == 1} {
+        # event might be printed with mask, kernel and user flags,
+        # for example:   CPU_CLK_UNHALTED:0x0:0:1
+        # only check the string before the first colon
+        if {[string match $symbol [ lindex [ split  $entry ":" ] 0 ] ]  == 1} {
             set count [lindex $words $index+1 ]
         }
         set index [expr $index + 1]
