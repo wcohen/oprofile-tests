@@ -88,7 +88,6 @@ proc operf_check_samples_exist {ctrs} {
     }
 }
 
-
 proc operf_get_version {} {
     global operf_version
 
@@ -110,5 +109,190 @@ proc operf_get_version {} {
 	verbose "unable to determine version"
 	set operf_version 0
 	warning $test
+    }
+}
+
+proc do_single_process_test {ctrs output_check test_debug_option} {
+#   The tests are run in single process mode which does not require root
+#
+#   output_check values:
+#     1 - check output for symbols from workload table
+#     2 - check if kallsyms should show up in the output and the symbol
+#         no-vmlinux is not be found to verify kallsyms was readable
+#     3 - test the callgraph ouput
+#
+#   test_debug_option values:
+#     0 - do not test any additional options
+#     1 - test --debug-info option
+
+    global op_workload_table
+    set kernel 1
+    set user 1
+    set ctr_opts {}
+
+    foreach ctr $ctrs {
+#       n - counter number, no longer used but didn't want to change
+#       specification format
+	set n [lindex $ctr 0]
+	set event [lindex $ctr 1]
+	set um [lindex $ctr 2]
+	set count [lindex $ctr 3]
+	append ctr_opts "${event}:${count}:${um}:${kernel}:${user},"
+    }
+
+    foreach entry [array name op_workload_table] {
+	set workload_src [lindex $op_workload_table($entry) 0]
+	set compile_options [lindex $op_workload_table($entry) 1]
+	set workload_exc [compile_workload $workload_src  $compile_options]
+
+	# Run the workload
+	if {$output_check == 3} {
+	    set cmd "operf --callgraph --lazy-conversion --events  ${ctr_opts} ${workload_exc}"
+	} else {
+	    set cmd "operf --events  ${ctr_opts} ${workload_exc}"
+	}
+
+	if {$test_debug_option == 1} {
+	    set dbg_test " (--debug-info)"
+	} else {
+	    set dbg_test ""
+	}
+	switch -exact "$output_check" {
+	    1 {set test "operf check for symbols$dbg_test: $cmd"}
+	    2 {set test "operf check for kallsyms$dbg_test: $cmd"}
+	    3 {set test "operf check for callgraph output$dbg_test: $cmd"}
+	}
+
+        if {[lindex [local_exec $cmd "" "" 100] 0] == 0} {
+            pass $test
+        } else {
+            fail $test
+	}
+
+	operf_check_samples_exist $ctrs
+
+	# Verify the interesting symbols for this test are found in
+	# the output.  Only checking the symbols for the first group of
+	# events.
+	if {$output_check == 1} {
+	    local_exec "sleep 1" "" "" 10
+	    verify_output $op_workload_table($entry) $workload_exc $ctr_opts $test_debug_option
+	}
+
+	if {$output_check == 2} {
+	    local_exec "sleep 1" "" "" 10
+	    verify_kallsyms_output
+	}
+
+	if {$output_check == 3} {
+	    # check callgraph output
+	    local_exec "sleep 1" "" "" 10
+	    verify_callgraph_output $op_workload_table($entry) $workload_exc $ctr_opts
+	}
+
+	operf_delete_samples
+    }
+}
+
+proc do_system-wide_test {ctrs symbol_check} {
+#   The tests are run in system-wide mode which requires the user to be
+#   root.  System-wide mode is being used to make the operf interface
+#   testing as functionally equivalent to the opcontrol interface testing
+#   as possible.
+#
+#   The operf --system-wide command is started in system-wide mode in the
+#   background.  Operf in system-wide mode runs until it received a kill
+#   command.  The test script captures the parent process id printed by
+#   operf.  After the workload has run, a script is called to kill the
+#   operf data collection processes.
+
+    global op_workload_table
+    set kernel 1
+    set user 1
+    set ctr_opts {}
+
+    foreach ctr $ctrs {
+#       n - counter number, no longer used but didn't want to change
+#       specification format
+	set n [lindex $ctr 0]
+	set event [lindex $ctr 1]
+	set um [lindex $ctr 2]
+	set count [lindex $ctr 3]
+	append ctr_opts "${event}:${count}:${um}:${kernel}:${user},"
+    }
+
+    foreach entry [array name op_workload_table] {
+	set workload_src [lindex $op_workload_table($entry) 0]
+	set compile_options [lindex $op_workload_table($entry) 1]
+	set workload_exc [compile_workload $workload_src  $compile_options]
+
+	if {$symbol_check == 1} {
+	    set test "operf systemwide check for symbols: $workload_exc"
+	} else {
+	    set test "operf systemwide: $workload_exc"
+	}
+
+	# create the script to run operf command
+	set filename "/tmp/operf_run.zzzz"
+	set fileId [open $filename "w"]
+	puts $fileId "#!/bin/bash"
+	puts -nonewline $fileId "operf --system-wide --events "
+	puts -nonewline $fileId $ctr_opts
+	puts -nonewline $fileId " 2>&1  | tee > /tmp/operf_out.zzzz"
+	close $fileId
+
+	local_exec "chmod 755 /tmp/operf_run.zzzz" "" "" 10
+
+	#  Start operf data collection in the background
+	exec /tmp/operf_run.zzzz &
+
+	# Create the script to stop the operf data collection.  Note this
+	# must be done after operf starts and writes the kill command out to
+	# operf_out.zzzz.
+	set filename "/tmp/operf_create_stop.zzzz"
+	set fileId [open $filename "w"]
+	puts $fileId "#!/bin/bash"
+	puts $fileId "echo -n  \"kill -s INT  \" > /tmp/operf_stop.zzzz "
+
+	# Get the process id to kill
+	puts $fileId "cat /tmp/operf_out.zzzz | grep \"kill\" | cut -d\"\'\" -f2 | cut -d\" \" -f3 >> /tmp/operf_stop.zzzz "
+	close $fileId
+
+	# check that operf started correctly
+	if {[lindex [local_exec "grep \"usage\" /tmp/operf_out.zzzz " "" "" 100] 0] == 1} {
+	    pass $test
+	} else {
+	    fail $test
+	}
+
+	# Run the script to create the operf stop script based on the
+	# output of the operf command.
+	local_exec "sleep 2" "" "" 10
+	local_exec "chmod 755 /tmp/operf_create_stop.zzzz" "" "" 10
+	exec /tmp/operf_create_stop.zzzz
+
+	# Run the workload
+	set result [local_exec "$workload_exc" "" "" 60]
+
+	local_exec "chmod 755 /tmp/operf_stop.zzzz" "" "" 10
+	exec /tmp/operf_stop.zzzz
+
+	operf_check_samples_exist $ctrs
+
+	# Verify the interesting symbols for this test are found in
+	# the output.  Only checking the symbols for the first group of
+	# events.
+	if {$symbol_check == 1} {
+	    local_exec "sleep 2" "" "" 10
+	    set test_debug_option 0
+	    verify_output $op_workload_table($entry) $workload_exc $ctr_opts $test_debug_option
+	}
+
+	# cleanup the files created
+	local_exec "rm -f /tmp/operf_out.zzzz" "" "" 10
+	local_exec "rm -f /tmp/operf_stop.zzzz" "" "" 10
+	local_exec "rm -f /tmp/operf_run.zzzz" "" "" 10
+	local_exec "rm -f /tmp/operf_create_stop.zzzz" "" "" 10
+	operf_delete_samples
     }
 }

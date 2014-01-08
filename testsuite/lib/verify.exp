@@ -1,14 +1,24 @@
-proc verify_output { workload_table_entry workload ctr_opts} {
+proc verify_output { workload_table_entry workload ctr_opts debug_opt_enabled} {
 
     set workload_spec $workload_table_entry
     set max [llength $workload_spec]
 
+    if { $debug_opt_enabled } {
+    # debug option enabled, adds a column to the output for the source
+	set base 3
+    } else {
+	set base 2
+    }
     # Note, starting with the second entry in the workload spec is the name
     # of the workload executable file. The remaining entries are symbols
     # which should be found in opreport output.
-    for {set index 2} {$index < $max} {incr index} {
+    for {set index $base} {$index < $max} {incr index} {
 	set symbol [lindex $workload_spec $index]
-	set result [local_exec "opreport --symbols --long-filenames" "" "" 100 ]
+	if { $debug_opt_enabled } {
+	    set result [local_exec "opreport --debug-info --symbols --long-filenames" "" "" 100 ]
+	} else {
+	    set result [local_exec "opreport --symbols --long-filenames" "" "" 100 ]
+	}
 
         if { [regexp $symbol "$result" ]} {
 	    verbose "Verify the symbols for workload: $workload"
@@ -21,5 +31,78 @@ proc verify_output { workload_table_entry workload ctr_opts} {
 	    fail "    opreport does not contain symbol: $symbol"
 	    print "\n"
 	}
+    }
+}
+
+proc verify_kallsyms_output { } {
+    # look for the presence of kallsyms and the absence of no-vmlinux to
+    # verify /proc/kallsyms could be read.
+    set symbol1 "kallsyms"
+    set symbol2 "no-vmlinux"
+
+    set result [local_exec "opreport --symbols --long-filenames" "" "" 100 ]
+
+    if { [regexp $symbol1 "$result" ] == 1 && [regexp $symbol2 "$result" ] == 0 } {
+	pass "    Kallsyms was used to get the kernel symbols."
+	verbose "\n"
+    } else {
+	print "Verify the test is being run as root and "
+	print "/proc/sys/kernel/kptr_restrict is either 0 or 1."
+	fail  "    Failed to obtain the kernel symbols from kallsyms."
+	print "\n"
+    }
+}
+
+proc verify_callgraph_output { workload_table_entry workload ctr_opts} {
+
+    set workload_spec $workload_table_entry
+    set max [llength $workload_spec]
+
+    # Note, starting with the second entry in the workload spec is the name
+    # of the workload executable file. The remaining entries are symbols
+    # which should be found in opreport output.
+
+    # Verify the output file contains the expected symbols.
+    set result [regsub {\{|\}} [local_exec "opreport --callgraph" "" "" 100 ] " "]
+
+    for {set index 2} {$index < $max} {incr index} {
+	set symbol [lindex $workload_spec $index]
+
+        if { [regexp $symbol "$result" ]} {
+	    verbose "Verify callgraph contains the workload symbols: $workload"
+	    verbose "  Performance counter events: $ctr_opts"
+	    pass "    opreport contains symbol: $symbol"
+	    verbose "\n"
+	} else {
+	    print "Verify callgraph contains the workload symbols: $workload"
+	    print "  Performance counter events: $ctr_opts"
+	    fail "    opreport does not contain symbol: $symbol"
+	    print "\n"
+	}
+    }
+    #  Check if kallsyms is the image name that the symbol name is
+    #  is not /proc/kallsyms as this would indicate an error getting
+    #  the symbol from kallsyms.  If the image name is no-vmlinux
+    #  then the symbol name should be /no-vmlinux as no vmlinux file
+    #  was available and the kallsyms file was not available.
+
+    set array_lines [ split  $result "\n" ]
+    set err 0
+    foreach line $array_lines {
+	set i 0
+	foreach word $line {
+
+	    set cur_word   [ lindex $line $i ]
+	    set next_word  [ lindex $line [ expr $i + 1 ] ]
+
+	    if { ([string compare $cur_word  "kallsyms"]  == 0 ) &&
+		 ([string compare $next_word "/proc/kallsyms"] == 0 ) } {
+		set err 1
+	    }
+	    set i [expr $i + 1]
+	    }
+    }
+    if { $err } {
+	fail " Could not extract symbols from /proc/kallsyms. \n"
     }
 }

@@ -245,7 +245,8 @@ proc op_daemon_cycle {ctrs symbol_check} {
 	# events.
 	if {$symbol_check == 1} {
 	    local_exec "sleep 2" "" "" 10
-	    verify_output $op_workload_table($entry) $workload_exc $ctr_opts
+	    set test_debug_option 0
+	    verify_output $op_workload_table($entry) $workload_exc $ctr_opts $test_debug_option
 	}
 
 	op_daemon_delete_any_samples
