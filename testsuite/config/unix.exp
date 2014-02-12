@@ -149,7 +149,7 @@ proc opcontrol_exit {} {
     global user_is_root
     global op_version
 
-    if {$user_is_root == 1 && $op_version == 1} {
+    if {$user_is_root == 1 && $op_version != ""} {
 	verbose "oprofile_exit: deinitializing..."
 	set test "opcontrol --deinit"
 	if {[lindex [local_exec "opcontrol --deinit" "" "" 100] 0] == 0} {

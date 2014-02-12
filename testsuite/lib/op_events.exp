@@ -382,6 +382,20 @@ set op_event_table(power7)                          \
 	}                                           \
     }
 
+set op_event_table(power8)                          \
+    {                                               \
+	{                                           \
+	    {0 CYCLES 0 500000}                     \
+	}                                           \
+	{                                           \
+	    {0 PM_BR_CMPL 0 100000}            \
+	    {1 PM_BR_TAKEN_CMPL 0 100000}         \
+	    {3 PM_GRP_DISP 0 100000}     \
+	    {4 PM_RUN_INST_CMPL 0 500000}      \
+	    {5 PM_RUN_CYC  0 500000}           \
+	}                                           \
+    }
+
 set op_event_table(ibm_compat_v1)                   \
     {                                               \
 	{                                           \
@@ -717,6 +731,8 @@ proc select_cpu_events {cpu_name} {
 	ARM_Cortex-A15 {set type arm7}
 	i386/haswell {set type sandybridge}
 	Intel_Haswell_microarchitecture {set type sandybridge}
+	ppc64/power8 {set type power8}
+	ppc64_POWER8 {set type power8}
     }
 
     verbose "cpu type is $type"
