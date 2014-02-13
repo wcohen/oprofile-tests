@@ -88,39 +88,68 @@ proc operf_check_samples_exist {ctrs} {
     }
 }
 
+proc operf_ocount_get_version {tool} {
+    global operf_ocount_version
+    global user_is_root
+
+    set test "OProfile operf/ocount version check"
+    verbose $test
+    set result [ local_exec "$tool -v" "" "" 100 ]
+
+    if {[regexp "\[0-9\]+\(.\[0-9\]+\)+\[a-zA-Z_\]*" $result operf_ocount_version] == 1} {
+
+#	Need to make sure the kernel has perf support as well
+        if {[lindex [local_exec op-check-perfevents "" "" 100] 0] == 0} {
+            pass $test
+        } else {
+            verbose "Kernel does not support operf\n"
+            set operf_ocount_version 0
+        }
+    } else {
+        verbose "unable to determine version"
+        # A common cause for this is when cpu type "timer" is detected.
+        # If running the full testsuite (i.e., 'runtest --tool=oprofile'), the
+        # oprofile-opcontrol part will have run first.  However, the exit proc
+        # does not run until we're completely finished, so opcontrol_exit will
+        # not have been called to do the deinit.  Some newer processor models
+        # are not supported by opcontrol except in timer mode, so running
+        # opcontrol results in /dev/oprofile/cpu_type being set to 'timer' by
+        # the oprofile kernel module.  If operf/ocount are run in such a situation,
+        # they detect the "timer" mode and exit with a message telling the user
+        # to run 'opcontrol --deinit'. If we are root user, we'll run the deinit
+        # here; then we'll try again to get the version.  If we're not user, we'll
+        # print a big message asking the user to do so.
+        set operf_ocount_version 0
+        check_user
+        if {$user_is_root == 1} {
+            if {[lindex [local_exec "opcontrol --deinit" "" "" 100] 0] == 0} {
+                verbose "oprofile deinitialized ok"
+                set result [ local_exec "$tool -v" "" "" 100 ]
+                if {[regexp "\[0-9\]+\(.\[0-9\]+\)+\[a-zA-Z_\]*" $result operf_ocount_version] == 1} {
+                    if {[lindex [local_exec op-check-perfevents "" "" 100] 0] == 0} {
+                        pass $test
+                        set operf_ocount_version 1
+                    } else {
+                        verbose "Kernel does not support operf/ocount\n"
+                    }
+                }
+            }
+        } else {
+            send "Unable to get version from operf.  Try running 'opcontrol --deinit'.\n"
+        }
+    }
+    if {$operf_ocount_version == 0} {
+        warning $test
+    }
+}
+
 proc operf_get_version {} {
+    global operf_ocount_version
     global operf_version
 
     set test "OProfile operf version check"
-    verbose $test
-    # If running the full testsuite (i.e., 'runtest --tool=oprofile'), the
-    # oprofile-opcontrol part will have run first.  However, the exit proc
-    # does not run until we're completely finished, so opcontrol_exit will
-    # not have been called to do the deinit.  Some newer processor models
-    # are not supported by opcontrol except in timer mode, so running
-    # opcontrol results in /dev/oprofile/cpu_type being set to 'timer' by
-    # the oprofile kernel module.  If operf is run in such a situation, it
-    # will detect the "timer" mode and exit with a message telling the user
-    # to run 'opcontrol --deinit'.  We'll do that blindly here to avoid the
-    # error.
-    opcontrol_exit
-    set result [ local_exec "operf -v" "" "" 100 ]
-
-
-    if {[regexp "\[0-9\]+\(.\[0-9\]+\)+\[a-zA-Z_\]*" $result operf_version] == 1} {
-
-#	Need to make sure the kernel has operf support as well
-	if {[lindex [local_exec op-check-perfevents "" "" 100] 0] == 0} {
-	    pass $test
-	} else {
-	    verbose "Kernel does not support operf\n"
-	    set operf_version 0
-	}
-    } else {
-	verbose "unable to determine version"
-	set operf_version 0
-	warning $test
-    }
+    operf_ocount_get_version "operf"
+    set operf_version $operf_ocount_version
 }
 
 proc do_single_process_test {ctrs output_check test_debug_option} {

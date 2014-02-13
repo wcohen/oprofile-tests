@@ -19,6 +19,7 @@
 #
 
 load_lib "ocount_util.exp"
+set ocount_version 0
 
 
 proc do_test_ocount_cycle_test {workload_exec output_format} {

@@ -188,24 +188,11 @@ proc get_cpu_frequency {} {
 }
 
 proc ocount_get_version {} {
+    global operf_ocount_version
     global ocount_version
 
     set test "OProfile ocount version check"
-    verbose $test
-    set result [ local_exec "ocount -v" "" "" 100 ]
-
-
-    if {[regexp "\[0-9\]+\(.\[0-9\]+\)+\[a-zA-Z_\]*" $result ocount_version] == 1} {
-#       Need to make sure the kernel has operf support as well
-        if {[lindex [local_exec op-check-perfevents "" "" 100] 0] == 0} {
-            pass $test
-        } else {
-            verbose "Kernel does not support ocount\n"
-            set ocount_version 0
-        }
-    } else {
-        verbose "unable to determine version"
-        set ocount_version 0
-        warning $test
-    }
+    # The operf_ocount_get_version proc is in operf_util.exp
+    operf_ocount_get_version "ocount"
+    set ocount_version $operf_ocount_version
 }
