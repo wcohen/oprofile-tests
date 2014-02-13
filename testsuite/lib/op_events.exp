@@ -263,6 +263,18 @@ set op_event_table(arm7)                            \
 	}                                           \
     }
 
+set op_event_table(arm8)                            \
+    {                                               \
+	{                                           \
+	     {1 INST_RETIRED      0 500000}         \
+	     {0 CPU_CYCLES        0 500000}         \
+	}                                           \
+	{                                           \
+	     {0 L1D_CACHE_REFILL  0 50000}          \
+	     {1 L1D_CACHE         0 500000}         \
+	}                                           \
+    }
+
 set op_event_table(power4)                          \
     {                                               \
 	{                                           \
@@ -733,6 +745,7 @@ proc select_cpu_events {cpu_name} {
 	Intel_Haswell_microarchitecture {set type sandybridge}
 	ppc64/power8 {set type power8}
 	ppc64_POWER8 {set type power8}
+	ARM_X-Gene {set type arm8}
     }
 
     verbose "cpu type is $type"
