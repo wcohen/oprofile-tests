@@ -133,6 +133,15 @@ if {$user_is_root == 0} {
 
 	oprofile-operf_run_tests
 	oprofile-callgraph_run_tests
-	oprofile-kallsyms-readable_run_tests
+
+	case $operf_version {
+	    { 0.* } {
+		# no pre 1.0 specific tests to run
+	    }
+	    { * } {
+		# kallsyms support was added in version 1.0.
+		oprofile-kallsyms-readable_run_tests
+	    }
+	}
     }
 }
