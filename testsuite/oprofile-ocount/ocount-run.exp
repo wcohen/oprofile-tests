@@ -23,17 +23,30 @@ set ocount_version 0
 
 
 proc do_test_ocount_cycle_test {workload_exec output_format} {
+    global ocount_version
 
     # Check that counting cycles for "interval" seconds is non-zero
     set event [get_cycles_event]
+
+    # run for one second
     set interval 1
+    case $ocount_version {
+	{ 0.*} {
+	    # Prior to version 1.0 the run time-interval is in units of seconds.
+	    set run_time_interval $interval
+	}
+	{*} {
+	    # Version 1.0 and beyond the run time-interval is in units of milliseconds
+	    set run_time_interval [expr $interval * 1000]
+	}
+    }
 
     set pid [exec $workload_exec  > /tmp/junky.xwyesu.xse &]
 
     # allow workload to reach steady state
     local_exec "sleep 1" "" "" 10
 
-    set result [local_exec "ocount $output_format -e $event --time-interval $interval:1 -p $pid " "" "" 60]
+    set result [local_exec "ocount $output_format -e $event --time-interval $run_time_interval:1 -p $pid " "" "" 60]
 
     test_kill_workload $pid
 
@@ -55,13 +68,30 @@ proc do_test_ocount_cycle_test {workload_exec output_format} {
 }
 
 proc do_test_ocount_scaling {workload_exec} {
+    global ocount_version
 
     # The actual result is expected to be within the following percent of the
     # actual count
     set percent   5
+
+    # Test sample intervals of 1, 2, 4 seconds
     set interval1 1
     set interval2 2
     set interval4 4
+    case $ocount_version {
+	{ 0.*} {
+	    # Prior to version 1.0 the time interval is in units of seconds.
+	    set run_time_interval1 $interval1
+	    set run_time_interval2 $interval2
+	    set run_time_interval4 $interval4
+	}
+	{*} {
+	    # Version 1.0 and beyond  time interval is in units of milliseconds
+	    set run_time_interval1 [expr $interval1 * 1000]
+	    set run_time_interval2 [expr $interval2 * 1000]
+	set run_time_interval4 [expr $interval4 * 1000]
+	}
+    }
 
     set event [get_cycles_event]
 
@@ -70,9 +100,9 @@ proc do_test_ocount_scaling {workload_exec} {
     # allow workload to reach steady state
     local_exec "sleep 1" "" "" 10
 
-    set result1 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $interval1:1 -p $pid" "" "" 60]
-    set result2 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $interval2:1 -p $pid" "" "" 60]
-    set result4 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $interval4:1 -p $pid" "" "" 60]
+    set result1 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $run_time_interval1:1 -p $pid" "" "" 60]
+    set result2 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $run_time_interval2:1 -p $pid" "" "" 60]
+    set result4 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $run_time_interval4:1 -p $pid" "" "" 60]
 
     test_kill_workload $pid
 
@@ -110,11 +140,24 @@ proc do_test_ocount_scaling {workload_exec} {
 }
 
 proc do_test_ocount_modes {workload_exec} {
+    global ocount_version
 
     # The actual result is expected to be within the following percent of the
     # actual count
     set percent 5
+
+    # test for 1 second
     set interval 1
+    case $ocount_version {
+	{ 0.*} {
+	    # Prior to version 1.0 the time interval is in units of seconds.
+	    set run_time_interval $interval
+	}
+	{*} {
+	    # Version 1.0 and beyond  time interval is in units of milliseconds
+	    set run_time_interval [expr $interval * 1000]
+	}
+    }
 
     set event [get_cycles_event]
 
@@ -125,11 +168,11 @@ proc do_test_ocount_modes {workload_exec} {
     # allow workload to reach steady state
     local_exec "sleep 1" "" "" 10
 
-    set user_result [local_exec "taskset -c 0 ocount -e ${event}:0:0:1 --time-interval $interval:1 -p $pid" "" "" 60]
+    set user_result [local_exec "taskset -c 0 ocount -e ${event}:0:0:1 --time-interval $run_time_interval:1 -p $pid" "" "" 60]
 
-    set kernel_result [local_exec "taskset -c 0 ocount -e ${event}:0:1:0 --time-interval $interval:1 -p $pid" "" "" 60]
+    set kernel_result [local_exec "taskset -c 0 ocount -e ${event}:0:1:0 --time-interval $run_time_interval:1 -p $pid" "" "" 60]
 
-    set user_kernel_result [local_exec "taskset -c 0 ocount -e ${event}:0:1:1 --time-interval $interval:1 -p $pid" "" "" 60]
+    set user_kernel_result [local_exec "taskset -c 0 ocount -e ${event}:0:1:1 --time-interval $run_time_interval:1 -p $pid" "" "" 60]
 
     test_kill_workload $pid
 

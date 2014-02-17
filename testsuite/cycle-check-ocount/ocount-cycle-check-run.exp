@@ -1,3 +1,4 @@
+
 # ocount-cycle-check-run.exp
 #   Copyright (C) 2013 IBM
 #
@@ -20,7 +21,10 @@
 
 load_lib "ocount_util.exp"
 
+set ocount_version ""
+
 proc do_test_ocount_cycle_test {workload_exec output_format} {
+    global ocount_version
 
     # Get processor frequency in Hz
     set freq  [get_cpu_frequency]
@@ -31,14 +35,27 @@ proc do_test_ocount_cycle_test {workload_exec output_format} {
     # idle.
 
     set event [get_cycles_event]
+
+    # run for interval of one second
     set interval 1
+
+    case $ocount_version {
+	{ 0.*} {
+	    # Prior to version 1.0 the run time-interval is in units of seconds.
+	    set run_time_interval $interval
+	}
+	{*} {
+	    # Version 1.0 and beyond run time-interval is in units of milliseconds
+	    set run_time_interval [expr 1000 * $interval]
+	}
+    }
 
     set pid [exec $workload_exec  > /tmp/junky.xwyesu.xse &]
 
     # allow workload to reach steady state
     local_exec "sleep 1" "" "" 10
 
-    set result [local_exec "ocount $output_format -e $event --time-interval $interval:1 -p $pid " "" "" 60]
+    set result [local_exec "ocount $output_format -e $event --time-interval $run_time_interval:1 -p $pid " "" "" 60]
 
     test_kill_workload $pid
 
