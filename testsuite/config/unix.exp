@@ -47,26 +47,39 @@ load_lib "operf_util.exp"
 
 # we need to find a linux image, before anything else
 
+proc _is_vmlinux_valid {vmlinux_file} {
+        set result [ local_exec "objdump -t $vmlinux_file" "" "" 100 ]
+        if { [regexp "File format not recognized" "$result" ]} {
+                verbose "File format not recognized for $vmlinux_file\n"
+                return 0
+        } elseif { [regexp "no symbols" "$result" ]} {
+                verbose "No symbols in $vmlinux_file\n"
+                return 0
+        } elseif { [regexp ".text" "$result" ]}  {
+                verbose "Found symbols in  $vmlinux_file\n"
+                return 1
+        } else {
+                verbose "Unknown result from objdump for $vmlinux_file\n"
+                return 0
+        }
+}
+
 proc oprofile_start {} {
     global op_vmlinux
     global op_module_active
 
     set op_linux_version [exec /bin/uname -r]
     set op_vmlinux "/boot/vmlinux-$op_linux_version"
-    set test "check for linux image"
-    if {[file exists $op_vmlinux] == 1} {
+    if {[file exists $op_vmlinux] == 1 && [_is_vmlinux_valid $op_vmlinux] == 1} {
 	verbose "using linux image $op_vmlinux"
-#	pass $test
     } else {
 	# try the debuginfo location
 	set op_vmlinux "/usr/lib/debug/lib/modules/${op_linux_version}/vmlinux"
 	if {[file exists $op_vmlinux] == 1} {
 	    verbose "using linux image $op_vmlinux"
-#	    pass $test
 	} else {
 	    verbose "linux image for $op_linux_version not found"
 	    set op_vmlinux 0
-#	    fail $test
 	}
     }
 
