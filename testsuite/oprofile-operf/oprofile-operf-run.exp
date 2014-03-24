@@ -126,6 +126,9 @@ if {$user_is_root == 0} {
     if { $operf_version == 0 } {
 	send "\nThe OProfile operf user tool is not supported.  Will not run operf tests.\n"
     } else {
+	# Ensure that the oprofile kernel module is unloaded, since it can
+	# interfere with proper operf operation on some platforms.
+	local_exec "opcontrol --deinit" "" "" 100
 	# Make sure there are no samples from the opcontrol or operf laying
 	# around that opreport might inadvertenly pick up.
 	op_daemon_delete_any_samples

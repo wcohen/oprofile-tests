@@ -231,5 +231,8 @@ ocount_get_version
 if { $ocount_version == 0 } {
     send "\nThe OProfile ocount user tool is not supported.  Will not run ocount tests.\n"
 } else {
+    # Ensure that the oprofile kernel module is unloaded, since it can
+    # interfere with proper ocount operation on some platforms.
+    local_exec "opcontrol --deinit" "" "" 100
     ocount_run_tests
 }
