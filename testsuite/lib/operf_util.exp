@@ -170,6 +170,10 @@ proc do_single_process_test {ctrs output_check test_debug_option} {
     set user 1
     set ctr_opts {}
 
+    if { $output_check == 1 && $test_debug_option == 0 } {
+        validate_xml_help
+    }
+
     foreach ctr $ctrs {
 #       n - counter number, no longer used but didn't want to change
 #       specification format

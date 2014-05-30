@@ -1,3 +1,43 @@
+proc validate_xml_help { } {
+    set binpath [lindex [local_exec "which ophelp" "" "" 10] 1]
+    set idx [string last "/bin" $binpath ]
+    set op_install_dir [string range $binpath 0 $idx ]
+    append schema_file $op_install_dir "/share/doc/oprofile/ophelp.xsd"
+    set ophelp_result [local_exec "ophelp --xml" "" "" 100 ]
+    set out [open "help_out.xml" w]
+    puts $out [lindex $ophelp_result 1]
+    close $out
+    set xmllint_result [local_exec "xmllint --noout --schema $schema_file help_out.xml"  "" "" 10 ]
+    if { [regexp "help_out.xml validates" "$xmllint_result" ]} {
+        pass "    Verified XML ophelp output is valid"
+    } else {
+        fail "    XML ophelp output is invalid"
+        print [lindex $xmllint_result 1]
+    }
+    set result [local_exec "rm -rf ./help_out.xml" "" "" 100 ]
+}
+
+proc validate_xml_report { callgraph } {
+    if { $callgraph } {
+        set cg_option "--callgraph"
+    } else {
+        set cg_option ""
+    }
+    set binpath [lindex [local_exec "which operf" "" "" 10] 1]
+    set idx [string last "/bin" $binpath ]
+    set op_install_dir [string range $binpath 0 $idx ]
+    append schema_file $op_install_dir "/share/doc/oprofile/opreport.xsd"
+    set opreport_result [local_exec "opreport --debug-info --symbols $cg_option --long-filenames --xml -o out.xml" "" "" 100 ]
+    set xmllint_result [local_exec "xmllint --noout --schema $schema_file out.xml"  "" "" 10 ]
+    if { [regexp "out.xml validates" "$xmllint_result" ]} {
+        pass "    Verified XML opreport with callgraph option=$callgraph is valid"
+    } else {
+        fail "    XML opreport output with callgraph option=$callgraph is invalid"
+        print [lindex $xmllint_result 1]
+    }
+    set result [local_exec "rm -rf ./out.xml" "" "" 100 ]
+}
+
 proc verify_output { workload_table_entry workload ctr_opts debug_opt_enabled} {
 
     set workload_spec $workload_table_entry
@@ -13,24 +53,26 @@ proc verify_output { workload_table_entry workload ctr_opts debug_opt_enabled} {
     # of the workload executable file. The remaining entries are symbols
     # which should be found in opreport output.
     for {set index $base} {$index < $max} {incr index} {
-	set symbol [lindex $workload_spec $index]
-	if { $debug_opt_enabled } {
-	    set result [local_exec "opreport --debug-info --symbols --long-filenames" "" "" 100 ]
-	} else {
-	    set result [local_exec "opreport --symbols --long-filenames" "" "" 100 ]
-	}
-
+        set symbol [lindex $workload_spec $index]
+        if { $debug_opt_enabled } {
+            set result [local_exec "opreport --debug-info --symbols --long-filenames" "" "" 100 ]
+        } else {
+            set result [local_exec "opreport --symbols --long-filenames" "" "" 100 ]
+        }
         if { [regexp $symbol "$result" ]} {
-	    verbose "Verify the symbols for workload: $workload"
-	    verbose "  Performance counter events: $ctr_opts"
-	    pass "    opreport contains symbol: $symbol"
-	    verbose "\n"
-	} else {
-	    print "Verify the symbols for workload: $workload"
-	    print "  Performance counter events: $ctr_opts"
-	    fail "    opreport does not contain symbol: $symbol"
-	    print "\n"
-	}
+            verbose "Verify the symbols for workload: $workload"
+            verbose "  Performance counter events: $ctr_opts"
+            pass "    opreport contains symbol: $symbol"
+            verbose "\n"
+        } else {
+            print "Verify the symbols for workload: $workload"
+            print "  Performance counter events: $ctr_opts"
+            fail "    opreport does not contain symbol: $symbol"
+            print "\n"
+        }
+        if { $debug_opt_enabled } {
+            validate_xml_report 0
+        }
     }
 }
 
@@ -66,20 +108,21 @@ proc verify_callgraph_output { workload_table_entry workload ctr_opts} {
     set result [regsub {\{|\}} [local_exec "opreport --callgraph" "" "" 100 ] " "]
 
     for {set index 2} {$index < $max} {incr index} {
-	set symbol [lindex $workload_spec $index]
-
+        set symbol [lindex $workload_spec $index]
         if { [regexp $symbol "$result" ]} {
-	    verbose "Verify callgraph contains the workload symbols: $workload"
-	    verbose "  Performance counter events: $ctr_opts"
-	    pass "    opreport contains symbol: $symbol"
-	    verbose "\n"
-	} else {
-	    print "Verify callgraph contains the workload symbols: $workload"
-	    print "  Performance counter events: $ctr_opts"
-	    fail "    opreport does not contain symbol: $symbol"
-	    print "\n"
-	}
+            verbose "Verify callgraph contains the workload symbols: $workload"
+            verbose "  Performance counter events: $ctr_opts"
+            pass "    opreport contains symbol: $symbol"
+            verbose "\n"
+        } else {
+            print "Verify callgraph contains the workload symbols: $workload"
+            print "  Performance counter events: $ctr_opts"
+            fail "    opreport does not contain symbol: $symbol"
+            print "\n"
+        }
     }
+    validate_xml_report 1
+
     #  Check if kallsyms is the image name that the symbol name is
     #  is not /proc/kallsyms as this would indicate an error getting
     #  the symbol from kallsyms.  If the image name is no-vmlinux
@@ -89,20 +132,18 @@ proc verify_callgraph_output { workload_table_entry workload ctr_opts} {
     set array_lines [ split  $result "\n" ]
     set err 0
     foreach line $array_lines {
-	set i 0
-	foreach word $line {
-
-	    set cur_word   [ lindex $line $i ]
-	    set next_word  [ lindex $line [ expr $i + 1 ] ]
-
-	    if { ([string compare $cur_word  "kallsyms"]  == 0 ) &&
-		 ([string compare $next_word "/proc/kallsyms"] == 0 ) } {
-		set err 1
-	    }
-	    set i [expr $i + 1]
-	    }
+        set i 0
+        foreach word $line {
+            set cur_word   [ lindex $line $i ]
+            set next_word  [ lindex $line [ expr $i + 1 ] ]
+            if { ([string compare $cur_word  "kallsyms"]  == 0 ) &&
+              ([string compare $next_word "/proc/kallsyms"] == 0 ) } {
+                set err 1
+            }
+            set i [expr $i + 1]
+        }
     }
     if { $err } {
-	fail " Could not extract symbols from /proc/kallsyms. \n"
+        fail " Could not extract symbols from /proc/kallsyms. \n"
     }
 }
