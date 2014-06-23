@@ -1,41 +1,77 @@
+set XML_help_done 0
+set XML_report_cg_done 0
+set XML_report_no_cg_done 0
+
+proc should_run_xml_tests { } {
+	global operf_version
+	if { $operf_version == 0 } {
+		return 0
+	} else {
+		case $operf_version {
+			{ 0.* } {
+				return 0
+			}
+			{ * } {
+				return 1
+			}
+		}
+	}
+}
+
 proc validate_xml_help { } {
-    set binpath [lindex [local_exec "which ophelp" "" "" 10] 1]
-    set idx [string last "/bin" $binpath ]
-    set op_install_dir [string range $binpath 0 $idx ]
-    append schema_file $op_install_dir "/share/doc/oprofile/ophelp.xsd"
-    set ophelp_result [local_exec "ophelp --xml" "" "" 100 ]
-    set out [open "help_out.xml" w]
-    puts $out [lindex $ophelp_result 1]
-    close $out
-    set xmllint_result [local_exec "xmllint --noout --schema $schema_file help_out.xml"  "" "" 10 ]
-    if { [regexp "help_out.xml validates" "$xmllint_result" ]} {
-        pass "    Verified XML ophelp output is valid"
-    } else {
-        fail "    XML ophelp output is invalid"
-        print [lindex $xmllint_result 1]
-    }
-    set result [local_exec "rm -rf ./help_out.xml" "" "" 100 ]
+	global XML_help_done
+	if { [should_run_xml_tests] == 0  || $XML_help_done == 1 } {
+		return
+	}
+	set binpath [lindex [local_exec "which ophelp" "" "" 10] 1]
+	set idx [string last "/bin" $binpath ]
+	set op_install_dir [string range $binpath 0 $idx ]
+	append schema_file $op_install_dir "/share/doc/oprofile/ophelp.xsd"
+	set ophelp_result [local_exec "ophelp --xml" "" "" 100 ]
+	set out [open "help_out.xml" w]
+	puts $out [lindex $ophelp_result 1]
+	close $out
+	set xmllint_result [local_exec "xmllint --noout --schema $schema_file help_out.xml"  "" "" 10 ]
+	if { [regexp "help_out.xml validates" "$xmllint_result" ]} {
+		pass "    Verified XML ophelp output is valid"
+	} else {
+		fail "    XML ophelp output is invalid"
+		print [lindex $xmllint_result 1]
+	}
+	set result [local_exec "rm -rf ./help_out.xml" "" "" 100 ]
+	set XML_help_done 1
 }
 
 proc validate_xml_report { callgraph } {
-    if { $callgraph } {
-        set cg_option "--callgraph"
-    } else {
-        set cg_option ""
-    }
-    set binpath [lindex [local_exec "which operf" "" "" 10] 1]
-    set idx [string last "/bin" $binpath ]
-    set op_install_dir [string range $binpath 0 $idx ]
-    append schema_file $op_install_dir "/share/doc/oprofile/opreport.xsd"
-    set opreport_result [local_exec "opreport --debug-info --symbols $cg_option --long-filenames --xml -o out.xml" "" "" 100 ]
-    set xmllint_result [local_exec "xmllint --noout --schema $schema_file out.xml"  "" "" 10 ]
-    if { [regexp "out.xml validates" "$xmllint_result" ]} {
-        pass "    Verified XML opreport with callgraph option=$callgraph is valid"
-    } else {
-        fail "    XML opreport output with callgraph option=$callgraph is invalid"
-        print [lindex $xmllint_result 1]
-    }
-    set result [local_exec "rm -rf ./out.xml" "" "" 100 ]
+	global XML_report_cg_done
+	global XML_report_no_cg_done
+	if { [should_run_xml_tests] == 0 } {
+		return
+	}
+	if { $XML_report_cg_done == 1 && $XML_report_no_cg_done == 1 } {
+		return
+	}
+
+	if { $callgraph } {
+		set cg_option "--callgraph"
+		set XML_report_cg_done 1
+	} else {
+		set cg_option ""
+		set XML_report_no_cg_done 1
+	}
+	set binpath [lindex [local_exec "which operf" "" "" 10] 1]
+	set idx [string last "/bin" $binpath ]
+	set op_install_dir [string range $binpath 0 $idx ]
+	append schema_file $op_install_dir "/share/doc/oprofile/opreport.xsd"
+	set opreport_result [local_exec "opreport --debug-info --symbols $cg_option --long-filenames --xml -o out.xml" "" "" 100 ]
+	set xmllint_result [local_exec "xmllint --noout --schema $schema_file out.xml"  "" "" 10 ]
+	if { [regexp "out.xml validates" "$xmllint_result" ]} {
+		pass "    Verified XML opreport with callgraph option=$callgraph is valid"
+	} else {
+		fail "    XML opreport output with callgraph option=$callgraph is invalid"
+				print [lindex $xmllint_result 1]
+	}
+	set result [local_exec "rm -rf ./out.xml" "" "" 100 ]
 }
 
 proc verify_output { workload_table_entry workload ctr_opts debug_opt_enabled} {
