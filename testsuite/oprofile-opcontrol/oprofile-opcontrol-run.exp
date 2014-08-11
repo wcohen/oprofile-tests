@@ -264,40 +264,38 @@ proc op_check_daemon {} {
     }
 }
 
-proc op_get_version {} {
-    global op_version
-    # this assumes that things work well enough for op_help
-    # the modules has to be already installed via opcontrol
-    set test "version check"
-    verbose $test
-    set result [ local_exec "opcontrol -v" "" "" 100 ]
-
-    if {[regexp "\[0-9\]+\(.\[0-9\]+\)+\[a-zA-Z_\]*" $result op_version] == 1} {
-	verbose "version is $op_version"
-	pass $test
-    } else {
-	verbose "unable to determine version"
-	set op_version 0
-	fail $test
-    }
-}
-
 # main
 check_user
 if {$user_is_root == 0} {
     send "\nYou must be root to run the OProfile opcontrol interface.\n"
     send "Will not run opcontrol tests.\n"
 } else {
+    set test "version check"
+    verbose $test
     op_get_version
+    operf_get_version
 
     if {$op_version == 0} {
 	send "\nUnable to find the opcontrol command.  Check to make sure \n"
 	send "OProfile is properly installed and the opcontrol command is \n"
 	send "in the root's path.  Will not run opcontrol tests.\n"
+	send "\nNote:  The legacy opcontrol command is not available in\n"
+	send "       OProfile versions 1.0 and newer.\n"
+	set opcontrol_installed 0
+	fail $test
+    } elseif {$op_version < $operf_version} {
+	# Skip the opcontrol tests as the version of opcontrol is older then operf
+	send "\nThere appears to be a newer verision of OProfile installed\n"
+	send "that does not support opcontrol.  Opcontrol support was dropped\n"
+	send "with OProfile version 1.0. Will not run the opcontrol tests with\n"
+	send "the older opcontrol version.\n\n"
+	set opcontrol_installed 0
     } else {
 	# Just to be paranoid and make sure there is no operf or opcontrol
 	# data that opreport might pickup by mistake, delete any existing
 	# data.
+	pass $test
+	set opcontrol_installed 1
 	operf_delete_samples
 	op_daemon_delete_any_samples
 

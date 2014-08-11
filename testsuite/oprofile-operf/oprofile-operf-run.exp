@@ -115,23 +115,46 @@ proc oprofile-kallsyms-readable_run_tests {} {
 
 
 #main
+
+# Check to see of opcontrol is installed.  Need to do this first as
+# to set opcontrol_installed.  If opcontrol is not installed, then we do
+# not make any opcontrol calls to do cleanup of exising opcontol data samples
+# or call --deinit when exiting.
+
+operf_get_version
+
+op_get_version
+if {$op_version == 0} {
+    # could not find opcontrol
+    set opcontrol_installed 0
+} else {
+    if {$op_version < $operf_version} {
+	# Don't run the opcontrol tests if it is an earlier version
+        set opcontrol_installed 0
+    } else {
+        set opcontrol_installed 1
+    }
+}
+
 check_user
 if {$user_is_root == 0} {
     send "\nYou must be root to run the operf --system-wide command.\n"
     send "Will not run operf tests.\n"
 } else {
 
-    operf_get_version
-
     if { $operf_version == 0 } {
 	send "\nThe OProfile operf user tool is not supported.  Will not run operf tests.\n"
     } else {
 	# Ensure that the oprofile kernel module is unloaded, since it can
 	# interfere with proper operf operation on some platforms.
-	local_exec "opcontrol --deinit" "" "" 100
-	# Make sure there are no samples from the opcontrol or operf laying
-	# around that opreport might inadvertenly pick up.
-	op_daemon_delete_any_samples
+	if {$opcontrol_installed == 1} {
+            local_exec "opcontrol --deinit" "" "" 100
+            # Make sure there are no samples from the opcontrol laying
+            # around that opreport might inadvertenly pick up.
+            op_daemon_delete_any_samples
+        }
+        # Make sure there are no samples from the operf laying
+        # around that opreport might inadvertenly pick up.
 	operf_delete_samples
 
 	oprofile-operf_run_tests

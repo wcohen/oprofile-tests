@@ -161,3 +161,17 @@ proc compile_workload {workload_src compile_options } {
     # name to the same as the source name.
     return $workload_src
 }
+
+proc op_get_version {} {
+    global op_version
+    # this assumes that things work well enough for op_help
+    # the modules has to be already installed via opcontrol
+    set result [ local_exec "opcontrol -v" "" "" 100 ]
+
+    if {[regexp "\[0-9\]+\(.\[0-9\]+\)+\[a-zA-Z_\]*" $result op_version] == 1} {
+	verbose "version is $op_version"
+    } else {
+	verbose "unable to determine version"
+	set op_version 0
+    }
+}

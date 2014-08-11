@@ -19,6 +19,7 @@
 #
 
 load_lib "ocount_util.exp"
+load_lib "op_util.exp"
 set ocount_version 0
 
 
@@ -228,11 +229,29 @@ send "ocount_run_tests\n"
 
 ocount_get_version
 
+# Check to see of opcontrol is installed.
+op_get_version
+
+if {$op_version == 0} {
+    # could not find opcontrol
+    set opcontrol_installed 0
+} else {
+    if {$op_version < $ocount_version} {
+	# Don't run the opcontrol tests if it is an earlier version
+        set opcontrol_installed 0
+    } else {
+        set opcontrol_installed 1
+    }
+}
+
 if { $ocount_version == 0 } {
     send "\nThe OProfile ocount user tool is not supported.  Will not run ocount tests.\n"
 } else {
     # Ensure that the oprofile kernel module is unloaded, since it can
     # interfere with proper ocount operation on some platforms.
-    local_exec "opcontrol --deinit" "" "" 100
+    if {$opcontrol_installed == 1} {
+	#opcontrol is installed, make sure daemon is shutdown
+        local_exec "opcontrol --deinit" "" "" 100
+    }
     ocount_run_tests
 }
