@@ -92,7 +92,14 @@ proc operf_ocount_get_version {tool} {
     global operf_ocount_version
     global user_is_root
 
-    set test "OProfile operf/ocount version check"
+    if { [string compare $tool "operf"] == 0 } {
+        set test "OProfile operf version check"
+    } elseif { [string compare $tool "ocount"] == 0 } {
+        set test "OProfile ocount version check"
+    } else {
+        set test "operf_ocount_get_version tool unknown"
+    }
+
     verbose $test
     set result [ local_exec "$tool -v" "" "" 100 ]
 
@@ -135,7 +142,9 @@ proc operf_ocount_get_version {tool} {
                 }
             }
         } else {
-            send "Unable to get version from operf.  Try running 'opcontrol --deinit'.\n"
+            send "Unable to get version for $tool. Is oprofile installed and in your PATH?\n"
+            send "If so, and the version is pre-1.0, try running 'opcontrol --deinit'.\n"
+            exit 1
         }
     }
     if {$operf_ocount_version == 0} {

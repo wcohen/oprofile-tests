@@ -130,12 +130,15 @@ proc op-userspace-version {} {
 
 proc oprofile-opcontrol_version {} {
 
+    global op_version
     set version [exec /bin/uname -r]
     set modpath [glob -nocomplain /lib/modules/$version/kernel/arch/*/oprofile/oprofile.ko]
 
     print ""
     print "kernel version: $version"
-    print "module path: $modpath"
+    if {$op_version != 0} {
+        print "module path: $modpath"
+    }
     op-userspace-version
 }
 

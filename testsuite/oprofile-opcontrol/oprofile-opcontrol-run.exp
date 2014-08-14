@@ -265,31 +265,33 @@ proc op_check_daemon {} {
 }
 
 # main
-check_user
-if {$user_is_root == 0} {
-    send "\nYou must be root to run the OProfile opcontrol interface.\n"
-    send "Will not run opcontrol tests.\n"
-} else {
-    set test "version check"
-    verbose $test
-    op_get_version
-    operf_get_version
 
-    if {$op_version == 0} {
-	send "\nUnable to find the opcontrol command.  Check to make sure \n"
-	send "OProfile is properly installed and the opcontrol command is \n"
-	send "in the root's path.  Will not run opcontrol tests.\n"
-	send "\nNote:  The legacy opcontrol command is not available in\n"
-	send "       OProfile versions 1.0 and newer.\n"
-	set opcontrol_installed 0
-	fail $test
-    } elseif {$op_version < $operf_version} {
-	# Skip the opcontrol tests as the version of opcontrol is older then operf
-	send "\nThere appears to be a newer verision of OProfile installed\n"
-	send "that does not support opcontrol.  Opcontrol support was dropped\n"
-	send "with OProfile version 1.0. Will not run the opcontrol tests with\n"
-	send "the older opcontrol version.\n\n"
-	set opcontrol_installed 0
+set test "version check"
+set user_is_root 0
+verbose $test
+op_get_version
+operf_get_version
+
+if {$op_version == 0} {
+    #The opcontrol program was not found. opcontrol was droped with
+    # OProfile version 1.0. We will just silently not run the opcontrol
+    # tests.
+    send "\nNote:  The legacy opcontrol command is not available in\n"
+    send "       OProfile versions 1.0 and newer.  Skipping opcontrol\n"
+    send "       tests.\n"
+    set opcontrol_installed 0
+} elseif {$op_version < $operf_version} {
+    # Skip the opcontrol tests as the version of opcontrol is older then operf
+    send "\nThere appears to be a newer verision of OProfile installed\n"
+    send "that does not support opcontrol.  Opcontrol support was dropped\n"
+    send "with OProfile version 1.0. Will not run the opcontrol tests with\n"
+    send "the older opcontrol version.\n\n"
+    set opcontrol_installed 0
+} else {
+    check_user
+    if {$user_is_root == 0} {
+	send "\nYou must be root to run the OProfile opcontrol interface.\n"
+	send "Will not run opcontrol tests.\n"
     } else {
 	# Just to be paranoid and make sure there is no operf or opcontrol
 	# data that opreport might pickup by mistake, delete any existing
