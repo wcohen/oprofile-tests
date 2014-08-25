@@ -408,6 +408,18 @@ set op_event_table(power8)                          \
 	}                                           \
     }
 
+set op_event_table(ibm_power_architected_v1)                          \
+    {                                               \
+	{                                           \
+	    {0 CYCLES 0 500000}                     \
+	}                                           \
+	{                                           \
+	    {1 PM_BR_TAKEN_CMPL 0 100000}         \
+	    {4 PM_RUN_INST_CMPL 0 500000}      \
+	    {5 PM_RUN_CYC  0 500000}           \
+	}                                           \
+    }
+
 set op_event_table(ibm_compat_v1)                   \
     {                                               \
 	{                                           \
@@ -746,6 +758,7 @@ proc select_cpu_events {cpu_name} {
 	ppc64/power8 {set type power8}
 	ppc64_POWER8 {set type power8}
 	ARM_X-Gene {set type arm8}
+	IBM_Power_Architected_Events_V1 {set type ibm_power_architected_v1}
     }
 
     verbose "cpu type is $type"
