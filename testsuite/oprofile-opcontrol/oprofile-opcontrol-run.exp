@@ -266,6 +266,11 @@ proc op_check_daemon {} {
 
 # main
 
+op_check_dependencies
+if {$op_deps_ok == 0} {
+    return
+}
+
 set test "version check"
 set user_is_root 0
 verbose $test

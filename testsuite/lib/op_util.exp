@@ -175,3 +175,30 @@ proc op_get_version {} {
 	set op_version 0
     }
 }
+
+proc op_check_dependencies {} {
+    global op_deps_ok
+    set tclsh_present 0
+    set xmllint_present 0
+    set result [ local_exec "which tclsh" "" "" 100 ]
+    if {[regexp "tclsh" $result tclsh_present] == 1} {
+        verbose "Found tclsh at $tclsh_present"
+    } else {
+        send "tclsh is required, but is not installed.\n"
+        send "Install the package that provides tclsh and re-run the testsuite.\n"
+    }
+
+    set result [ local_exec "which xmllint" "" "" 100 ]
+    if {[regexp "xmllint" $result xmllint_present] == 1} {
+        verbose "Found xmllint at $xmllint_present"
+    } else {
+        send "xmllint is required, but is not installed.\n"
+        send "Install the package that provides xmllint and re-run the testsuite.\n"
+    }
+
+    if {$tclsh_present == 0 || $xmllint_present == 0} {
+        set op_deps_ok 0
+    } else {
+        set op_deps_ok 1
+    }
+}

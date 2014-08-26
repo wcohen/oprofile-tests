@@ -67,6 +67,10 @@ proc oprofile-debug-option_run_tests {} {
 }
 
 #main
+op_check_dependencies
+if {$op_deps_ok == 0} {
+    return
+}
 
 operf_get_version
 

@@ -116,6 +116,11 @@ proc oprofile-kallsyms-readable_run_tests {} {
 
 #main
 
+op_check_dependencies
+if {$op_deps_ok == 0} {
+    return
+}
+
 # Check to see of opcontrol is installed.  Need to do this first as
 # to set opcontrol_installed.  If opcontrol is not installed, then we do
 # not make any opcontrol calls to do cleanup of exising opcontol data samples
