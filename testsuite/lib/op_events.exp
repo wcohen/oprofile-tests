@@ -757,8 +757,10 @@ proc select_cpu_events {cpu_name} {
 	Intel_Haswell_microarchitecture {set type sandybridge}
 	ppc64/power8 {set type power8}
 	ppc64_POWER8 {set type power8}
-	ARM_X-Gene {set type arm8}
+	APM_X-Gene {set type arm8}
 	IBM_Power_Architected_Events_V1 {set type ibm_power_architected_v1}
+	ARM_Cortex-A57 {set type arm8}
+	ARM_Cortex-A53 {set type arm8}
     }
 
     verbose "cpu type is $type"
