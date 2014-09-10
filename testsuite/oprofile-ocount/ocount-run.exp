@@ -94,6 +94,20 @@ proc do_test_ocount_scaling {workload_exec} {
 	}
     }
 
+    set cpuinfo [ local_exec "cat /proc/cpuinfo" "" "" 100 ]
+    if { [ regexp -line "processor\t: \[0-9\]+" $cpuinfo line] != 1 } {
+        send "\nERROR: regexpr failed to determine a vaild processor id.\n"
+        send "\nSkipping the time interval scaling tests.\n"
+        send "\nThe cpuinfo line was:\n\n$cpuinfo\n"
+        return
+    }
+    set cpuid [ lindex [ split $line " " ] 1 ]
+    ## if we couldn't determine a valid cpuid, skip the tests
+    if {! [ string is integer -strict $cpuid ]} {
+       send "\nSkipping time interval scaling tests because of unexpected value $cpuid for CPU ID\n"
+       return
+    }
+
     set event [get_cycles_event]
 
     set pid [exec $workload_exec > /tmp/junky.xwyesu.xse &]
