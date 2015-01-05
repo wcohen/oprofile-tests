@@ -196,3 +196,74 @@ proc ocount_get_version {} {
     operf_ocount_get_version "ocount"
     set ocount_version $operf_ocount_version
 }
+
+proc arch_does_not_support_exclusive_mode_settings {} {
+    set arch [lindex [split [local_exec "ophelp --get-cpu-type" "" "" 10] "\{" ] 1]
+
+    # Event counts may occur when the system is running in user mode, kernel
+    # mode or hypervisor modes.  Some architectures have settings that allow
+    # the user to select which modes the events should be collected in.  Return
+    # 1 if the architecture being tested does not support selecting the mode
+    # to collect the counts in, otherwise, return 0.
+
+    # The cpu "pretty" descriptions strings come from:
+    #    static struct cpu_descr const cpu_descrs[MAX_CPU_TYPE]
+    # in op_cpu_type.c.
+
+    ## ARM
+    if {[ regexp "ARM/XScale PMU1" $arch ] == 1 } {  # arm/xcale1
+        return  1
+    }
+
+    if {[ regexp "ARM/XScale PMU2" $arch ] == 1 } {  # arm/xscale2
+        return  1
+    }
+
+    if {[ regexp "ARM 11MPCore" $arch ] == 1 } {  # arm/mpcore
+        return  1
+    }
+
+    if {[ regexp "ARM V6 PMU" $arch ] == 1 } {  # arm/armv6
+        return  1
+    }
+
+    if {[ regexp "ARM Cortex-A8" $arch ] == 1 } {  # arm/armv7
+        return  1
+    }
+
+    if {[ regexp "ARM Cortex-A9" $arch ] == 1 } {  # arm/armv7-ca9
+        return  1
+    }
+
+    if {[ regexp "ARMv7 Scorpion" $arch ] == 1 } {  # arm/armv7-scorpion
+        return  1
+    }
+
+    if {[ regexp "ARMv7 ScorpionMP" $arch ] == 1 } {  # arm/armv7-scorpionmp
+        return  1
+    }
+
+    if {[ regexp "ARMv7 Scorpion" $arch ] == 1 } {  # arm/armv7-scorpion
+        return  1
+    }
+
+    if {[ regexp "ARM Cortex-A5" $arch ] == 1 } {  # arm/armv7-ca5
+        return  1
+    }
+
+
+    ## IBM
+    if {[ regexp "IBM System z10" $arch ] == 1 } {  # s390/z10
+        return  1
+    }
+
+    if {[ regexp "IBM zEnterprise z196" $arch ] == 1 } {  # s390/z196
+        return  1
+    }
+
+    if {[ regexp "IBM zEnterprise EC12" $arch ] == 1 } {  # s390/zEC12
+        return  1
+    }
+
+    return 0
+}

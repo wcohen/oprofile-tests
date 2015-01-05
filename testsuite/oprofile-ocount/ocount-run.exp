@@ -157,6 +157,22 @@ proc do_test_ocount_scaling {workload_exec} {
 proc do_test_ocount_modes {workload_exec} {
     global ocount_version
 
+    # The test assumes the architecture supports counting in user and
+    # kernel modes unless the architecture is explicitly listed in function
+    # arch_does_not_support_exclusive_mode_settings{}.
+
+    # This test counts the events that occur in user mode, then for kernel
+    # mode.  The test then counts the number of events when both modes are
+    # selected.  The count with both modes selected is then compared to the
+    # sum of the counts when each mode was counted individually to see if
+    # they agree.
+    if {[arch_does_not_support_exclusive_mode_settings] == 1} {
+        send "\nNote: Architecture is in list of architectures that"
+        send " do not support User mode and Kernel\n"
+        send "mode selection.  Skipping mode scaling tests.  \n\n"
+        return
+    }
+
     # The actual result is expected to be within the following percent of the
     # actual count
     set percent 5
