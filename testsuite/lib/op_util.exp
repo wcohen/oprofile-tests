@@ -27,6 +27,42 @@ proc found_error {msg} {
     exit 1
 }
 
+# collect the current power_mode_data value.  We collect it from
+# the lparcfg interface.  The field value ultimately comes from firmware.
+proc get_baseline_power_savings_mode {} {
+    global initial_power_mode_data_string
+    set initial_power_mode_data_string [ local_exec "grep ^power_mode_data /proc/ppc64/lparcfg" "" "" 100 ]
+    if { [ regexp -line "power_mode_data=\[0-9\]+" $initial_power_mode_data_string line] != 1 } {
+        verbose "Did not find a power_mode_data value.\n"
+        set initial_power_mode_data_string "unset"
+    }
+}
+
+# verify the current power_mode_data value is unchanged.  A change in this value
+# indicates the systems power saving state has changed, which will affect the
+# test results.
+proc confirm_power_savings_mode {} {
+    global initial_power_mode_data_string
+    global power_mode_has_changed
+    # Pause a few seconds here.  This allows the lparcfg reported value to
+    # catch up with the current setting.  In practice, the lparcfg reported
+    # value does not immediately reflect the change in power modes.
+    local_exec "sleep 10" "" "" 30
+    set current_power_mode_data_string [ local_exec "grep ^power_mode_data /proc/ppc64/lparcfg" "" "" 100 ]
+    if { [ regexp -line "power_mode_data=\[0-9\]+" $current_power_mode_data_string line] != 1 } {
+        verbose "did not find a power_mode_data value.\n"
+        set current_power_mode_data_string "unset"
+        set power_mode_has_changed 0
+    } elseif { $initial_power_mode_data_string != $current_power_mode_data_string } {
+        verbose "  power_mode_data value has changed. was:  \[$initial_power_mode_data_string\] \n"
+        verbose "                                     now:  \[$current_power_mode_data_string\] \n"
+        set power_mode_has_changed 1
+    } else {
+        verbose "power_mode_data value has not changed since the last baseline check.\n"
+        set power_mode_has_changed 0
+    }
+}
+
 # read contents of file and return
 proc op_get_file_contents {fname} {
     set fd [open $fname]

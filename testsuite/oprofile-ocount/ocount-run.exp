@@ -110,16 +110,45 @@ proc do_test_ocount_scaling {workload_exec} {
 
     set event [get_cycles_event]
 
-    set pid [exec $workload_exec > /tmp/junky.xwyesu.xse &]
+    # Logic here to handle a scenario where the system is switching between
+    # power states.  Since a change in power saving modes will throw off
+    # the scaling test results, if we detect the state has changed, we
+    # will re-run the tests before attempting to process any results.
+    set retry_limit 3
+    set retry_count 0
+    global power_mode_has_changed
+    set power_mode_has_changed 99
 
-    # allow workload to reach steady state
-    local_exec "sleep 1" "" "" 10
+    # loop to validate power_savings_mode status begins here
+    while {$power_mode_has_changed > 0} {
+        incr retry_count
+        get_baseline_power_savings_mode
 
-    set result1 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $run_time_interval1:1 -p $pid" "" "" 60]
-    set result2 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $run_time_interval2:1 -p $pid" "" "" 60]
-    set result4 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $run_time_interval4:1 -p $pid" "" "" 60]
+        set pid [exec $workload_exec > /tmp/junky.xwyesu.xse &]
 
-    test_kill_workload $pid
+        # allow workload to reach steady state
+        local_exec "sleep 1" "" "" 10
+
+        set result1 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $run_time_interval1:1 -p $pid" "" "" 60]
+        set result2 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $run_time_interval2:1 -p $pid" "" "" 60]
+        set result4 [local_exec "taskset -c 0 ocount -e ${event} --time-interval $run_time_interval4:1 -p $pid" "" "" 60]
+
+        test_kill_workload $pid
+
+        confirm_power_savings_mode
+
+        if { $power_mode_has_changed == 0 } {
+            # no change detected.  Good to go.
+            verbose "valid run (The power_savings_mode value was stable, or not present)\n"
+        } elseif {$retry_count > $retry_limit} {
+            # exceeded our arbitrary retry limit.
+            send "Warning: Unable to verify a clean run due to power_savings_mode fluctuations.\n"
+            break
+        } else {
+            verbose "Informational: Detected power_savings_mode fluctuation. (iteration #$retry_count)\n"
+        }
+    # end of power_savings_mode loop.
+    }
 
     set count1 [get_event_count $result1 $event]
     set count2 [get_event_count $result2 $event]
