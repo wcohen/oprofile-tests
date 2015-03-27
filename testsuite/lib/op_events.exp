@@ -210,6 +210,18 @@ set op_event_table(athlon)                          \
 	}                                           \
     }
 
+set op_event_table(amd_generic)                          \
+    {                                               \
+	{                                           \
+	     {0 CPU_CLK_UNHALTED  0 500000}         \
+	     {1 DATA_CACHE_ACCESSES 0 500000}       \
+	}                                           \
+	{                                           \
+	     {0 DATA_CACHE_ACCESSES   0 500000}     \
+	     {1 DATA_CACHE_MISSES     1 500000}     \
+	}                                           \
+    }
+
 set op_event_table(p4)                              \
     {                                               \
 	{                                           \
@@ -712,8 +724,8 @@ proc select_cpu_events {cpu_name} {
 	x86-64/family14h {set type athlon}
 	AMD64_family14h {set type athlon}
 	65 {set type athlon}
-	x86-64/family15h {set type athlon}
-	AMD64_family15h {set type athlon}
+	x86-64/family15h {set type amd_generic}
+	AMD64_family15h {set type amd_generic}
 	66 {set type arch_perf}
 	i386/westmere  {set type arch_perf}
 	Intel_Westmere_microarchitecture  {set type arch_perf}
@@ -761,6 +773,7 @@ proc select_cpu_events {cpu_name} {
 	IBM_Power_Architected_Events_V1 {set type ibm_power_architected_v1}
 	ARM_Cortex-A57 {set type arm8}
 	ARM_Cortex-A53 {set type arm8}
+	x86-64/generic {set type amd_generic}
     }
 
     verbose "cpu type is $type"
