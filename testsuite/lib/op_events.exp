@@ -178,6 +178,22 @@ set op_event_table(arch_perf)                       \
 	}                                           \
     }
 
+set op_event_table(nehalem)                         \
+    {                                               \
+	{                                           \
+	     {0 INST_RETIRED      1 500000}         \
+	     {1 CPU_CLK_UNHALTED  0 500000}         \
+	}                                           \
+	{                                           \
+	     {0 LLC_MISSES        0x41 10000}       \
+	     {1 LLC_REFS          0x4f 10000}       \
+	}                                           \
+	{                                           \
+	     {0 BR_INST_RETIRED   0 500000}         \
+	     {1 BR_MISS_PRED_RETIRED 0 50000}       \
+	}                                           \
+    }
+
 set op_event_table(sandybridge)                     \
     {                                               \
 	{                                           \
@@ -697,8 +713,8 @@ proc select_cpu_events {cpu_name} {
 	ppc64/ibm-compat-v1 {set type ibm_compat_v1}
 	ppc64_compat_version_1 {set type ibm_compat_v1}
 	56 {set type arch_perf}
-	i386/core_i7 {set type arch_perf}
-	Intel_Core/i7 {set type arch_perf}
+	i386/core_i7 {set type nehalem}
+	Intel_Core/i7 {set type nehalem}
 	57 {set type arch_perf}
 	i386/atom {set type arch_perf}
 	Intel_Atom {set type arch_perf}
@@ -706,7 +722,7 @@ proc select_cpu_events {cpu_name} {
 	mips/loongson2 {set type mips}
 	Loongson2 {set type mips}
 	59 {set type arch_perf}
-	i386/nehalem {set type arch_perf}
+	i386/nehalem {set type nehalem}
 	Intel_Nehalem_microarchitecture {set type arch_perf}
 	60 {set type arm7}
 	arm/armv7-ca9 {set type arm7}
