@@ -24,6 +24,7 @@ proc validate_xml_help { } {
 		return
 	}
 	set binpath [lindex [local_exec "which ophelp" "" "" 10] 1]
+	set binpath [lindex [local_exec "realpath $binpath" "" "" 10] 1]
 	set idx [string last "/bin" $binpath ]
 	set op_install_dir [string range $binpath 0 $idx ]
 	append schema_file $op_install_dir "/share/doc/oprofile/ophelp.xsd"
@@ -60,6 +61,7 @@ proc validate_xml_report { callgraph } {
 		set XML_report_no_cg_done 1
 	}
 	set binpath [lindex [local_exec "which operf" "" "" 10] 1]
+	set binpath [lindex [local_exec "realpath $binpath" "" "" 10] 1]
 	set idx [string last "/bin" $binpath ]
 	set op_install_dir [string range $binpath 0 $idx ]
 	append schema_file $op_install_dir "/share/doc/oprofile/opreport.xsd"
