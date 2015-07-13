@@ -33,7 +33,7 @@
 #define UPPER_LIMIT     10000
 #define LOWER_LIMIT     10
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 
   int array[ARRAY_SIZE];
@@ -68,6 +68,8 @@ main(int argc, char *argv[])
       }
     }
   }
+
+  return (EXIT_SUCCESS);
 }
 
 int sum_add(int sum, int value)
