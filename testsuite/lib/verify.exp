@@ -8,6 +8,9 @@ proc should_run_xml_tests { } {
 		return 0
 	} else {
 		case $operf_version {
+			{ 0.9.9 } {
+				return 1
+			}
 			{ 0.* } {
 				return 0
 			}
@@ -27,7 +30,8 @@ proc validate_xml_help { } {
 	set binpath [lindex [local_exec "realpath $binpath" "" "" 10] 1]
 	set idx [string last "/bin" $binpath ]
 	set op_install_dir [string range $binpath 0 $idx ]
-	append schema_file $op_install_dir "/share/doc/oprofile/ophelp.xsd"
+	append schema_file $op_install_dir "/share/doc/oprofile*/ophelp.xsd"
+	set schema_file [glob $schema_file]
 	set ophelp_result [local_exec "ophelp --xml" "" "" 100 ]
 	set out [open "help_out.xml" w]
 	puts $out [lindex $ophelp_result 1]
@@ -64,7 +68,8 @@ proc validate_xml_report { callgraph } {
 	set binpath [lindex [local_exec "realpath $binpath" "" "" 10] 1]
 	set idx [string last "/bin" $binpath ]
 	set op_install_dir [string range $binpath 0 $idx ]
-	append schema_file $op_install_dir "/share/doc/oprofile/opreport.xsd"
+	append schema_file $op_install_dir "/share/doc/oprofile*/opreport.xsd"
+	set schema_file [glob $schema_file]
 	set opreport_result [local_exec "opreport --debug-info --symbols $cg_option --long-filenames --xml -o out.xml" "" "" 100 ]
 	set xmllint_result [local_exec "xmllint --noout --schema $schema_file out.xml"  "" "" 10 ]
 	if { [regexp "out.xml validates" "$xmllint_result" ]} {
