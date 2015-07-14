@@ -214,6 +214,26 @@ set op_event_table(sandybridge)                     \
 	}                                           \
     }
 
+set op_event_table(skylake)                         \
+    {                                               \
+	{                                           \
+	     {1 inst_retired      any 2000003}      \
+	     {0 cpu_clk_unhalted  thread 2000003}   \
+	}                                           \
+	{                                           \
+	     {0 longest_lat_cache miss 100003}      \
+	     {1 longest_lat_cache reference 100003} \
+	}                                           \
+	{                                           \
+	     {0 br_inst_retired   all_branches 400009}\
+	     {1 br_misp_retired   all_branches 400009}\
+	}                                           \
+	{                                           \
+	     {0 uops_issued stall_cycles 2000003}   \
+	     {1 uops_retired stall_cycles 2000003}  \
+	}                                           \
+    }
+
 set op_event_table(athlon)                          \
     {                                               \
 	{                                           \
@@ -790,6 +810,12 @@ proc select_cpu_events {cpu_name} {
 	ARM_Cortex-A57 {set type arm8}
 	ARM_Cortex-A53 {set type arm8}
 	x86-64/generic {set type amd_generic}
+	i386/silvermont {set type arch_perf}
+	Intel_Silvermont_microarchitecture {set type arch_perf}
+	i386/broadwell {set type arch_perf}
+	Intel_broadwell_microarchitecture {set type arch_perf}
+	i386/skylake {set type skylake}
+	Intel_Skylake_microarchitecture {set type skylake}
     }
 
     verbose "cpu type is $type"
