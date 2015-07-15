@@ -89,7 +89,7 @@ main(int argc, char *argv[])
   if (argc == 2)
     iter_max = atoi(argv[1]);
   else
-    iter_max = 10000;
+    iter_max = 2000;
 
   page_size = (size_t)sysconf(_SC_PAGESIZE);
   initial_buffer_size = (MINIMUM_BUFFER_SIZE / page_size + 1) * page_size;
