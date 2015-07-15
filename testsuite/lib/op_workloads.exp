@@ -53,3 +53,11 @@ set op_workload_table(thread)                      \
       {thread_bin}                                 \
       {mythread}                                   \
     }
+
+set op_workload_table(anon_remap)                  \
+    {                                              \
+      {workloads/anon_remap_src/anon_remap.c}      \
+      {}                                           \
+      {}                                           \
+      {anon}                                       \
+    }
