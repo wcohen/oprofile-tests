@@ -66,8 +66,23 @@ initialize_anon_func(char *buffer, size_t initial_buffer_size, size_t remapped_b
   int add_size = sizeof(add_inst);
   int ret_size = sizeof(ret_inst);
 
-  for (cursor = func_start_addr; cursor + add_size + ret_size <= func_end_addr; cursor += add_size) {
+#if defined(__powerpc64__) && defined(__BIG_ENDIAN__)
+  {
+    /* Have function descriptors rather than regular function pointers.
+       https://refspecs.linuxfoundation.org/ELF/ppc64/PPC-elf64abi-1.9.html */
+    char **fdesc  = (char **) func_start_addr;
+    fdesc[0] = func_start_addr + sizeof (char *) * 3; /* pointer to code */
+    fdesc[1] = 0; /* GOT */
+    fdesc[2] = 0; /* evironment pointer */
+    cursor = fdesc[0];
+  }
+#else
+  cursor = func_start_addr;
+#endif
+
+  while (cursor + add_size + ret_size <= func_end_addr) {
     memcpy(cursor, add_inst, add_size);
+    cursor += add_size;
   }
   memcpy(cursor, ret_inst, ret_size);
 
