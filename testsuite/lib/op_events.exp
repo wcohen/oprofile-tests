@@ -813,7 +813,7 @@ proc select_cpu_events {cpu_name} {
 	i386/silvermont {set type arch_perf}
 	Intel_Silvermont_microarchitecture {set type arch_perf}
 	i386/broadwell {set type arch_perf}
-	Intel_broadwell_microarchitecture {set type arch_perf}
+	Intel_Broadwell_microarchitecture {set type arch_perf}
 	i386/skylake {set type skylake}
 	Intel_Skylake_microarchitecture {set type skylake}
     }
