@@ -55,17 +55,6 @@ proc oprofile-callgraph_run_tests {} {
     global op_event_table
 
     set cpu [operf_cpu_type]
-    set cmd "cat /proc/sys/kernel/kptr_restrict"
-    set kptr_restrict [ lindex [split [local_exec $cmd "" "" 10 ] "\{\}" ] 1 ]
-
-    if { $kptr_restrict > 1 } {
-        send "  The setting of /proc/sys/kernel/kptr_restrict is not 0 or 1.\n"
-        send "  Can not verify the kernel symbols were properly found in \n"
-        send "  /proc/kallsyms.\n"
-        send "\n"
-        send "  SKIPPING the callgraph option test\n"
-        send "\n"
-    } else {
 	if {$cpu == "bogus"} {
 	    send "Error, not able find cpu type exiting.\n"
 	} else {
@@ -78,27 +67,19 @@ proc oprofile-callgraph_run_tests {} {
 	    set spec [lindex $op_event_table($cpu) 0]
 	    do_single_process_test $spec $output_check $test_debug_option
 	}
-    }
 }
 
 proc oprofile-kallsyms-readable_run_tests {} {
-    # This test should be run as root as the default is to restrict users
-    # from getting the kernel addresses from kallsyms.  The test is done as
-    # a single process test to keep it simple.
+    # Under the deprecated opcontrol utility, this test would only be valid
+    # when run as root.  With the perf-events interface (oprofile 1.0 and
+    # newer), and when kptr_restrict set to permissive, it is
+    # now possible to get kernel symbol information as a normal user.
     global op_event_table
 
     set cpu [operf_cpu_type]
     set cmd "cat /proc/sys/kernel/kptr_restrict"
     set kptr_restrict [ lindex [split [local_exec $cmd "" "" 10 ] "\{\}" ] 1 ]
 
-    if { $kptr_restrict > 1 } {
-        send "  The setting of /proc/sys/kernel/kptr_restrict is not 0 or 1.\n"
-        send "  Can not verify the kernel symbols were properly found in \n"
-        send "  /proc/kallsyms.\n"
-        send "\n"
-        send "  SKIPPING the test to verify kallsyms was readable!!!\n"
-        send "\n"
-    } else {
 	if {$cpu == "bogus"} {
 	    send "Error, not able find cpu type exiting.\n"
 	} else {
@@ -110,7 +91,6 @@ proc oprofile-kallsyms-readable_run_tests {} {
 	    set spec [lindex $op_event_table($cpu) 0]
 	    do_single_process_test $spec $output_check $test_debug_option
 	}
-    }
 }
 
 
