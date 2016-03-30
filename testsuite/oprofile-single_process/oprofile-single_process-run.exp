@@ -75,13 +75,13 @@ if {$op_deps_ok == 0} {
 operf_get_version
 
 if { $operf_version == 0} {
-    send "\nThe OProfile operf user tool is not supported.  Will not run operf tests.\n"
+    send "\nThe OProfile operf userspace utility was not found.  Will not run operf tests.\n"
 } else {
     # Ensure that the oprofile kernel module is unloaded, since it can
     # interfere with proper operf operation on some platforms.
     local_exec "opcontrol --deinit" "" "" 100
     # Make sure there are no samples from operf laying around that opreport
-    # might inadvertenly pick up.  Unfortunately, the user needs to make sure
+    # might inadvertently pick up.  Unfortunately, the user needs to make sure
     # the opcontrol data was previously deleted as root.  The goal is to be
     # able to run this test as a regular user.
     operf_delete_samples

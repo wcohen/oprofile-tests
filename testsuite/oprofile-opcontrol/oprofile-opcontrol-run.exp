@@ -278,19 +278,20 @@ op_get_version
 operf_get_version
 
 if {$op_version == 0} {
-    #The opcontrol program was not found. opcontrol was droped with
+    #The opcontrol program was not found. opcontrol was dropped with
     # OProfile version 1.0. We will just silently not run the opcontrol
     # tests.
-    send "\nNote:  The legacy opcontrol command is not available in\n"
-    send "       OProfile versions 1.0 and newer.  Skipping opcontrol\n"
-    send "       tests.\n"
+    send "Skipping the opcontrol tests.\n"
+    send "       The legacy opcontrol command is not available in\n"
+    send "       OProfile versions 1.0 and newer.\n"
     set opcontrol_installed 0
 } elseif {$op_version < $operf_version} {
     # Skip the opcontrol tests as the version of opcontrol is older then operf
-    send "\nThere appears to be a newer verision of OProfile installed\n"
-    send "that does not support opcontrol.  Opcontrol support was dropped\n"
-    send "with OProfile version 1.0. Will not run the opcontrol tests with\n"
-    send "the older opcontrol version.\n\n"
+    send "Skipping the opcontrol tests. \n"
+    send "  The opcontrol utility was found in the path, but appears\n"
+    send "  to be obsolete (version $op_version) with respect to the\n"
+    send "  installed version of operf (version $operf_version). \n"
+    send "  Opcontrol support was dropped with OProfile version 1.0.\n\n"
     set opcontrol_installed 0
 } else {
     check_user

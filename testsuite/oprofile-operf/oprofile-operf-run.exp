@@ -131,11 +131,11 @@ if { $operf_version == 0 } {
 	if {$opcontrol_installed == 1} {
             local_exec "opcontrol --deinit" "" "" 100
             # Make sure there are no samples from the opcontrol laying
-            # around that opreport might inadvertenly pick up.
+            # around that opreport might inadvertently pick up.
             op_daemon_delete_any_samples
         }
         # Make sure there are no samples from the operf laying
-        # around that opreport might inadvertenly pick up.
+        # around that opreport might inadvertently pick up.
 	operf_delete_samples
 
        check_user
