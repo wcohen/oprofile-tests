@@ -134,22 +134,18 @@ if {$op_version == 0} {
     set opcontrol_installed 0
 } else {
     if {$op_version < $operf_version} {
-	# Don't run the opcontrol tests if it is an earlier version
+        # Don't run the opcontrol tests at all if the opcontrol binary appears to
+        # be from an earlier version of OProfile.
         set opcontrol_installed 0
     } else {
         set opcontrol_installed 1
     }
 }
 
-check_user
-if {$user_is_root == 0} {
-    send "\nYou must be root to run the operf --system-wide command.\n"
-    send "Will not run operf tests.\n"
+if { $operf_version == 0 } {
+    send "Skipping the operf tests.\n"
+    send "Unable to find or verify the version of the OProfile operf utility.\n"
 } else {
-
-    if { $operf_version == 0 } {
-	send "\nThe OProfile operf user tool is not supported.  Will not run operf tests.\n"
-    } else {
 	# Ensure that the oprofile kernel module is unloaded, since it can
 	# interfere with proper operf operation on some platforms.
 	if {$opcontrol_installed == 1} {
@@ -162,8 +158,14 @@ if {$user_is_root == 0} {
         # around that opreport might inadvertenly pick up.
 	operf_delete_samples
 
-        send "Running the operf system-wide tests\n"
-	oprofile-operf_run_system_wide_tests
+       check_user
+        if {$user_is_root == 0} {
+            send "Skipping the operf system-wide tests.\n"
+            send "  You must be root to run operf with the --system-wide parameter.\n\n"
+        } else {
+            send "Running the operf system-wide tests.\n"
+            oprofile-operf_run_system_wide_tests
+        }
         send "Running the operf callgraph tests\n"
 	oprofile-callgraph_run_tests
 
@@ -177,5 +179,4 @@ if {$user_is_root == 0} {
 		oprofile-kallsyms-readable_run_tests
 	    }
 	}
-    }
 }
