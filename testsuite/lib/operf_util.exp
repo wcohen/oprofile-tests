@@ -295,52 +295,52 @@ proc do_system-wide_test {ctrs symbol_check} {
 	    set test "operf systemwide: $workload_exc"
 	}
 
-	# create the script to run operf command
-	set filename "/tmp/operf_run.zzzz"
-	set fileId [open $filename "w"]
+        # create the script to run the operf command
+        set operf_run_script [exec mktemp "/tmp/operf_run.XXXX"]
+        set operf_output_log [exec mktemp "/tmp/operf_output.XXXX"]
+        set fileId [open $operf_run_script "w"]
 	puts $fileId "#!/bin/bash"
 	puts -nonewline $fileId "operf --system-wide --events "
 	puts -nonewline $fileId $ctr_opts
-	puts -nonewline $fileId " 2>&1  | tee > /tmp/operf_out.zzzz"
+	puts -nonewline $fileId " 2>&1  | tee > $operf_output_log"
 	close $fileId
+        local_exec "chmod 755 $operf_run_script" "" "" 10
 
-	local_exec "chmod 755 /tmp/operf_run.zzzz" "" "" 10
+        #  Run the script to start operf data collection in the background
+        exec $operf_run_script &
 
-	#  Start operf data collection in the background
-	exec /tmp/operf_run.zzzz &
-
-	# Create the script to stop the operf data collection.  Note this
-	# must be done after operf starts and writes the kill command out to
-	# operf_out.zzzz.
-	set filename "/tmp/operf_create_stop.zzzz"
-	set fileId [open $filename "w"]
+        # Now that operf is running in the background, collect the PID from
+        # the output file.   This will be used to stop the system wide data
+        # collection shortly.
+        set create_stop_script [exec mktemp "/tmp/operf_create_stop_script.XXXX"]
+        set fileId [open $create_stop_script "w"]
+        set operf_stop_script [exec mktemp "/tmp/operf_stop_operf.XXXX"]
 	puts $fileId "#!/bin/bash"
-	puts $fileId "echo -n  \"kill -s INT  \" > /tmp/operf_stop.zzzz "
-
-	# Get the process id to kill
-	puts $fileId "cat /tmp/operf_out.zzzz | grep \"kill\" | cut -d\"\'\" -f2 | cut -d\" \" -f3 >> /tmp/operf_stop.zzzz "
+        puts $fileId "echo -n  \"kill -s INT  \" > $operf_stop_script "
+        # logic that collects the process id to be killed
+        puts $fileId "cat $operf_output_log | grep \"kill\" | cut -d\"\'\" -f2 | cut -d\" \" -f3 >> $operf_stop_script "
 	close $fileId
 
 	# check that operf started correctly
-	if {[lindex [local_exec "grep \"usage\" /tmp/operf_out.zzzz " "" "" 100] 0] == 1} {
+        if {[lindex [local_exec "grep \"usage\" $operf_output_log " "" "" 100] 0] == 1} {
 	    pass $test
 	} else {
 	    fail $test
 	}
 
-	# Run the script to create the operf stop script based on the
-	# output of the operf command.
+        # Now, call the script to create the operf kill script.
 	local_exec "sleep 2" "" "" 10
-	local_exec "chmod 755 /tmp/operf_create_stop.zzzz" "" "" 10
-	exec /tmp/operf_create_stop.zzzz
+        local_exec "chmod 755 $create_stop_script" "" "" 10
+        exec $create_stop_script
 
-	# Run the workload
-	set result [local_exec "$workload_exc" "" "" 60]
+        # Run the workload
+        set result [local_exec "$workload_exc" "" "" 60]
 
-	local_exec "chmod 755 /tmp/operf_stop.zzzz" "" "" 10
-	exec /tmp/operf_stop.zzzz
+        # And finally, call the operf kill script.
+        local_exec "chmod 755 $operf_stop_script" "" "" 10
+        exec $operf_stop_script
 
-	operf_check_samples_exist $ctrs
+        operf_check_samples_exist $ctrs
 
 	# Verify the interesting symbols for this test are found in
 	# the output.  Only checking the symbols for the first group of
@@ -352,10 +352,10 @@ proc do_system-wide_test {ctrs symbol_check} {
 	}
 
 	# cleanup the files created
-	local_exec "rm -f /tmp/operf_out.zzzz" "" "" 10
-	local_exec "rm -f /tmp/operf_stop.zzzz" "" "" 10
-	local_exec "rm -f /tmp/operf_run.zzzz" "" "" 10
-	local_exec "rm -f /tmp/operf_create_stop.zzzz" "" "" 10
+        local_exec "rm -f $operf_run_script" "" "" 10
+        local_exec "rm -f $operf_output_log" "" "" 10
+        local_exec "rm -f $create_stop_script" "" "" 10
+        local_exec "rm -f $operf_stop_script" "" "" 10
 	operf_delete_samples
     }
 }
