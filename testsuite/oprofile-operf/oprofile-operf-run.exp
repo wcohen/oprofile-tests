@@ -28,7 +28,7 @@ load_lib "verify.exp"
 set operf_version 0
 
 
-proc oprofile-operf_run_tests {} {
+proc oprofile-operf_run_system_wide_tests {} {
     global op_event_table
     set cpu [operf_cpu_type]
 
@@ -162,7 +162,7 @@ if {$user_is_root == 0} {
         # around that opreport might inadvertenly pick up.
 	operf_delete_samples
 
-	oprofile-operf_run_tests
+	oprofile-operf_run_system_wide_tests
 	oprofile-callgraph_run_tests
 
 	case $operf_version {
