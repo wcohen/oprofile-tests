@@ -33,18 +33,16 @@ proc oprofile-operf_run_system_wide_tests {} {
     set cpu [operf_cpu_type]
 
     if {$cpu == "bogus"} {
-	send "Error, not able find cpu type exiting.\n"
-
+        send "Error, not able find cpu type exiting.\n"
     } else {
-
-	set symbol_check 1
-	foreach spec $op_event_table($cpu) {
-	    # Just do the symbol check on the first event group.  The
-	    # assumption is the first event group contains cycles or count
-	    # instructions which will reliably collect a lot of samples.
-	    do_system-wide_test $spec $symbol_check
-	    set symbol_check 0
-	}
+        set symbol_check 1
+        foreach spec $op_event_table($cpu) {
+            # Just do the symbol check on the first event group.  The
+            # assumption is the first event group contains cycles or count
+            # instructions which will reliably collect a lot of samples.
+            do_system-wide_test $spec $symbol_check
+            set symbol_check 0
+        }
     }
 }
 
@@ -55,18 +53,18 @@ proc oprofile-callgraph_run_tests {} {
     global op_event_table
 
     set cpu [operf_cpu_type]
-	if {$cpu == "bogus"} {
-	    send "Error, not able find cpu type exiting.\n"
-	} else {
-	    # test callgraph output
-	    set output_check 3
-	    set test_debug_option  0
+    if {$cpu == "bogus"} {
+        send "Error, not able find cpu type exiting.\n"
+    } else {
+        # test callgraph output
+        set output_check 3
+        set test_debug_option  0
 
-	    # The goal here is a quick sanity check so we will just do the
-	    # test using the first event entry
-	    set spec [lindex $op_event_table($cpu) 0]
-	    do_single_process_test $spec $output_check $test_debug_option
-	}
+        # The goal here is a quick sanity check so we will just do the
+        # test using the first event entry
+        set spec [lindex $op_event_table($cpu) 0]
+        do_single_process_test $spec $output_check $test_debug_option
+    }
 }
 
 proc oprofile-kallsyms-readable_run_tests {} {
@@ -80,17 +78,17 @@ proc oprofile-kallsyms-readable_run_tests {} {
     set cmd "cat /proc/sys/kernel/kptr_restrict"
     set kptr_restrict [ lindex [split [local_exec $cmd "" "" 10 ] "\{\}" ] 1 ]
 
-	if {$cpu == "bogus"} {
-	    send "Error, not able find cpu type exiting.\n"
-	} else {
-	    # kallsyms output check
-	    set output_check 2
-	    set test_debug_option  0
+    if {$cpu == "bogus"} {
+        send "Error, not able find cpu type exiting.\n"
+    } else {
+        # kallsyms output check
+        set output_check 2
+        set test_debug_option  0
 
-	    # The goal here is a quick check to see if /proc/kallsyms was readable
-	    set spec [lindex $op_event_table($cpu) 0]
-	    do_single_process_test $spec $output_check $test_debug_option
-	}
+        # The goal here is a quick check to see if /proc/kallsyms was readable
+        set spec [lindex $op_event_table($cpu) 0]
+        do_single_process_test $spec $output_check $test_debug_option
+    }
 }
 
 
@@ -126,37 +124,37 @@ if { $operf_version == 0 } {
     send "Skipping the operf tests.\n"
     send "Unable to find or verify the version of the OProfile operf utility.\n"
 } else {
-	# Ensure that the oprofile kernel module is unloaded, since it can
-	# interfere with proper operf operation on some platforms.
-	if {$opcontrol_installed == 1} {
-            local_exec "opcontrol --deinit" "" "" 100
-            # Make sure there are no samples from the opcontrol laying
-            # around that opreport might inadvertently pick up.
-            op_daemon_delete_any_samples
-        }
-        # Make sure there are no samples from the operf laying
+    # Ensure that the oprofile kernel module is unloaded, since it can
+    # interfere with proper operf operation on some platforms.
+    if {$opcontrol_installed == 1} {
+        local_exec "opcontrol --deinit" "" "" 100
+        # Make sure there are no samples from the opcontrol laying
         # around that opreport might inadvertently pick up.
-	operf_delete_samples
+        op_daemon_delete_any_samples
+    }
+    # Make sure there are no samples from the operf laying
+    # around that opreport might inadvertently pick up.
+    operf_delete_samples
 
-       check_user
-        if {$user_is_root == 0} {
-            send "Skipping the operf system-wide tests.\n"
-            send "  You must be root to run operf with the --system-wide parameter.\n\n"
-        } else {
-            send "Running the operf system-wide tests.\n"
-            oprofile-operf_run_system_wide_tests
+    check_user
+    if {$user_is_root == 0} {
+        send "Skipping the operf system-wide tests.\n"
+        send "  You must be root to run operf with the --system-wide parameter.\n\n"
+    } else {
+        send "Running the operf system-wide tests.\n"
+        oprofile-operf_run_system_wide_tests
+    }
+    send "Running the operf callgraph tests\n"
+    oprofile-callgraph_run_tests
+
+    case $operf_version {
+        { 0.* } {
+            # no pre 1.0 specific tests to run
+            }
+        { * } {
+            # kallsyms support was added in version 1.0.
+            send "Running the operf kallsyms-readable tests. (symbols,kallsyms,callgraph) \n"
+            oprofile-kallsyms-readable_run_tests
         }
-        send "Running the operf callgraph tests\n"
-	oprofile-callgraph_run_tests
-
-	case $operf_version {
-	    { 0.* } {
-		# no pre 1.0 specific tests to run
-	    }
-	    { * } {
-		# kallsyms support was added in version 1.0.
-                send "Running the operf kallsyms-readable tests. (symbols,kallsyms,callgraph) \n"
-		oprofile-kallsyms-readable_run_tests
-	    }
-	}
+    }
 }

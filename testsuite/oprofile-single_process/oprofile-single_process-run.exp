@@ -32,18 +32,17 @@ proc oprofile-single_process_run_tests {} {
     global op_event_table
     set cpu [operf_cpu_type]
 
-
     if {$cpu == "bogus"} {
-	send "Error, run single process test not able find CPU type, exiting.\n"
+        send "Error, run single process test not able find CPU type, exiting.\n"
     } else {
-	# check for workload symbols in output
-	set output_check 1
-	set test_debug_option 0
+        # check for workload symbols in output
+        set output_check 1
+        set test_debug_option 0
 
-	# The goal here is a quick sanity check so we will just do the
-	# test using the first event entry
-	set spec [lindex $op_event_table($cpu) 0]
-	do_single_process_test $spec $output_check $test_debug_option
+        # The goal here is a quick sanity check so we will just do the
+        # test using the first event entry
+        set spec [lindex $op_event_table($cpu) 0]
+        do_single_process_test $spec $output_check $test_debug_option
     }
 }
 
@@ -52,17 +51,17 @@ proc oprofile-debug-option_run_tests {} {
     set cpu [operf_cpu_type]
 
     if {$cpu == "bogus"} {
-	send "Error, run debug-info option test not able find CPU type, exiting.\n"
+        send "Error, run debug-info option test not able find CPU type, exiting.\n"
     } else {
-	# check for workload symbols in output
-	set output_check 1
-	# test --debug-info option
-	set test_debug_option  1
+        # check for workload symbols in output
+        set output_check 1
+        # test --debug-info option
+        set test_debug_option  1
 
-	# The goal here is a quick sanity check that the --debug
-	# option doesn't crash the opreport tool
-	set spec [lindex $op_event_table($cpu) 0]
-	do_single_process_test $spec $output_check $test_debug_option
+        # The goal here is a quick sanity check that the --debug
+        # option doesn't crash the opreport tool
+        set spec [lindex $op_event_table($cpu) 0]
+        do_single_process_test $spec $output_check $test_debug_option
     }
 }
 

@@ -33,14 +33,14 @@ proc op_daemon_flush {} {
     set test "opcontrol --dump"
 
     if {$op_daemon_running == 0} {
-	unsupported $test
-	return
+        unsupported $test
+        return
     }
     verbose "running opcontrol --dump"
     if {[lindex [local_exec "opcontrol --dump" "" "" 100] 0] == 0} {
-	pass $test
+        pass $test
     } else {
-	fail $test
+        fail $test
     }
 }
 
@@ -52,51 +52,51 @@ proc op_daemon_check_samples_exist {ctrs} {
     set test "nonzero-sized sample file creation"
 
     if {$op_daemon_running == 0} {
-	print "op_daemon_check_samples_exist, op_daemon not running as expected"
-	unsupported $test
-	return
+        print "op_daemon_check_samples_exist, op_daemon not running as expected"
+        unsupported $test
+        return
     }
 
     verbose "checking for nonzero sample files"
 
     foreach ctr $ctrs {
-	set n [lindex $ctr 0]
-	set event [lindex $ctr 1]
-	case $op_version {
-	    { 0.1* 0.2* 0.3* 0.4* } {
-		fail "ERROR: testsuite not supported on version {$op_version}"
-	    }
-	    { 0.5* } {
-		set files [glob -nocomplain -types f "$op_var_prefix/samples/*#$n"]
-		if {[llength $files] == 0} {
-		    unresolved "$test: {$ctr} created no files"
-		} else {
-		    set sz 0
-		    verbose "looking at [llength $files] sample files for ctr $n"
-		    foreach f $files {
-			set nsz [file size $f]
-			if {$nsz > $sz} {
-			    set sz $nsz
-			}
-		    }
-		    if {$sz == 0} {
-			unresolved "$test: {$ctr} created only zero-length files"
-		    } else {
-			pass "$test: {$ctr} created nonzero sample files"
-		    }
-		}
-	    }
-	    { * } {
-		# default for all newer versions of oprofile
-		verbose "running opreport --long-filenames event:$event"
-		set result [local_exec "opreport --long-filenames event:$event" "" "" 100 ]
-		if { [regexp "error:" "$result" ]} {
-		    fail "$test: {$event} created nonzero sample files"
-		} else {
-		    pass "$test: {$event} created nonzero sample files"
-		}
-	    }
-	}
+        set n [lindex $ctr 0]
+        set event [lindex $ctr 1]
+        case $op_version {
+            { 0.1* 0.2* 0.3* 0.4* } {
+                fail "ERROR: testsuite not supported on version {$op_version}"
+            }
+            { 0.5* } {
+                set files [glob -nocomplain -types f "$op_var_prefix/samples/*#$n"]
+                if {[llength $files] == 0} {
+                    unresolved "$test: {$ctr} created no files"
+                } else {
+                    set sz 0
+                    verbose "looking at [llength $files] sample files for ctr $n"
+                    foreach f $files {
+                        set nsz [file size $f]
+                        if {$nsz > $sz} {
+                            set sz $nsz
+                        }
+                    }
+                    if {$sz == 0} {
+                        unresolved "$test: {$ctr} created only zero-length files"
+                    } else {
+                        pass "$test: {$ctr} created nonzero sample files"
+                    }
+                }
+            }
+            { * } {
+                # default for all newer versions of oprofile
+                verbose "running opreport --long-filenames event:$event"
+                set result [local_exec "opreport --long-filenames event:$event" "" "" 100 ]
+                if { [regexp "error:" "$result" ]} {
+                    fail "$test: {$event} created nonzero sample files"
+                } else {
+                    pass "$test: {$event} created nonzero sample files"
+                }
+            }
+        }
     }
 }
 
@@ -111,30 +111,30 @@ proc op_daemon_start {ctrs} {
     local_exec "rm -f /root/.oprofile/daemonrc" "" "" 100
 
     if {$op_module_active == 0} {
-	unsupported "daemon start"
-	return
+        unsupported "daemon start"
+        return
     }
 
     set ctr_opts {}
     foreach ctr $ctrs {
-	set n [lindex $ctr 0]
-	set event [lindex $ctr 1]
-	set um [lindex $ctr 2]
-	set count [lindex $ctr 3]
-	case $op_version {
-	    { 0.1* 0.2* 0.3* 0.4* } {
-		fail "ERROR: testsuite not supported on version {$op_version}"
-	    }
-	    { 0.5* } {
-		append ctr_opts " --ctr${n}-event=${event}"
-		append ctr_opts " --ctr${n}-count=${count}"
-		append ctr_opts " --ctr${n}-unit-mask=${um}"
-	    }
-	    { * } {
-		# default for all newer versions of oprofile
-		append ctr_opts " --event=${event}:${count}:${um}"
-	    }
-	}
+        set n [lindex $ctr 0]
+        set event [lindex $ctr 1]
+        set um [lindex $ctr 2]
+        set count [lindex $ctr 3]
+        case $op_version {
+            { 0.1* 0.2* 0.3* 0.4* } {
+                fail "ERROR: testsuite not supported on version {$op_version}"
+            }
+            { 0.5* } {
+                append ctr_opts " --ctr${n}-event=${event}"
+                append ctr_opts " --ctr${n}-count=${count}"
+                append ctr_opts " --ctr${n}-unit-mask=${um}"
+            }
+            { * } {
+                # default for all newer versions of oprofile
+                append ctr_opts " --event=${event}:${count}:${um}"
+            }
+        }
     }
 
     verbose "running opcontrol --reset"
@@ -143,18 +143,18 @@ proc op_daemon_start {ctrs} {
     # this will activate the daemon too. opcontrol is so silly.
 
     if {$op_vmlinux == 0} {
-	set kernel_control "--no-vmlinux"
+        set kernel_control "--no-vmlinux"
     } else {
-	set kernel_control "--vmlinux=${op_vmlinux}"
+        set kernel_control "--vmlinux=${op_vmlinux}"
     }
     set cmd "opcontrol --setup ${kernel_control} ${ctr_opts}"
     set test $cmd
     verbose "running '$cmd'"
     set result [local_exec $cmd "" "" 100]
     if {[lindex $result 0] == 0} {
-	pass $test
+        pass $test
     } else {
-	fail $test
+        fail $test
     }
 
     # this starts daemon, but doesn't start profiling
@@ -163,33 +163,33 @@ proc op_daemon_start {ctrs} {
     verbose "running '$cmd'"
     set result [local_exec $cmd "" "" 100]
     if {[lindex $result 0] == 0} {
-	if {[regexp oprofiled [exec /bin/ps ax]] == 1} {
-	    verbose "daemon is now running"
-	    set op_daemon_running 1
-	    pass $test
-	} else {
-	    verbose "daemon did not start as requested"
-	    set op_daemon_running 0
-	    fail $test
-	}
+        if {[regexp oprofiled [exec /bin/ps ax]] == 1} {
+            verbose "daemon is now running"
+            set op_daemon_running 1
+            pass $test
+        } else {
+            verbose "daemon did not start as requested"
+            set op_daemon_running 0
+            fail $test
+        }
     } else {
-	verbose "opcontrol --init failed. are you root?"
-	set op_daemon_running 0
-	fail $test
+        verbose "opcontrol --init failed. are you root?"
+        set op_daemon_running 0
+        fail $test
     }
 
     # this activates profiling
 
     set test "opcontrol --start"
     if {$op_daemon_running == 0} {
-	unsupported $test
+        unsupported $test
     } else {
-	verbose "running 'opcontrol --start'"
-	if {[lindex [local_exec "opcontrol --start" "" "" 100] 0] == 0} {
-	    pass $test
-	} else {
-	    fail $test
-	}
+        verbose "running 'opcontrol --start'"
+        if {[lindex [local_exec "opcontrol --start" "" "" 100] 0] == 0} {
+            pass $test
+        } else {
+            fail $test
+        }
     }
 }
 
@@ -198,15 +198,15 @@ proc op_daemon_stop {} {
 
     set test "opcontrol --shutdown"
     if {$op_daemon_running == 0} {
-	unsupported $test
+        unsupported $test
     } else {
-	verbose "running 'opcontrol --shutdown'"
-	if {[lindex [local_exec "opcontrol --shutdown" "" "" 100] 0] == 0} {
-	    pass $test
-	    set op_daemon_running 0
-	} else {
-	    fail $test
-	}
+        verbose "running 'opcontrol --shutdown'"
+        if {[lindex [local_exec "opcontrol --shutdown" "" "" 100] 0] == 0} {
+            pass $test
+            set op_daemon_running 0
+        } else {
+            fail $test
+        }
     }
 
     # delete the daemonrc file to remove any settings from the testsuite
@@ -218,38 +218,37 @@ proc op_daemon_cycle {ctrs symbol_check} {
 
     set ctr_opts {}
     foreach ctr $ctrs {
-	set n [lindex $ctr 0]
-	set event [lindex $ctr 1]
-	set um [lindex $ctr 2]
-	set count [lindex $ctr 3]
-	append ctr_opts "{$n $event $um $count} "
+        set n [lindex $ctr 0]
+        set event [lindex $ctr 1]
+        set um [lindex $ctr 2]
+        set count [lindex $ctr 3]
+        append ctr_opts "{$n $event $um $count} "
     }
 
     foreach entry [array name op_workload_table] {
+        set workload_src [lindex $op_workload_table($entry) 0]
+        set compile_options [lindex $op_workload_table($entry) 1]
+        set workload_exc [compile_workload $workload_src  $compile_options]
 
-	set workload_src [lindex $op_workload_table($entry) 0]
-	set compile_options [lindex $op_workload_table($entry) 1]
-	set workload_exc [compile_workload $workload_src  $compile_options]
-
-	op_daemon_start $ctrs
+        op_daemon_start $ctrs
 
         # run the workload
-	local_exec ${workload_exc} "" "" 100
+        local_exec ${workload_exc} "" "" 100
 
-	op_daemon_flush
-	op_daemon_check_samples_exist $ctrs
-	op_daemon_stop
+        op_daemon_flush
+        op_daemon_check_samples_exist $ctrs
+        op_daemon_stop
 
-	# Verify the interesting symbols for this test are found in
-	# the output.  Only checking the symbols for the first group of
-	# events.
-	if {$symbol_check == 1} {
-	    local_exec "sleep 2" "" "" 10
-	    set test_debug_option 0
-	    verify_output $op_workload_table($entry) $workload_exc $ctr_opts $test_debug_option
-	}
+        # Verify the interesting symbols for this test are found in
+        # the output.  Only checking the symbols for the first group of
+        # events.
+        if {$symbol_check == 1} {
+            local_exec "sleep 2" "" "" 10
+            set test_debug_option 0
+            verify_output $op_workload_table($entry) $workload_exc $ctr_opts $test_debug_option
+        }
 
-	op_daemon_delete_any_samples
+        op_daemon_delete_any_samples
     }
 }
 
@@ -259,8 +258,8 @@ proc op_check_daemon {} {
     set symbol_check 1
 
     foreach spec $op_event_table($cpu) {
-	op_daemon_cycle $spec $symbol_check
-	set symbol_check 0
+        op_daemon_cycle $spec $symbol_check
+        set symbol_check 0
     }
 }
 
@@ -296,18 +295,18 @@ if {$op_version == 0} {
 } else {
     check_user
     if {$user_is_root == 0} {
-	send "\nYou must be root to run the OProfile opcontrol interface.\n"
-	send "Will not run opcontrol tests.\n"
+        send "\nYou must be root to run the OProfile opcontrol interface.\n"
+        send "Will not run opcontrol tests.\n"
     } else {
-	# Just to be paranoid and make sure there is no operf or opcontrol
-	# data that opreport might pickup by mistake, delete any existing
-	# data.
-	pass $test
-	set opcontrol_installed 1
-	operf_delete_samples
-	op_daemon_delete_any_samples
+        # Just to be paranoid and make sure there is no operf or opcontrol
+        # data that opreport might pickup by mistake, delete any existing
+        # data.
+        pass $test
+        set opcontrol_installed 1
+        operf_delete_samples
+        op_daemon_delete_any_samples
 
-	oprofile_start
-	op_check_daemon
+        oprofile_start
+        op_check_daemon
     }
 }

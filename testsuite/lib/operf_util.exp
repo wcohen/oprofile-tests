@@ -29,12 +29,12 @@ proc operf_get_proc_name {string} {
     set i 0
 
     foreach field $string {
-	set res $res$field
-	incr i
+        set res $res$field
+        incr i
 
-	if {$i != $len} {
-	    set res $res\_
-	}
+        if {$i != $len} {
+            set res $res\_
+        }
     }
     return $res
 }
@@ -51,10 +51,10 @@ proc operf_cpu_type {} {
 # Note, operf does not support the timer modes
 
     switch -exact "$cpu_name" {
-	4 {set cpu_events bogus}
-	timer {set cpu_events bogus}
-	5 {set cpu_events bogus}
-	rtc {set cpu_events bogus}
+        4 {set cpu_events bogus}
+        timer {set cpu_events bogus}
+        5 {set cpu_events bogus}
+        rtc {set cpu_events bogus}
     }
 
     return $cpu_events
@@ -75,16 +75,16 @@ proc operf_check_samples_exist {ctrs} {
     verbose "checking for nonzero sample files"
 
     foreach ctr $ctrs {
-	set n [lindex $ctr 0]
-	set event [lindex $ctr 1]
+        set n [lindex $ctr 0]
+        set event [lindex $ctr 1]
 
-	verbose "running opreport --symbols --long-filenames event:$event"
-	set result [ local_exec "opreport --symbols --long-filenames event:$event" "" "" 100 ]
-	if { [regexp "error:" "$result" ]} {
-	    fail "$test: {$event} created nonzero sample files"
-	} else {
-	    pass "$test: {$event} created nonzero sample files"
-	}
+        verbose "running opreport --symbols --long-filenames event:$event"
+        set result [ local_exec "opreport --symbols --long-filenames event:$event" "" "" 100 ]
+        if { [regexp "error:" "$result" ]} {
+            fail "$test: {$event} created nonzero sample files"
+        } else {
+            pass "$test: {$event} created nonzero sample files"
+        }
     }
 }
 
@@ -105,7 +105,7 @@ proc operf_ocount_get_version {tool} {
 
     if {[regexp "\[0-9\]+\(.\[0-9\]+\)+\[a-zA-Z_\]*" $result operf_ocount_version] == 1} {
 
-#	Need to make sure the kernel has perf support as well
+#        Need to make sure the kernel has perf support as well
         if {[lindex [local_exec op-check-perfevents "" "" 100] 0] == 0} {
             pass $test
         } else {
@@ -186,74 +186,74 @@ proc do_single_process_test {ctrs output_check test_debug_option} {
     foreach ctr $ctrs {
 #       n - counter number, no longer used but didn't want to change
 #       specification format
-	set n [lindex $ctr 0]
-	set event [lindex $ctr 1]
-	set um [lindex $ctr 2]
-	if {$output_check == 3} {
-	    # With callgraph profiling, we only use the cycles-based event for the
-	    # architecture.  Just set the count value high enough to make sure it's
-	    # at least 15x the minimum; 1,500,000 should do it.
-	    set count 1500000
-	} else {
-	    set count [lindex $ctr 3]
-	}
-	append ctr_opts "${event}:${count}:${um}:${kernel}:${user},"
+        set n [lindex $ctr 0]
+        set event [lindex $ctr 1]
+        set um [lindex $ctr 2]
+        if {$output_check == 3} {
+            # With callgraph profiling, we only use the cycles-based event for the
+            # architecture.  Just set the count value high enough to make sure it's
+            # at least 15x the minimum; 1,500,000 should do it.
+            set count 1500000
+        } else {
+            set count [lindex $ctr 3]
+        }
+        append ctr_opts "${event}:${count}:${um}:${kernel}:${user},"
     }
 
     foreach entry [array name op_workload_table] {
-	set workload_src [lindex $op_workload_table($entry) 0]
-	set compile_options [lindex $op_workload_table($entry) 1]
-	set workload_exc [compile_workload $workload_src  $compile_options]
+        set workload_src [lindex $op_workload_table($entry) 0]
+        set compile_options [lindex $op_workload_table($entry) 1]
+        set workload_exc [compile_workload $workload_src  $compile_options]
         verbose "Workload: $workload_exc\n"
         verbose "Counter options: $ctr_opts\n"
 
-	# Run the workload
-	if {$output_check == 3} {
-	    set cmd "operf --callgraph --lazy-conversion --events  ${ctr_opts} ${workload_exc}"
-	} else {
-	    set cmd "operf --events  ${ctr_opts} ${workload_exc}"
-	}
+        # Run the workload
+        if {$output_check == 3} {
+            set cmd "operf --callgraph --lazy-conversion --events  ${ctr_opts} ${workload_exc}"
+        } else {
+            set cmd "operf --events  ${ctr_opts} ${workload_exc}"
+        }
         verbose "operf command is: $cmd \n"
 
-	if {$test_debug_option == 1} {
-	    set dbg_test " (--debug-info)"
-	} else {
-	    set dbg_test ""
-	}
-	switch -exact "$output_check" {
-	    1 {set test "operf check for symbols$dbg_test: $cmd"}
-	    2 {set test "operf check for kallsyms$dbg_test: $cmd"}
-	    3 {set test "operf check callgraph output$dbg_test: $cmd"}
-	}
+        if {$test_debug_option == 1} {
+            set dbg_test " (--debug-info)"
+        } else {
+            set dbg_test ""
+        }
+        switch -exact "$output_check" {
+            1 {set test "operf check for symbols$dbg_test: $cmd"}
+            2 {set test "operf check for kallsyms$dbg_test: $cmd"}
+            3 {set test "operf check callgraph output$dbg_test: $cmd"}
+        }
         verbose "\nTest: $test\n"
         if {[lindex [local_exec $cmd "" "" 100] 0] == 0} {
             pass $test
         } else {
             fail $test
-	}
+        }
 
-	operf_check_samples_exist $ctrs
+        operf_check_samples_exist $ctrs
 
-	# Verify the interesting symbols for this test are found in
-	# the output.  Only checking the symbols for the first group of
-	# events.
-	if {$output_check == 1} {
-	    local_exec "sleep 1" "" "" 10
-	    verify_output $op_workload_table($entry) $workload_exc $ctr_opts $test_debug_option
-	}
+        # Verify the interesting symbols for this test are found in
+        # the output.  Only checking the symbols for the first group of
+        # events.
+        if {$output_check == 1} {
+            local_exec "sleep 1" "" "" 10
+            verify_output $op_workload_table($entry) $workload_exc $ctr_opts $test_debug_option
+        }
 
-	if {$output_check == 2} {
-	    local_exec "sleep 1" "" "" 10
-	    verify_kallsyms_output
-	}
+        if {$output_check == 2} {
+            local_exec "sleep 1" "" "" 10
+            verify_kallsyms_output
+        }
 
-	if {$output_check == 3} {
-	    # check callgraph output
-	    local_exec "sleep 1" "" "" 10
-	    verify_callgraph_output $op_workload_table($entry) $workload_exc $ctr_opts
-	}
+        if {$output_check == 3} {
+            # check callgraph output
+            local_exec "sleep 1" "" "" 10
+            verify_callgraph_output $op_workload_table($entry) $workload_exc $ctr_opts
+        }
 
-	operf_delete_samples
+        operf_delete_samples
     }
 }
 
@@ -277,33 +277,33 @@ proc do_system-wide_test {ctrs symbol_check} {
     foreach ctr $ctrs {
 #       n - counter number, no longer used but didn't want to change
 #       specification format
-	set n [lindex $ctr 0]
-	set event [lindex $ctr 1]
-	set um [lindex $ctr 2]
-	set count [lindex $ctr 3]
-	append ctr_opts "${event}:${count}:${um}:${kernel}:${user},"
+        set n [lindex $ctr 0]
+        set event [lindex $ctr 1]
+        set um [lindex $ctr 2]
+        set count [lindex $ctr 3]
+        append ctr_opts "${event}:${count}:${um}:${kernel}:${user},"
     }
 
     foreach entry [array name op_workload_table] {
-	set workload_src [lindex $op_workload_table($entry) 0]
-	set compile_options [lindex $op_workload_table($entry) 1]
-	set workload_exc [compile_workload $workload_src  $compile_options]
+        set workload_src [lindex $op_workload_table($entry) 0]
+        set compile_options [lindex $op_workload_table($entry) 1]
+        set workload_exc [compile_workload $workload_src  $compile_options]
 
-	if {$symbol_check == 1} {
-	    set test "operf systemwide check for symbols: $workload_exc"
-	} else {
-	    set test "operf systemwide: $workload_exc"
-	}
+        if {$symbol_check == 1} {
+            set test "operf systemwide check for symbols: $workload_exc"
+        } else {
+            set test "operf systemwide: $workload_exc"
+        }
 
         # create the script to run the operf command
         set operf_run_script [exec mktemp "/tmp/operf_run.XXXX"]
         set operf_output_log [exec mktemp "/tmp/operf_output.XXXX"]
         set fileId [open $operf_run_script "w"]
-	puts $fileId "#!/bin/bash"
-	puts -nonewline $fileId "operf --system-wide --events "
-	puts -nonewline $fileId $ctr_opts
-	puts -nonewline $fileId " 2>&1  | tee > $operf_output_log"
-	close $fileId
+        puts $fileId "#!/bin/bash"
+        puts -nonewline $fileId "operf --system-wide --events "
+        puts -nonewline $fileId $ctr_opts
+        puts -nonewline $fileId " 2>&1  | tee > $operf_output_log"
+        close $fileId
         local_exec "chmod 755 $operf_run_script" "" "" 10
 
         #  Run the script to start operf data collection in the background
@@ -315,21 +315,21 @@ proc do_system-wide_test {ctrs symbol_check} {
         set create_stop_script [exec mktemp "/tmp/operf_create_stop_script.XXXX"]
         set fileId [open $create_stop_script "w"]
         set operf_stop_script [exec mktemp "/tmp/operf_stop_operf.XXXX"]
-	puts $fileId "#!/bin/bash"
+        puts $fileId "#!/bin/bash"
         puts $fileId "echo -n  \"kill -s INT  \" > $operf_stop_script "
         # logic that collects the process id to be killed
         puts $fileId "cat $operf_output_log | grep \"kill\" | cut -d\"\'\" -f2 | cut -d\" \" -f3 >> $operf_stop_script "
-	close $fileId
+        close $fileId
 
-	# check that operf started correctly
+        # check that operf started correctly
         if {[lindex [local_exec "grep \"usage\" $operf_output_log " "" "" 100] 0] == 1} {
-	    pass $test
-	} else {
-	    fail $test
-	}
+            pass $test
+        } else {
+            fail $test
+        }
 
         # Now, call the script to create the operf kill script.
-	local_exec "sleep 2" "" "" 10
+        local_exec "sleep 2" "" "" 10
         local_exec "chmod 755 $create_stop_script" "" "" 10
         exec $create_stop_script
 
@@ -342,20 +342,20 @@ proc do_system-wide_test {ctrs symbol_check} {
 
         operf_check_samples_exist $ctrs
 
-	# Verify the interesting symbols for this test are found in
-	# the output.  Only checking the symbols for the first group of
-	# events.
-	if {$symbol_check == 1} {
-	    local_exec "sleep 2" "" "" 10
-	    set test_debug_option 0
-	    verify_output $op_workload_table($entry) $workload_exc $ctr_opts $test_debug_option
-	}
+        # Verify the interesting symbols for this test are found in
+        # the output.  Only checking the symbols for the first group of
+        # events.
+        if {$symbol_check == 1} {
+            local_exec "sleep 2" "" "" 10
+            set test_debug_option 0
+            verify_output $op_workload_table($entry) $workload_exc $ctr_opts $test_debug_option
+        }
 
-	# cleanup the files created
+        # cleanup the files created
         local_exec "rm -f $operf_run_script" "" "" 10
         local_exec "rm -f $operf_output_log" "" "" 10
         local_exec "rm -f $create_stop_script" "" "" 10
         local_exec "rm -f $operf_stop_script" "" "" 10
-	operf_delete_samples
+        operf_delete_samples
     }
 }
