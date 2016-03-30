@@ -85,6 +85,8 @@ if { $operf_version == 0} {
     # the opcontrol data was previously deleted as root.  The goal is to be
     # able to run this test as a regular user.
     operf_delete_samples
+    # single process tests
     oprofile-single_process_run_tests
+    # debug option tests
     oprofile-debug-option_run_tests
 }

@@ -68,14 +68,18 @@ proc validate_xml_report { callgraph } {
 	set binpath [lindex [local_exec "readlink -f $binpath" "" "" 10] 1]
 	set idx [string last "/bin" $binpath ]
 	set op_install_dir [string range $binpath 0 $idx ]
+        verbose "Using install_dir location: $op_install_dir \n"
 	append schema_file $op_install_dir "/share/doc/oprofile*/opreport.xsd"
 	set schema_file [glob $schema_file]
-	set opreport_result [local_exec "opreport --debug-info --symbols $cg_option --long-filenames --xml -o out.xml" "" "" 100 ]
+        verbose "Using schema file: $schema_file \n"
+        set opreport_cmd "opreport --debug-info --symbols $cg_option --long-filenames --xml -o out.xml"
+        verbose "Opreport command: $opreport_cmd \n"
+        set opreport_result [local_exec "$opreport_cmd"  "" "" 100 ]
 	set xmllint_result [local_exec "xmllint --noout --schema $schema_file out.xml"  "" "" 10 ]
 	if { [regexp "out.xml validates" "$xmllint_result" ]} {
-		pass "    Verified XML opreport with callgraph option=$callgraph is valid"
+		pass "    Verified XML opreport with callgraph option=$cg_option is valid"
 	} else {
-		fail "    XML opreport output with callgraph option=$callgraph is invalid"
+		fail "    XML opreport output with callgraph option=$cg_option is invalid"
 				print [lindex $xmllint_result 1]
 	}
 	set result [local_exec "rm -rf ./out.xml" "" "" 100 ]
@@ -97,10 +101,15 @@ proc verify_output { workload_table_entry workload ctr_opts debug_opt_enabled} {
     # which should be found in opreport output.
     for {set index $base} {$index < $max} {incr index} {
         set symbol [lindex $workload_spec $index]
+        verbose "Looking for symbol: $symbol \n"
         if { $debug_opt_enabled } {
-            set result [local_exec "opreport --debug-info --symbols --long-filenames" "" "" 100 ]
+            set opreport_cmd "opreport --debug-info --symbols --long-filenames"
+            verbose "Opreport command: $opreport_cmd \n"
+            set result [local_exec "$opreport_cmd" "" "" 100 ]
         } else {
-            set result [local_exec "opreport --symbols --long-filenames" "" "" 100 ]
+            set opreport_cmd "opreport --symbols --long-filenames"
+            verbose "Opreport command: $opreport_cmd \n"
+            set result [local_exec "$opreport_cmd" "" "" 100 ]
         }
         if { [regexp $symbol "$result" ]} {
             verbose "Verify the symbols for workload: $workload"
@@ -125,16 +134,23 @@ proc verify_kallsyms_output { } {
     set symbol1 "kallsyms"
     set symbol2 "no-vmlinux"
 
-    set result [local_exec "opreport --symbols --long-filenames" "" "" 100 ]
+    set opreport_cmd "opreport --symbols --long-filenames"
+    verbose "Opreport command: $opreport_cmd \n"
+    set result [local_exec "$opreport_cmd" "" "" 100 ]
 
     if { [regexp $symbol1 "$result" ] == 1 && [regexp $symbol2 "$result" ] == 0 } {
-	pass "    Kallsyms was used to get the kernel symbols."
-	verbose "\n"
+        pass "    Kallsyms was successfully used to get the kernel symbols."
+        verbose "\n"
     } else {
-	print "Verify the test is being run as root and "
-	print "/proc/sys/kernel/kptr_restrict is either 0 or 1."
-	fail  "    Failed to obtain the kernel symbols from kallsyms."
-	print "\n"
+        fail  "    Failed to obtain the kernel symbols from kallsyms."
+        print "Verify the test is being run as root or that "
+        print "/proc/sys/kernel/kptr_restrict is set to 0."
+        send "The current value of kptr_restrict is: "
+        set kptr_restrict_file /proc/sys/kernel/kptr_restrict
+        set file [open $kptr_restrict_file]
+        fcopy $file stdout
+        close $file
+        print "\n"
     }
 }
 
@@ -148,18 +164,23 @@ proc verify_callgraph_output { workload_table_entry workload ctr_opts} {
     # which should be found in opreport output.
 
     # Verify the output file contains the expected symbols.
-    set result [regsub {\{|\}} [local_exec "opreport --callgraph" "" "" 100 ] " "]
+    set opreport_cmd "opreport --callgraph"
+    verbose "Opreport command: $opreport_cmd \n"
+    set result [regsub {\{|\}} [local_exec "$opreport_cmd " "" "" 100 ] " "]
 
     for {set index 2} {$index < $max} {incr index} {
         set symbol [lindex $workload_spec $index]
         if { [regexp $symbol "$result" ]} {
-            verbose "Verify callgraph contains the workload symbols: $workload"
-            verbose "  Performance counter events: $ctr_opts"
+            verbose "Verify callgraph output contains the expected symbols:\n"
+            verbose "  Workload: $workload\n"
+            verbose "  Performance counter events: $ctr_opts\n"
+            verbose "  Symbol: $symbol\n"
             pass "    opreport contains symbol: $symbol"
             verbose "\n"
         } else {
-            print "Verify callgraph contains the workload symbols: $workload"
-            print "  Performance counter events: $ctr_opts"
+            print "Verify callgraph output contains the expected symbols:\n"
+            print "  Workload: $workload\n"
+            print "  Performance counter events: $ctr_opts\n"
             fail "    opreport does not contain symbol: $symbol"
             print "\n"
         }

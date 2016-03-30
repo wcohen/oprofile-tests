@@ -162,7 +162,9 @@ if {$user_is_root == 0} {
         # around that opreport might inadvertenly pick up.
 	operf_delete_samples
 
+        send "Running the operf system-wide tests\n"
 	oprofile-operf_run_system_wide_tests
+        send "Running the operf callgraph tests\n"
 	oprofile-callgraph_run_tests
 
 	case $operf_version {
@@ -171,6 +173,7 @@ if {$user_is_root == 0} {
 	    }
 	    { * } {
 		# kallsyms support was added in version 1.0.
+                send "Running the operf kallsyms-readable tests. (symbols,kallsyms,callgraph) \n"
 		oprofile-kallsyms-readable_run_tests
 	    }
 	}

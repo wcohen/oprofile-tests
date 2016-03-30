@@ -63,9 +63,9 @@ proc operf_cpu_type {} {
 proc operf_delete_samples {} {
     set result [local_exec "rm -rf ./oprofile_data" "" "" 100 ]
     if { [lindex $result 0] == 0 } {
-	verbose "Successfully deleted exiting data directory"
+        verbose "Successfully deleted existing oprofile_data directory"
     } else {
-	verbose "Failed to delete exiting data directory"
+        verbose "Failed to delete existing oprofile_data directory"
     }
 }
 
@@ -123,9 +123,9 @@ proc operf_ocount_get_version {tool} {
         # opcontrol results in /dev/oprofile/cpu_type being set to 'timer' by
         # the oprofile kernel module.  If operf/ocount are run in such a situation,
         # they detect the "timer" mode and exit with a message telling the user
-        # to run 'opcontrol --deinit'. If we are root user, we'll run the deinit
-        # here; then we'll try again to get the version.  If we're not user, we'll
-        # print a big message asking the user to do so.
+        # to run 'opcontrol --deinit'. If we are the root user, we'll run the deinit
+        # here; then we'll try again to get the version.  If we're not running as
+        # root, we'll print an error message with hints to the user on what to do.
         set operf_ocount_version 0
         check_user
         if {$user_is_root == 1} {
@@ -204,6 +204,8 @@ proc do_single_process_test {ctrs output_check test_debug_option} {
 	set workload_src [lindex $op_workload_table($entry) 0]
 	set compile_options [lindex $op_workload_table($entry) 1]
 	set workload_exc [compile_workload $workload_src  $compile_options]
+        verbose "Workload: $workload_exc\n"
+        verbose "Counter options: $ctr_opts\n"
 
 	# Run the workload
 	if {$output_check == 3} {
@@ -211,6 +213,7 @@ proc do_single_process_test {ctrs output_check test_debug_option} {
 	} else {
 	    set cmd "operf --events  ${ctr_opts} ${workload_exc}"
 	}
+        verbose "operf command is: $cmd \n"
 
 	if {$test_debug_option == 1} {
 	    set dbg_test " (--debug-info)"
@@ -220,9 +223,9 @@ proc do_single_process_test {ctrs output_check test_debug_option} {
 	switch -exact "$output_check" {
 	    1 {set test "operf check for symbols$dbg_test: $cmd"}
 	    2 {set test "operf check for kallsyms$dbg_test: $cmd"}
-	    3 {set test "operf check for callgraph output$dbg_test: $cmd"}
+	    3 {set test "operf check callgraph output$dbg_test: $cmd"}
 	}
-
+        verbose "\nTest: $test\n"
         if {[lindex [local_exec $cmd "" "" 100] 0] == 0} {
             pass $test
         } else {
