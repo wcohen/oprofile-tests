@@ -90,7 +90,7 @@ proc do_test_ocount_scaling {workload_exec} {
 	    # Version 1.0 and beyond  time interval is in units of milliseconds
 	    set run_time_interval1 [expr $interval1 * 1000]
 	    set run_time_interval2 [expr $interval2 * 1000]
-	set run_time_interval4 [expr $interval4 * 1000]
+           set run_time_interval4 [expr $interval4 * 1000]
 	}
     }
 
@@ -245,7 +245,7 @@ proc do_test_ocount_modes {workload_exec} {
 
     # Check the counts are not zero
     check_nonzero_count $u_count $workload_exec $event
-    check_nonzero_count $k_count $workload_exec $event]
+    check_nonzero_count $k_count $workload_exec $event
     check_nonzero_count $u_k_count $workload_exec $event
 
     # Check the scaling of the results
@@ -267,7 +267,12 @@ proc ocount_run_tests {} {
 
     set workload_exec [compile_ocount_workload "workload_ocount/load.c"]
 
-send "ocount_run_tests\n"
+    send "ocount_run_tests\n"
+
+    # if ocount can't determine the cpu_type properly, just return.
+    if {[check_ocount_valid_cpu_type] == 0 } {
+       return 0
+    }
 
     # Check the brief format counting cycles gives non-zero count
     do_test_ocount_cycle_test $workload_exec "--brief-format"

@@ -2,7 +2,7 @@
 #   Copyright (C) 2012 Carl Love, IBM
 #
 # Modified by Carl Love <carll@us.ibm.com>
-#   Copyright (C) 2013 Carl Love, IBM Corporation
+#   Copyright (C) 2013-2017 Carl Love, IBM Corporation
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ proc oprofile-operf_run_system_wide_tests {} {
     set cpu [operf_cpu_type]
 
     if {$cpu == "bogus"} {
-        send "Error, not able find cpu type exiting.\n"
+        send "Error, not able to find a valid cpu type. Exiting.\n"
     } else {
         set symbol_check 1
         foreach spec $op_event_table($cpu) {
@@ -54,7 +54,7 @@ proc oprofile-callgraph_run_tests {} {
 
     set cpu [operf_cpu_type]
     if {$cpu == "bogus"} {
-        send "Error, not able find cpu type exiting.\n"
+        send "Error, not able to find a valid cpu type. Exiting.\n"
     } else {
         # test callgraph output
         set output_check 3
@@ -79,7 +79,7 @@ proc oprofile-kallsyms-readable_run_tests {} {
     set kptr_restrict [ lindex [split [local_exec $cmd "" "" 10 ] "\{\}" ] 1 ]
 
     if {$cpu == "bogus"} {
-        send "Error, not able find cpu type exiting.\n"
+        send "Error, not able to find a valid cpu type. Exiting.\n"
     } else {
         # kallsyms output check
         set output_check 2

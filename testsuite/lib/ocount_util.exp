@@ -68,6 +68,15 @@ proc check_nonzero_count {count workload event} {
     }
 }
 
+proc check_ocount_valid_cpu_type {} {
+    set ocount_result [ local_exec "ocount " "" "" 5 ]
+    if { [ regexp  "Unable to obtain cpu_type" $ocount_result ] } {
+        send "\nERROR: Ocount failed to obtain a valid cpu_type.\n"
+        return 0
+    }
+    return 1
+}
+
 proc get_event_count { result symbol} {
 
     set words [regexp -all -inline {\S+} $result]
