@@ -456,6 +456,20 @@ set op_event_table(power8)                          \
 	}                                           \
     }
 
+set op_event_table(power9)                          \
+    {                                               \
+	{                                           \
+	    {0 CYCLES 0 500000}                     \
+	}                                           \
+	{                                           \
+	    {0 PM_BR_CMPL 0 100000}                 \
+	    {1 PM_BR_TAKEN_CMPL 0 100000}           \
+	    {3 PM_INST_DISP 0 100000}               \
+	    {4 PM_RUN_INST_CMPL 0 500000}           \
+	    {5 PM_RUN_CYC  0 500000}                \
+	}                                           \
+    }
+
 set op_event_table(ibm_power_architected_v1)                          \
     {                                               \
 	{                                           \
@@ -816,6 +830,9 @@ proc select_cpu_events {cpu_name} {
 	Intel_Broadwell_microarchitecture {set type arch_perf}
 	i386/skylake {set type skylake}
 	Intel_Skylake_microarchitecture {set type skylake}
+	ppc64/power9 {set type power9}
+	ppc64_POWER9 {set type power9}
+
     }
 
     verbose "cpu type is $type"
