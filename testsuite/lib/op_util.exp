@@ -137,7 +137,9 @@ proc op_intel_perf_arch {cpu_type} {
 	    78 {set cpu_type i386/skylake}
 	    79 {set cpu_type i386/broadwell}
 	    86 {set cpu_type i386/broadwell}
+	    87 {set cpu_type i386/knightslanding}
 	    94 {set cpu_type i386/skylake}
+	   133 {set cpu_type i386/knightslanding}
 	}
     }
 

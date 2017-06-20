@@ -234,6 +234,26 @@ set op_event_table(skylake)                         \
 	}                                           \
     }
 
+set op_event_table(knightslanding)                  \
+    {                                               \
+	{                                           \
+	     {0 INST_RETIRED      0 500000}         \
+	     {1 CPU_CLK_UNHALTED  0 500000}         \
+	}                                           \
+	{                                           \
+	     {0 LLC_MISSES        0x41 10000}       \
+	     {1 LLC_REFS          0x4f 10000}       \
+	}                                           \
+	{                                           \
+	     {0 br_inst_retired any 500000}         \
+	     {1 br_misp_retired any 50000}          \
+	}                                           \
+	{                                           \
+	     {0 icache accesses 2000003}            \
+	     {1 icache misses 2000003}              \
+	}                                           \
+    }
+
 set op_event_table(athlon)                          \
     {                                               \
 	{                                           \
@@ -832,6 +852,8 @@ proc select_cpu_events {cpu_name} {
 	Intel_Skylake_microarchitecture {set type skylake}
 	ppc64/power9 {set type power9}
 	ppc64_POWER9 {set type power9}
+	i386/knightslanding {set type knightslanding}
+	Intel_Knights_Landing {set type knightslanding}
 
     }
 
