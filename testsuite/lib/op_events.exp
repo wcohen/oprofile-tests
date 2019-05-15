@@ -854,6 +854,7 @@ proc select_cpu_events {cpu_name} {
 	ppc64_POWER9 {set type power9}
 	i386/knightslanding {set type knightslanding}
 	Intel_Knights_Landing {set type knightslanding}
+	AMD64_generic {set type amd_generic}
 
     }
 
