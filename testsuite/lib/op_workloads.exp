@@ -4,6 +4,10 @@ if {! [array exists op_workload_table]} {
     array set op_workload_table {}
 }
 
+if {! [array exists op_java_workload_table]} {
+    array set op_java_workload_table {}
+}
+
 # Make sure the workload binary name is unique and not a substring of the
 # directory or the test to see if the symbol exists may find the symbol in
 # the directory name not the executable.
@@ -61,3 +65,13 @@ set op_workload_table(anon_remap)                  \
       {}                                           \
       { anon }                                       \
     }
+
+# A new/different table for the java workload(s).
+set op_java_workload_table(fibonacci)              \
+        {                                          \
+        {workloads/java/Fibonacci.java}            \
+        {}                                         \
+        {Fibonacci.main}                           \
+        {}                                         \
+}
+

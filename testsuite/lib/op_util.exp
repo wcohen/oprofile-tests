@@ -181,11 +181,11 @@ proc compile_workload {workload_src compile_options } {
     # Ideally the TCL command target_compile should be used.  However,
     # target_compile is ignoring the compiler options argument.
 
-    set compiler "cc"
     set extension [lindex [split $workload_src "."] 1]
-    set workload_exc [ lindex [split $workload_src "."] 0]_bin
 
     if { [string compare $extension "c"] == 0 } {
+	set workload_exc [ lindex [split $workload_src "."] 0]_bin
+	set compiler "cc"
 	# workload is a C program, see if it needs to be compiled.
 	set test [local_exec "ls $workload_exc" "" "" 10]
 
@@ -198,6 +198,24 @@ proc compile_workload {workload_src compile_options } {
 	    }
 	}
 	return [ lindex [split $workload_src "."] 0]_bin
+    }
+
+    if { [string compare $extension "java"] == 0 } {
+	set compiler "javac"
+	set workload_exc [ lindex [split $workload_src "."] 0].class
+	# workload is a java program, see if it needs to be compiled.
+	set test [local_exec "ls $workload_exc" "" "" 10]
+	if { [lindex $test 0] == 1 } {
+	    # workload has not been compiled
+	    set result [local_exec "$compiler $workload_src $compile_options" "" "" 10 ]
+	    if { [lindex $result 0] == 1 } {
+		print "\nERROR compiling workload: $workload_src"
+		print "Compiler error message: $result\n"
+	    }
+	}
+	set path_and_basename [lindex [split $workload_src "."] 0]
+	set classonly [ lindex [ split $path_and_basename "/"] 2]
+	return $classonly
     }
 
     # Assume the workload is a script, set the executable
@@ -245,3 +263,79 @@ proc op_check_dependencies {} {
         set op_deps_ok 1
     }
 }
+
+proc op_resolve_java_dependencies {} {
+    global java_deps_ok
+    global path_to_libjvmti
+    set libjvmti_oprofile_present 0
+    set java_present 0
+    set javac_present 0
+    set operf_present 0
+
+    set path_to_operf [ local_exec "which operf" "" "" 100 ]
+    if {[regexp "operf" $path_to_operf operf_present] == 1} {
+	verbose "Found operf ($operf_present) at $path_to_operf ."
+    } else {
+	send "Didn't find operf.\n"
+    }
+
+    set path_to_javac [ local_exec "which javac" "" "" 100 ]
+    if {[regexp "javac" $path_to_javac javac_present] == 1} {
+	verbose "Found javac ($javac_present) at $path_to_javac ."
+    } else {
+	send "javac is require to build the java testcase.  I didn't find javac via 'which'.\n"
+    }
+
+    set path_to_java [ local_exec "which java" "" "" 100 ]
+    if {[regexp "java" $path_to_java java_present] == 1} {
+	verbose "Found java ($java_present) at $path_to_java ."
+    } else {
+	send "java is require to run the java testcase.  I didn't find java via 'which'.\n"
+    }
+
+    send "checking for libjvmti_oprofile.so .\n"
+    # In the case of a userspace build, the oprofile install location has
+    # sibling bin and lib or lib64 directories, so we will check for the 
+    # libjvmti_oprofile.so library in those locations.
+
+    # Search in lib64 sibling directory.
+    set path_to_libjvmti [string map {bin/operf lib64/oprofile/libjvmti_oprofile.so} $path_to_operf ]
+    set path_to_libjvmti [string trimleft $path_to_libjvmti "0\ \{"]
+    set path_to_libjvmti [string trim $path_to_libjvmti "\ \n\r\}"]
+    verbose "checking for lib at $path_to_libjvmti \n"
+    set libjvmti_oprofile_present [file exists $path_to_libjvmti ]
+
+    if {$libjvmti_oprofile_present == 0 } {
+    # Search in lib sibling directory.
+    set path_to_libjvmti [string map {bin/operf lib/oprofile/libjvmti_oprofile.so} $path_to_operf ]
+    set path_to_libjvmti [string trimleft $path_to_libjvmti "0\ \{"]
+    set path_to_libjvmti [string trim $path_to_libjvmti "\ \n\r\}"]
+    verbose "checking for lib at $path_to_libjvmti \n"
+    set libjvmti_oprofile_present [file exists $path_to_libjvmti ]
+    }
+
+    # Search in common system directories.
+    if {$libjvmti_oprofile_present == 0 } {
+	foreach path_to_libjvmti { /usr/lib64/libjvmti_oprofile.so /usr/lib/libjvmti_oprofile.so } {
+		verbose "checking for lib at $path_to_libjvmti \n"
+		set libjvmti_oprofile_present [file exists $path_to_libjvmti ]
+		if {$libjvmti_oprofile_present == 1 } {
+			break
+		} else {
+			verbose "did not find libjvmti_oprofile in $path_to_libjvmti ) .\n"
+		}
+	}
+   }
+   send "found libjvmti_oprofile at $path_to_libjvmti . \n"
+
+    if {$operf_present == 0 || $java_present == 0 || $javac_present == 0 || $libjvmti_oprofile_present == 0} {
+	set java_deps_ok 0
+    } else {
+	verbose "found operf at $path_to_operf . \n"
+	verbose "found java at $path_to_java . \n"
+	verbose "found javac at $path_to_javac . \n"
+	verbose "found libjvmti_oprofile at $path_to_libjvmti . \n"
+	set java_deps_ok 1
+    }
+}
+

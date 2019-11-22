@@ -1,0 +1,112 @@
+# oprofile-java.exp
+#   Copyright (C) 2019 IBM Corporation
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+global path_to_libjvmti
+
+check_user
+load_lib "op_events.exp"
+load_lib "op_util.exp"
+load_lib "operf_util.exp"
+load_lib "op_workloads.exp"
+
+# run operf against a java utility, verify that a .jo file is created,
+# and that an oreport can run successfully against the run.
+
+proc oprofile_run_java_tests {} {
+    global op_event_table
+
+    set cpu [operf_cpu_type]
+    if {$cpu == "bogus"} {
+        send "Error, not able to find a valid cpu type. Exiting.\n"
+    } else {
+        set output_check 2
+        set test_debug_option  0
+        # Test using the first event entry only.
+        set spec [lindex $op_event_table($cpu) 0]
+        do_java_test $spec $output_check $test_debug_option
+    }
+}
+
+#main
+
+set operf_version 0
+set op_version 0
+
+op_check_dependencies
+if {$op_deps_ok == 0} {
+    return
+}
+
+op_resolve_java_dependencies
+if {$java_deps_ok == 0} {
+#send "returning from java_deps_ok check"
+    send "Skipping the java test due to missing dependencies."
+    send "Oprofile needs to be built --with-java=<path/to/jdk/>, such "
+    send "that the libjvmti_oprofile.so object is built and installed."
+    send "java, javac, operf also need to be available and in the PATH."
+    return
+}
+
+# Check to see of opcontrol is installed.  Need to do this first as
+# to set opcontrol_installed.  If opcontrol is not installed, then we do
+# not make any opcontrol calls to do cleanup of existing opcontrol data samples
+# or call --deinit when exiting.
+
+operf_get_version
+op_get_version
+
+if {$op_version == 0} {
+    # could not find opcontrol
+    set opcontrol_installed 0
+} else {
+    if {$op_version < $operf_version} {
+        # Don't run the opcontrol tests at all if the opcontrol binary appears to
+        # be from an earlier version of OProfile.
+        set opcontrol_installed 0
+    } else {
+        set opcontrol_installed 1
+    }
+}
+
+if { $operf_version == 0 } {
+    send "Skipping the operf tests.\n"
+    send "Unable to find or verify the version of the OProfile operf utility.\n"
+} else {
+    # Ensure that the oprofile kernel module is unloaded, since it can
+    # interfere with proper operf operation on some platforms.
+#    if {$opcontrol_installed == 1} {
+#        local_exec "opcontrol --deinit" "" "" 100
+#        # Make sure there are no samples from the opcontrol laying
+#        # around that opreport might inadvertently pick up.
+#        op_daemon_delete_any_samples
+#    }
+    # Make sure there are no samples from the operf laying
+    # around that opreport might inadvertently pick up.
+    operf_delete_samples
+
+    case $operf_version {
+        { 0.* } {
+            # Just don't run this on old versions.
+            send "v==0, skipping. \n"
+            }
+        { * } {
+            send "Running operf against a java workload. \n"
+            oprofile_run_java_tests
+        }
+    }
+}

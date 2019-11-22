@@ -1,5 +1,5 @@
-# op_util.exp
-#   Copyright (C) 2012 IBM
+# operf_util.exp
+#   Copyright (C) 2012-2019 IBM
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -88,6 +88,37 @@ proc operf_check_samples_exist {ctrs} {
     }
 }
 
+proc operf_check_java_samples_exist {ctrs} {
+    set test "checking for samples associated with *.jo"
+    verbose "checking for samples associated with *.jo"
+
+    foreach ctr $ctrs {
+        set n [lindex $ctr 0]
+        set event [lindex $ctr 1]
+        # add "-t 3" as a percentage threshold to cull some noise.
+        # add "-n" to suppress the opreport header (easier for debug).
+        # add a regexp blurb to get just the .jo entries.
+        set result [ local_exec "opreport  event:$event -t 3 -n " "" "" 100 ]
+        if { [regexp "\[0-9\].jo" "$result" ]} {
+            pass "$test: {$event} found samples associated with *.jo"
+        } else {
+            fail "$test: {$event} didn't find samples associated with *.jo"
+        }
+    }
+}
+
+proc operf_check_java_object_file_exists {} {
+    set test "At least one java object (.jo) file exists."
+    verbose "At least one java object (.jo) file exists."
+
+    set result [ local_exec "find . -name \"*.jo\" "  "" "" 100 ]
+    if {[regexp ".jo" "$result"]} {
+            pass "$test: found at least one java object file."
+    } else {
+            fail "$test: Did not find a java object (*.jo) file."
+    }
+}
+
 proc operf_ocount_get_version {tool} {
     global operf_ocount_version
     global user_is_root
@@ -160,6 +191,81 @@ proc operf_get_version {} {
     operf_ocount_get_version "operf"
     set operf_version $operf_ocount_version
 }
+
+# run a java test.
+proc do_java_test {ctrs output_check test_debug_option} {
+
+    global op_java_workload_table
+    global op_workload_table
+    global path_to_libjvmti
+    set kernel 1
+    set user 1
+    set ctr_opts {}
+
+    if { $output_check == 1 && $test_debug_option == 0 } {
+        validate_xml_help
+    }
+
+    foreach ctr $ctrs {
+#       n - counter number, no longer used but didn't want to change
+#       specification format
+        set n [lindex $ctr 0]
+        set event [lindex $ctr 1]
+        set um [lindex $ctr 2]
+        if {$output_check == 3} {
+            # With callgraph profiling, we only use the cycles-based event for the
+            # architecture.  Just set the count value high enough to make sure it's
+            # at least 15x the minimum; 1,500,000 should do it.
+            set count 1500000
+        } else {
+            set count [lindex $ctr 3]
+        }
+        append ctr_opts "${event}:${count}:${um}:${kernel}:${user},"
+    }
+
+    foreach entry [array name op_java_workload_table] {
+        set workload_src [lindex $op_java_workload_table($entry) 0]
+        set compile_options [lindex $op_java_workload_table($entry) 1]
+        set workload_exc [compile_workload $workload_src  $compile_options]
+        verbose "Workload: $workload_exc\n"
+        verbose "Counter options: $ctr_opts\n"
+        # Run the workload
+        set java_classpath "workloads/java/"
+        set cmd "operf java -agentpath:${path_to_libjvmti} -cp ${java_classpath} ${workload_exc}"
+        verbose "operf command is: $cmd \n"
+
+        if {$test_debug_option == 1} {
+            set dbg_test " (--debug-info)"
+        } else {
+            set dbg_test ""
+        }
+        set test "operf test against java: $cmd"
+        verbose "\nTest: $test\n"
+        if {[lindex [local_exec $cmd "" "" 100] 0] == 0} {
+            pass $test
+        } else {
+            fail $test
+        }
+
+        # - verify that the test ran.
+        operf_check_samples_exist $ctrs
+        # - verify that at least one .jo file exists.
+        operf_check_java_object_file_exists
+        # - verify that the .jo entry shows up in the output.
+        operf_check_java_samples_exist $ctrs
+
+        # Verify the interesting symbols for this test are found in
+        # the output.  Only checking the symbols for the first group of
+        # events.
+        if {$output_check == 1} {
+            local_exec "sleep 1" "" "" 10
+            verify_output $op_java_workload_table($entry) $workload_exc $ctr_opts $test_debug_option
+        }
+
+        operf_delete_samples
+    }
+}
+
 
 proc do_single_process_test {ctrs output_check test_debug_option} {
 #   The tests are run in single process mode which does not require root
